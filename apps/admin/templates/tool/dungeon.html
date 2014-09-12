@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>查询</title>
+</head>
+<body>
+    {% load filters %}
+    <div>
+        {% if msg %}
+            <span style="color:red;">{{msg}}</span>
+        {% endif %}
+        <form action="../dungeon_test/" method="post">
+        <h3>关卡测试</h3>
+        <span>测试次数：<input name="count" type="text" size="6" maxlength="4" {% if count %}value={{count}}{% endif %}></span>
+        <span>关卡类型：
+        <select name="dungeon_type">
+            <option value="normal" {% ifequal dungeon_type 'normal' %} selected="selected" {% endifequal %}>普通战场</option>
+            <option value="special"  {% ifequal dungeon_type 'special' %} selected="selected" {% endifequal %}>特殊战场</option>
+            <option value="weekly"  {% ifequal dungeon_type 'weekly' %} selected="selected" {% endifequal %}>每日战场</option>
+            <option value="hg"  {% ifequal dungeon_type 'hg' %} selected="selected" {% endifequal %}>皇宫限时战场</option>
+        </select>
+        </span>
+        <span>战场编号：<input name="floor_id" type="text" size="6" maxlength="3" value="{{floor_id}}"/></span>
+        <span>关卡编号：<input name="room_id" type="text" size="6" maxlength="3" value="{{room_id}}"/></span>
+        <span>主将编号：<input name="deck_1" type="text" size="6" maxlength="3"/>_card　</span>
+        <span>主将编号：<input name="deck_2" type="text" size="6" maxlength="3"/>_card　</span> 
+        
+        <span>玩家类型：
+        <select name="user_type">
+            <option value="odd" {% ifequal user_type 'odd' %} selected="selected" {% endifequal %}>甲组</option>
+            <option value="even"  {% ifequal user_type 'even' %} selected="selected" {% endifequal %}>乙组</option>
+        </select>
+        </span>
+
+        </span>
+        <input type="submit" value="开始测试" />
+        <input type="submit" value="检查所有关卡配置（测试次数：50,  战场编号：*）" />
+        </form>
+        <hr />
+        <table bgcolor="#C7EDCC" border="2">
+            <tr>
+                <td width="100">最大宝石数</td>
+                <td width="100">最小宝石数</td>
+                <td width="100">平均宝石数</td>
+            </tr>
+            <tr>
+                <td width="100">{{max_stone}}</td>
+                <td width="100">{{min_stone}}</td>
+                <td width="100">{{avg_stone}}</td>
+            </tr>
+            <tr>
+                <td width="100">最大铜钱数</td>
+                <td width="100">最小铜钱数</td>
+                <td width="100">平均铜钱数</td>
+            </tr>
+            <tr>
+                <td width="100">{{max_gold}}</td>
+                <td width="100">{{min_gold}}</td>
+                <td width="100">{{avg_gold}}</td>
+            </tr>
+            <tr>
+                <td width="100">平均经验</td>
+            </tr>
+            <tr>
+                <td width="100">{{avg_exp}}</td>
+            </tr>
+            <tr>
+                <td width="100">材料id</td>
+                <td width="100">材料名称</td>
+                <td width="100">材料平均数量</td>
+            </tr>
+        {% for record in material_list %}
+            <tr>
+                <td width="100">{{record.0}}</td>
+                <td width="100">{{record.1.name}}</td>
+                <td width="100">{{record.1.cnt}}</td>
+            </tr>
+        {% endfor %}
+            <tr>
+                <td width="100">掉落武将id</td>
+                <td width="100">掉落武将名</td>
+                <td width="100">掉落次数</td>
+            </tr>
+        {% for record in result %}
+            <tr>
+                <td width="100">{{record.0}}</td>
+                <td width="100">{{record.1.name}}</td>
+                <td width="100">{{record.1.count}}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

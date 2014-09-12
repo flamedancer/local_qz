@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+{% block head %}
+{% endblock head %}
+
+{% block main %}
+
+<div id="main">
+	<div id="top">
+		Flash 版本发布<font color="red">(请慎重操作)</font>
+	</div>
+</div>
+
+<hr />
+
+<form action='/admin/flash_release/' method='post'>
+	<fieldset>
+		<legend>版本回滚：</legend>
+		<input type="radio" id = "flash_ver" name="flash_ver" value="flash_version_last" />(swf 上一版本：{{ flash_version_last }})<br>
+		<input type="radio" id = "flash_ver" name="flash_ver" value="flash_version_curr" />(swf 当前版本：{{ flash_version_curr }})<br>
+		<p><input type="submit" value="发布" onclick="if (!confirm('确定发布？')) return false;" /></p>
+	</fieldset>
+</form>
+
+<br/>
+
+<form action='/admin/flash_release/' method='post'>
+	<fieldset>
+		<legend>新版本发布：</legend>
+		<input type="text" id = "flash_new_ver" name="flash_new_ver"  /><br>
+		<p><input type="submit" value="发布" onclick="if (!confirm('确定发布？')) return false;" /></p>
+	</fieldset>
+</form>
+
+<br/>
+<hr/>
+<br/>
+
+<form action='/admin/config_release/' method='post'>
+	<fieldset>
+	    当前配置版本：{{ cur_config_ver }}
+		<legend>配置版本发布：</legend>
+		<p><input type="submit" value="发布" onclick="if (!confirm('确定发布？')) return false;" /></p>
+	</fieldset>
+</form>
+
+
+{% endblock main %}

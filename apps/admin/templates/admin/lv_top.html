@@ -1,0 +1,27 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>管理员权限</title>
+</head>
+<body>
+    <h1>lv_top 前100名</h1>
+    <table bgcolor="#C7EDCC" border="2">
+        <tr>
+                <th width="100">名次</th>
+                <th width="100">uid</th>
+                <th width="100">用户名</th>
+                <th width="100">等级</th>
+        </tr>
+        {% for tmp in data %}
+        <tr>
+                <td width="100">{{forloop.counter}}</td>
+                <td width="100"><a href="/admin/user/view/?uid={{tmp.uid}}" target='_blank'>{{tmp.uid}}</a></td>
+                <td width="100">{{tmp.username}}</td>
+                <td width="100">{{tmp.lv}}</td>
+        </tr>
+        {%endfor%}
+    </table>
+</body>
+</html>

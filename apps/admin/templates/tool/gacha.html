@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>查询</title>
+</head>
+<body>
+    {% load filters %}
+    <div>
+        <form action="../gacha/" method="post">
+        <h3>求将测试</h3>
+        <span>测试次数：<input name="count" type="text" size="6" maxlength="6"/></span>
+        <span>测试类型：
+        <select name="type">
+            <option value="free_rate" {% if data.type == "free_rate" %}selected="selected"{% endif %}>求良将</option>
+            <option value="charge_rate" {% if data.type == "charge_rate" %}selected="selected"{% endif %}>求神将</option>
+        </select>
+        </span>
+        <span>排序方式：
+        <select name="order">
+            <option value="star" {% if data.order == "star" %}selected="selected"{% endif %}>星级</option>
+            <option value="ctype" {% if data.order == "ctype" %}selected="selected"{% endif %}>武将属性</option>
+            <option value="count" {% if data.order == "count" %}selected="selected"{% endif %}>出现次数</option>
+            <option value="category" {% if data.order == "category" %}selected="selected"{% endif %}>武将类型</option>
+        </select>
+        </span>
+        <input type="submit" value="开始求将" />
+        </form>
+        <table bgcolor="#C7EDCC" border="2">
+            <tr>
+                <td width="100">编号</td>
+                <td width="100">武将名</td>
+                <td width="100">武将ID</td>
+                <td width="100">武将等级</td>
+                <td width="100">武将属性</td>
+                <td width="100">武将星级</td>
+                <td width="100">出现次数</td>
+                <td width="100">武将类型</td>
+                <td width="100">武将品质</td>
+            </tr>
+        {% for card in data.card_list %}
+            <tr>
+                <td width="100">{{forloop.counter}}</td>
+                <td width="100">{{card.1.name}}</td>
+                <td width="100">{{card.1.cid}}</td>
+                <td width="100">{{card.1.lv}}</td>
+                <td width="100">{{card.1.ctype}}</td>
+                <td width="100">{{card.1.star}}</td>
+                <td width="100">{{card.1.count}}</td>
+                <td width="100">{{card.1.category_name}}</td>
+                <td width="100">{{card.1.quality}}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

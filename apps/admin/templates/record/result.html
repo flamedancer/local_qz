@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>查询</title>
+    <script type="text/javascript">
+        function get_data(date_k){
+            if (document.getElementById('btn_' + date_k).value == "展开"){
+                document.getElementById('btn_' + date_k).value = "折叠";
+                document.getElementById('detail_' + date_k).style.display = "block";
+            }
+            else{
+                document.getElementById('btn_' + date_k).value = "展开";
+                document.getElementById('detail_' + date_k).style.display = "none";
+            }
+        }
+    </script>
+</head>
+<body>
+    {% load filters %}
+    <script src="../../js/calendar.js">
+    </script>
+    {% if view_type == "consume" %}
+    <form action="../../record/consume/" method="post">
+    <h3>查询消费<span style="color:red;">（大数据量查询不要使用后台，请联系技术人员）</span></h3>
+    {% else %}
+        {% if view_type == "charge" %}
+            <form action="../../record/charge/" method="post">
+            <h3>查询充值<span style="color:red;">（大数据量查询不要使用后台，请联系技术人员）</span></h3>
+        {% else %}
+            <form action="../../record/consume_contrast/" method="post">
+            <h3>对比消费<span style="color:red;">（大数据量查询不要使用后台，请联系技术人员）</span></h3>
+        {% endif %}
+    {% endif %}
+    <div>
+        <span>从
+            <input name="start_date" type="text" id="start_date" size="10" maxlength="10" onclick="new Calendar().show(this);" 
+            {% if start_date %}value="{{start_date}}"{% endif %} readonly="readonly" />
+        </span>
+        <span>至
+            <input name="end_date" type="text" id="end_date" size="10" maxlength="10" onclick="new Calendar().show(this);" 
+            {% if end_date %}value="{{end_date}}"{% endif %} readonly="readonly" />
+        </span>
+        <label for="uid">用户ID:</label> 
+        <input type="text" size="10" id="uid" name="uid" {% if uid %}value="{{uid}}"{%endif%}/>
+        {% if view_type == "consume" or view_type == "consume_contrast" %}
+        消费类型:
+        <select name="consume_type">
+            <option value="all" {%if consume_type == 'all'%}selected="selected"{%endif%}>所有</option>
+            <option value="gacha" {%if consume_type == 'gacha'%}selected="selected"{%endif%}>求将</option>
+            <option value="revive" {%if consume_type == 'revive'%}selected="selected"{%endif%}>复活</option>
+            <option value="recover" {%if consume_type == 'recover'%}selected="selected"{%endif%}>回复体力</option>
+            <option value="extend" {%if consume_type == 'extend'%}selected="selected"{%endif%}>扩充军营</option>
+        </select>
+        {% if view_type == "consume_contrast" %}
+            <span>对比起始日期
+                <input name="second_start" type="text" id="start_date" size="10" maxlength="10" onclick="new Calendar().show(this);" readonly="readonly" />
+            </span>
+        {% endif %}
+        {% else %}
+            商品:
+            <select name="item_id">
+                <option value="all">所有</option>
+                {% for item in item_info %}
+                <option value="{{item.0}}" {%if item_id == item.0%}selected="selected"{%endif%}>{{item.1.num}}个元宝</option>
+                {% endfor %}
+            </select>
+            平台:
+            <select name="platform">
+                <option value="all" {%if platform == 'all'%}selected="selected"{%endif%}>所有</option>
+                <option value="oc" {%if platform == 'oc'%}selected="selected"{%endif%}>玩客</option>
+                <option value="qq" {%if platform == 'qq'%}selected="selected"{%endif%}>腾讯</option>
+                <option value="sina" {%if platform == 'sina'%}selected="selected"{%endif%}>新浪</option>
+            </select>
+            支付方式:
+            <select name="charge_way">
+                <option value="all" {%if charge_way == 'all'%}selected="selected"{%endif%}>所有</option>
+                <option value="" {%if charge_way == ''%}selected="selected"{%endif%}>ios</option>
+                <option value="alipay" {%if charge_way == 'alipay'%}selected="selected"{%endif%}>支付宝</option>
+                <option value="googleplay" {%if charge_way == 'googleplay'%}selected="selected"{%endif%}>谷歌</option>
+                <option value="mi" {%if charge_way == 'mi'%}selected="selected"{%endif%}>小米</option>
+                <option value="91" {%if charge_way == '91'%}selected="selected"{%endif%}>91</option>
+                <option value="pp" {%if charge_way == 'pp'%}selected="selected"{%endif%}>pp</option>
+                <option value="mycard" {%if charge_way == 'mycard'%}selected="selected"{%endif%}>mycard</option>
+            </select>
+        {% endif %}
+        <input type="submit" value="确定"/>
+    </div>
+    </form>
+    <div>
+    <hr/>
+    {% if view_type == 'consume' or view_type == 'consume_contrast'%}
+    <table bgcolor="#C7EDCC" border="2">
+        <tr>
+            <td width="100">日期</td>
+            <td width="100">消费次数</td>
+            <td width="100">消费总元宝数</td>
+        {% if view_type == 'consume_contrast'%}
+            <td><input type="button" id="btn_{{record.0}}" value="展开" onclick="get_data('{{record.0}}');"/></td>
+            <td width="100">对比日期</td>
+            <td width="100">对比消费次数</td>
+            <td width="100">对比消费总元宝数</td>
+            <td><input type="button" id="btn_{{record.0}}" value="展开" onclick="get_data('{{record.0}}');"/></td>
+            <td width="100">消费次数前后之差</td>
+            <td width="100">消费宝数前后之差</td>
+        {% endif %}
+        </tr>
+    </table>
+    {% for record in result%}
+    <table bgcolor="#C7EDCC" border="2">
+        <tr>
+            <td width="100"  align="right">{{record.0}}</td>
+            <td width="100"  align="right">{{record.1.total_count}}</td>
+            <td width="100"  align="right">{{record.1.total_sum}}</td>
+            <td><input type="button" id="btn_{{record.0}}" value="展开" onclick="get_data('{{record.0}}');"/></td>
+        {% if view_type == 'consume_contrast'%}
+            <td width="100" align="right">{{record.1.data_contrast}}</td>
+            <td width="100" align="right">{{record.1.second_total_count}}</td>
+            <td width="100" align="right">{{record.1.second_total_sum}}</td>
+            <td><input type="button" id="btn_{{record.0}}" value="展开" onclick="get_data('{{record.0}}');"/></td>
+            <td width="100" align="right">{{record.1.total_count_contrast}}</td>
+            <td width="100" align="right">{{record.1.total_sum_contrast}}</td>
+        {% endif %}
+        </tr>
+    </table>
+    <div id="detail_{{record.0}}" style="display:none">
+        <table bgcolor="#7DBDE8" border="1">
+        <tr>
+            <td width="150">时间段</td>
+            <td width="150">消费次数</td>
+            <td width="150">消费元宝数量</td>
+        </tr>
+        {% for row in record.1.record %}
+        <tr>
+            <td width="150" align="right">{{row.item_time}}</td>
+            <td width="150" align="right">{{row.item_count}}</td>
+            <td width="150" align="right">{{row.item_sum}}</td>
+        </tr>
+        {% endfor %}
+        </table>
+    </div>
+    {% endfor %}
+    <table bgcolor="#C7EDCC" border="2">
+        <tr>
+            <td width="100">总计</td>
+            <td width="100" align="right">{{total_count}}</td>
+            <td width="100" align="right">{{total_sum}}</td>
+            {% if view_type == 'consume_contrast'%}
+            <td><input type="button" id="btn_{{record.0}}" value="展开" onclick="get_data('{{record.0}}');"/></td>
+            <td width="100">总计</td>
+            <td width="100" align="right">{{second_total_count}}</td>
+            <td width="100" align="right">{{second_total_sum}}</td>
+            <td><input type="button" id="btn_{{record.0}}" value="展开" onclick="get_data('{{record.0}}');"/></td>
+            <td width="100" align="right">{{count_contrast_result}}</td>
+            <td width="100" align="right">{{sum_contrast_result}}</td>
+            {% endif %}
+        </tr>
+    </table>
+    {% else %}
+        {% if view_type == 'charge'%}
+        <table bgcolor="#C7EDCC" border="2">
+            <tr>
+                <td width="100">日期</td>
+                <td width="100">充值次数</td>
+                <td width="100">充值总价</td>
+            </tr>
+        </table>
+        {% endif %}
+    {% for record in result %}
+    <table bgcolor="#C7EDCC" border="2">
+        <tr>
+            <td width="100" align="right">{{record.0}}</td>
+            <td width="100" align="right">{{record.1.total_count}}</td>
+            <td width="100" align="right">{{record.1.total_price}}</td>
+            <td><input type="button" id="btn_{{record.0}}" value="展开" onclick="get_data('{{record.0}}');"/></td>
+        </tr>
+    </table>
+    <div id="detail_{{record.0}}" style="display:none">
+        <table bgcolor="#7DBDE8" border="1">
+        <tr>
+            <td width="200">充值时间</td>
+            <td width="200">充值次数</td>
+            <td width="200">充值价格</td>
+        </tr>
+        {% for row in record.1.record %}
+        <tr>
+            <td width="200" align="right">{{row.charge_time}}</td>
+            <td width="200" align="right">{{row.charge_count}}</td>
+            <td width="100" align="right">{{row.charge_sum}}</td>
+        </tr>
+        {% endfor %}
+        </table>
+    </div>
+    {% endfor %}
+    <table bgcolor="#C7EDCC" border="2">
+        <tr>
+            <td width="100">总计</td>
+            <td width="100" align="right">{{total_count}}</td>
+            <td width="100" align="right">{{total_price}}</td>
+        </tr>
+    </table>
+    {% endif %}
+    </div>
+</body>
+</html>

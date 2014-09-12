@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>查询</title>
+    <script src="../js/calendar.js">
+    </script>
+</head>
+<body>
+ 
+    <form action="../tool/cards_product_statistic/" method="post">
+        <h3>元宝抽将武将产出统计</h3>
+            <span>从
+                <input name="start_date" type="text" id="start_date" size="10" maxlength="10" onclick="new Calendar().show(this);" readonly="readonly" />
+            </span>
+            <span>至
+                <input name="end_date" type="text" id="end_date" size="10" maxlength="10" onclick="new Calendar().show(this);" readonly="readonly" />
+            </span>
+            排序:
+            <select name="sort_by">
+                <option value="star" selected="selected">星级</option>
+                <option value="count">数量</option>
+            </select>
+        <input type="submit" value="开始查找" />
+    </form>
+
+	
+    {% if support %}
+        <h3>静态文件更新列表</h3>
+        <form id="loginForm" name="loginForm" action="do_popen/" method="post">
+            <select name="do_popen">
+                <option value={{app_name}} >{{app_name}}</option>
+            </select>
+            <input id="submit" name="submit" type="submit" value=生成文件列表>
+        </form>
+    {% endif %}
+	
+    <hr/>
+    {% if debug %}
+       <form action="../tool/gacha/" method="post">
+    <h3>求将测试</h3>
+    <span>测试次数：<input name="count" type="text" size="6" maxlength="6"/></span>
+    <span>测试类型：
+    <select name="type">
+        <option value="free_rate">求良将</option>
+        <option value="charge_rate">求神将</option>
+    </select>
+    </span>
+    <span>排序方式：
+    <select name="order">
+        <option value="star">星级</option>
+        <option value="ctype">武将属性</option>
+        <option value="count">出现次数</option>
+        <option value="category">武将类型</option>
+    </select>
+    </span>
+    <input type="submit" value="开始求将" />
+    </form>
+    <hr />
+    
+    <form action="../tool/dungeon_test/" method="post">
+    <h3>关卡测试</h3>
+    <span>测试次数：<input name="count" type="text" size="6" maxlength="4"/></span>
+    <span>关卡类型：
+    <select name="dungeon_type">
+        <option value="normal">普通战场</option>
+        <option value="special">特殊战场</option>
+        <option value="weekly">每日战场</option>
+        <option value="hg">皇宫限时战场</option>
+    </select>
+    </span>
+    <span>战场编号：<input name="floor_id" type="text" size="6" maxlength="3"/></span>
+    <span>关卡编号：<input name="room_id" type="text" size="6" maxlength="3"/></span>
+    <span>主将编号：<input name="deck_1" type="text" size="6" maxlength="3"/>_card　</span>
+    <span>主将编号：<input name="deck_2" type="text" size="6" maxlength="3"/>_card　</span>
+    <span>玩家类型：
+        <select name="user_type">
+            <option value="odd" {% ifequal user_type 'odd' %} selected="selected" {% endifequal %}>甲组</option>
+            <option value="even"  {% ifequal user_type 'even' %} selected="selected" {% endifequal %}>乙组</option>
+        </select>
+    </span>
+   
+    <input type="submit" value="开始测试" />
+    <input type="submit" value="检查所有关卡配置（测试次数：50,  战场编号：*）" />
+    </form>
+    <hr />
+    
+    <form action="../tool/card/" method="post">
+    <h3>查找武将</h3>
+    <span>星级：</span>
+    <select name="star">
+        <option value="" {%if card_star == ""%}selected="selected"{%endif%}></option>
+        <option value="1" {%if card_star == "1"%}selected="selected"{%endif%}>1星</option>
+        <option value="2" {%if card_star == "2"%}selected="selected"{%endif%}>2星</option>
+        <option value="3" {%if card_star == "3"%}selected="selected"{%endif%}>3星</option>
+        <option value="4" {%if card_star == "4"%}selected="selected"{%endif%}>4星</option>
+        <option value="5" {%if card_star == "5"%}selected="selected"{%endif%}>5星</option>
+        <option value="6" {%if card_star == "6"%}selected="selected"{%endif%}>6星</option>
+    </select>
+    <span>属性：</span>
+    <select name="ctype">>
+        <option value="" {%if ctype == ""%}selected="selected"{%endif%}></option>
+        <option value="1" {%if ctype == "1"%}selected="selected"{%endif%}>火</option>
+        <option value="2" {%if ctype == "2"%}selected="selected"{%endif%}>水</option>
+        <option value="3" {%if ctype == "3"%}selected="selected"{%endif%}>木</option>
+        <option value="4" {%if ctype == "4"%}selected="selected"{%endif%}>雷</option>
+        <option value="5" {%if ctype == "5"%}selected="selected"{%endif%}>阳</option>
+        <option value="6" {%if ctype == "6"%}selected="selected"{%endif%}>阴</option>
+    </select>
+    <input type="submit" value="开始查找" />
+    </form>
+    <hr/>
+    <form action="../tool/update_static/" method="post" enctype="multipart/form-data">
+        <h3>上传静态文件</h3>
+        目录：/static/
+        <input type="file" name='html' value="上传文件" /><br />
+        <input type="submit" value="开始上传文件" /><br />
+    </form>
+    <hr/>
+    {%endif%}
+</body>
+</html>

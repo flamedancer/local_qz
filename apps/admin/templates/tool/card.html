@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>查询</title>
+</head>
+<body>
+    <div>
+        <form action="../card/" method="post">
+        <h3>查找武将</h3>
+        <span>星级：</span>
+        <select name="star">
+            <option value="" {%if card_star == ""%}selected="selected"{%endif%}></option>
+            <option value="1" {%if card_star == "1"%}selected="selected"{%endif%}>1星</option>
+            <option value="2" {%if card_star == "2"%}selected="selected"{%endif%}>2星</option>
+            <option value="3" {%if card_star == "3"%}selected="selected"{%endif%}>3星</option>
+            <option value="4" {%if card_star == "4"%}selected="selected"{%endif%}>4星</option>
+            <option value="5" {%if card_star == "5"%}selected="selected"{%endif%}>5星</option>
+            <option value="6" {%if card_star == "6"%}selected="selected"{%endif%}>6星</option>
+        </select>
+        <span>属性：</span>
+        <select name="ctype">>
+            <option value="" {%if ctype == ""%}selected="selected"{%endif%}></option>
+            <option value="1" {%if ctype == "1"%}selected="selected"{%endif%}>火</option>
+            <option value="2" {%if ctype == "2"%}selected="selected"{%endif%}>水</option>
+            <option value="3" {%if ctype == "3"%}selected="selected"{%endif%}>木</option>
+            <option value="4" {%if ctype == "4"%}selected="selected"{%endif%}>雷</option>
+            <option value="5" {%if ctype == "5"%}selected="selected"{%endif%}>阳</option>
+            <option value="6" {%if ctype == "6"%}selected="selected"{%endif%}>阴</option>
+        </select>
+        <input type="submit" value="开始查找" /><br />
+        <textarea style="width:800px;height:500px">{{ name_str }}
+        {{cid_str}}
+        </textarea>
+        </form>
+    </div>
+</body>
+</html>

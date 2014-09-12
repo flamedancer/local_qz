@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>查询</title>
+    <script src="../js/calendar.js">
+    </script>
+    <script type="text/javascript">
+        function set_date(){
+            var first_day = new Date();
+            first_day.setDate(1);
+            document.getElementById("start_date").value = first_day.format("yyyy-MM-dd");
+            var today = new Date();
+            document.getElementById("end_date").value = today.format("yyyy-MM-dd");
+        }
+    </script>
+</head>
+<body onload="set_date()">
+    {% if view_type == "consume" %}
+    <form action="../record/consume/" method="post">
+    <h3>查询消费<span style="color:red;">（大数据量查询不要使用后台，请联系技术人员）</span></h3>
+    {% else %}
+        {% if view_type == "charge" %}
+        <form action="../record/charge/" method="post">
+        <h3>查询充值<span style="color:red;">（大数据量查询不要使用后台，请联系技术人员）</span></h3>
+        {% else %}
+        <form action="../record/consume_contrast/" method="post">
+        <h3>对比消费<span style="color:red;">（大数据量查询不要使用后台，请联系技
+术人员）</span></h3>
+        {% endif %}
+    {% endif %}
+        <div>
+            <span>查询：</span>
+            <span>从
+                <input name="start_date" type="text" id="start_date" size="10" maxlength="10" onclick="new Calendar().show(this);" readonly="readonly" />
+            </span>
+            <span>至
+                <input name="end_date" type="text" id="end_date" size="10" maxlength="10" onclick="new Calendar().show(this);" readonly="readonly" />
+            </span>
+            <label for="uid">用户ID:</label> 
+            <input type="text" size="10" id="uid" name="uid"/>
+            {% if view_type == "consume" or view_type == "consume_contrast" %}
+            消费类型:
+            <select name="consume_type">
+                <option value="all">所有</option>
+                <option value="gacha">求将</option>
+                <option value="revive">复活</option>
+                <option value="recover">回复体力</option>
+                <option value="extend">扩充军营</option>
+            </select>
+            {% else %}
+            商品:
+            <select name="item_id">
+                <option value="all">所有</option>
+                {% for item in item_info %}
+                <option value="{{item.0}}">{{item.1.num}}个元宝</option>
+                {% endfor %}
+            </select>
+            平台:
+            <select name="platform">
+                <option value="all">所有</option>
+                <option value="oc">玩客</option>
+                <option value="qq">腾讯</option>
+                <option value="sina">新浪</option>
+            </select>
+            支付方式:
+            <select name="charge_way">
+                <option value="all">所有</option>
+                <option value="" >ios</option>
+                <option value="alipay" >支付宝</option>
+                <option value="googleplay">谷歌</option>
+                <option value="mi">小米</option>      
+                <option value="91">91</option>
+                <option value="pp">pp</option>
+                <option value="mycard">mycard</option>
+            </select>
+            {% endif %}
+            {% if view_type == "consume_contrast" %}
+                <span>对比起始日期
+                    <input name="second_start" type="text" id="start_date" size="10" maxlength="10" onclick="new Calendar().show(this);" readonly="readonly" />
+                </span>
+            {% endif %}
+            <input type="submit" value="确定"/>
+        </div>
+    </form>
+    <hr/>
+</body>
+</html>

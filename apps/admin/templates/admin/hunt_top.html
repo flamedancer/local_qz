@@ -1,0 +1,44 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>皇宫排行榜</title>
+</head>
+<body>
+	{% for top_name,top_value in data.items %}
+    <span>{{ top_value.name }} 前20名</span>
+    <table bgcolor="#C7EDCC" border="2">
+        <tr>
+                <th width="100">名次</th>
+                <th width="100">uid</th>
+                <th width="100">用户名</th>
+                <th width="100">pt</th>
+                <th width="100">战斗次数</th>
+            {% if top_name == 'hg_middle_hunt_mvp' or top_name == 'hg_contribute_top' %}
+                <th width="100">中级最高记录</th>
+            {% endif %}
+            {% if top_name == 'hg_high_hunt_mvp' or top_name == 'hg_contribute_top' %}
+                <th width="100">高级最高记录</th>
+            {% endif %}
+            
+        </tr>
+        {% for tmp in top_value.list %}
+        <tr>
+                <td width="100">{{forloop.counter}}</td>
+                <td width="100"><a href="/admin/user/view/?uid={{tmp.uid}}" target='_blank'>{{tmp.uid}}</a></td>
+                <td width="100">{{tmp.username}}</td>
+                <td width="100">{{tmp.pt}}</td>
+                <td width="100">{{tmp.fight_cnt}}</td>
+             {% if top_name == 'hg_middle_hunt_mvp' or top_name == 'hg_contribute_top' %}
+                <td width="100">{{tmp.md_max_pt}}</td>
+             {% endif %}
+             {% if top_name == 'hg_high_hunt_mvp' or top_name == 'hg_contribute_top' %}
+                <td width="100">{{tmp.hi_max_pt}}</td>
+             {% endif %}
+        </tr>
+        {%endfor%}
+    </table>
+  {%endfor%}
+</body>
+</html>

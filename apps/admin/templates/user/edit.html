@@ -1,0 +1,949 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>编辑用户信息</title>
+    <style type="text/css">
+      tr.odd {background-color:#c7dccc;color:#376400;}
+      tr.even {background-color:white;}
+    </style>
+</head>
+<body>
+    {% ifequal status 1 %}
+    <div class="success">
+        <span style="color:red;">保存成功</span>
+    </div>
+    {% endifequal %}
+    <form method="post">
+        <div>
+            用户ID:&nbsp;{{ user.uid }}
+            <a href="javascript:window.location = window.location">刷新</a>
+        </div>
+        <hr/>
+        <table>
+            <tr>
+                <td>用户名</td>
+                <td>
+                    <span style="color:red;">{{ user.username }}</span>
+                </td>
+                <td>手机号</td>
+                <td>
+                    <span style="color:red;">{% if user_property_obj.mobile_num %}{{ user_property_obj.mobile_num }}{% else %}无{% endif %}</span>
+                </td>
+                <td>性别</td>
+                <td>
+                    <span style="color:red;">{% if user.baseinfo.sex %}男{% else %}女{% endif %}</span>
+                </td>
+                <td>客户端类型</td>
+                <td>
+                    <span style="color:red;">{{ client_type }}</span>
+                </td>
+                <td>安装时间</td>
+                <td>
+                    <span style="color:red;">{{ add_time }}</span>
+                </td>
+                <td>最后登录时间</td>
+                <td>
+                    <span style="color:red;">{{ last_login_time }}</span>
+                </td>
+                <td>登录记录</td>
+                <td>
+                    <select name="login_record" size="1">
+                        {% for login_date in login_record%}
+                        <option>{{login_date}}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>级别</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.lv }}</span>
+                </td>
+                <td>经验</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.exp }}</span>
+                </td>
+                <td>铜钱</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.gold }}</span>
+                </td>
+                <td>元宝</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.coin }}</span>
+                </td>             
+                <td>友情点</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.gacha_pt }}</span>
+                </td>
+            </tr>
+            <tr>
+                  <td>用户帐号类型</td>
+                  <td>
+                    <span style="color:red;">{{ user.platform }}</span>
+                </td>
+                <td>
+                    <label for="state">账号状态</label>
+                </td>
+                <td>
+                    <select id="state" name="state">
+                        <option value="0" {% if not user.in_frozen %}selected="selected"{% endif %}>正常</option>
+                        <option value="1" {% if user.in_frozen %}selected="selected"{% endif %}>冻结</option>
+                    </select>
+                </td>
+                <td>
+                    {% if user.in_frozen and not user.frozen and user.baseinfo.unfroze_time %}解封时间:{{user.baseinfo.unfroze_time|date:"Y-m-d H:i:s"}}{% endif %}
+                </td>
+                <td>
+                    <input type="submit" value="更改状态"/>
+                </td>
+                <td>当前战场进度：</td>
+                <td>
+                    <span style="color:red;">{{current_dungeon.floor_id}}-{{current_dungeon.room_id}}</span>
+                </td>
+                <td>
+                    {% if max_dungeon %}
+                    <span style="color:red";>已到最深层战场</span>
+                    {% else %}
+                    开放战场
+                    <select name="open_dungeon" size="1">
+                        {% for dungeon in all_dungeon%}
+                        <option value="{{dungeon}}" {%if forloop.first%}selected="selected"{%endif%}>{{dungeon}}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="submit" value="开放"/>
+                    {% endif %}
+                </td>
+                <td>当前体力：</td>
+                <td>
+                    <span style="color:red;">{{user_property_obj.stamina}}</span>
+                </td>
+
+            </tr>
+            <tr>
+                 <td>pvp 胜负 </td>
+                <td>
+                    <span style="color:red;">win:{{pvp.pvp_info.base_info.win}}</span>
+                    <span style="color:red;">lose:{{pvp.pvp_info.base_info.lose}}</span>
+                </td>
+                 <td>pvp 经验 </td>
+                <td>
+                    <span style="color:red;">{{pvp.pvp_info.base_info.pt}}</span>
+                </td>
+                <td>pvp 等级 </td>
+                <td>
+                    <span style="color:red;">{{pvp.pvp_info.base_info.pvp_level}}</span>
+                </td>
+                <td>pvp称号</td>
+                <td>
+                    <span style="color:red;">{{pvp.pvp_info.base_info.pvp_title}}</span>
+                </td>
+                <td>当前PVP体力：</td>
+                <td>
+                    <span style="color:red;">{{pvp.pvp_stamina}}</span>
+                </td>
+            </tr>   
+        </table>
+    </form> 
+    <hr />  
+    <div>         
+        <h4>修改用户数据</h4>
+    </div>          
+    <table>     
+        <tr>    
+            <td>    
+                <form method="post">
+                    <input type="hidden" name="del_user" value="yes" />
+                    <input type="submit" value="删除用户" />
+                </form> 
+            </td>       
+            <form method="post">
+                <td>
+                    加铜钱
+                    <input type="text" size="5" maxlength="10" id="add_gold" name="add_gold"/>
+                </td>
+                
+                <td>
+                    加元宝
+                    <input type="text" size="5" maxlength="10" id="add_coin" name="add_coin"/>
+                </td>
+                <td>
+                    加经验点
+                    <input type="text" size="5" maxlength="10" id="add_card_point" name="add_card_point"/>
+                </td>
+                <td>    
+                    加经验
+                    <input type="text" size="5" maxlength="10" id="add_exp" name="add_exp"/>
+                </td>
+                <td>
+                    加pvp经验
+                    <input type="text" size="5" maxlength="10" id="add_pvp_exp" name="add_pvp_exp"/>
+                </td> 
+                <td>
+                    <input type="submit" value="确定"/>
+                </td>
+           </form>
+        </tr>
+        <br />
+        <tr> 
+            <form method="post">
+                <td>
+                    邮件内容
+                    <input type="text" size="5" maxlength="10" id="mail_value" name="mail_value"/>
+                </td>
+                <td>
+                    奖励内容-元宝
+                    <input type="text" size="5" maxlength="10" id="mail_coin" name="mail_coin"/>
+                </td>
+                <td>
+                    奖励内容-金币
+                    <input type="text" size="5" maxlength="10" id="mail_gold" name="mail_gold"/>
+                </td>
+                <td>
+                    <input type="submit" value="发送邮件"/>
+                </td>
+           </form>
+        </tr>
+        <tr>
+            {% if user_property_obj.stamina != user_property_obj.max_stamina %}
+            <td>
+                <form method="post">
+                    <input type="hidden" name="recover_stamina" value="yes" />
+                    <input type="submit" value="回复体力" />
+                </form>
+            </td>
+                    
+            {% else %}
+            <td>体力满值</td>
+            {% endif %}
+
+            {% if pvp.pvp_stamina < pvp.max_pvp_stamina %}
+            <td>
+                <form method="post">
+                    <input type="hidden" name="recover_pvp_stamina" value="yes" />
+                    <input type="submit" value="回复pvp体力" />
+                </form>
+            </td>
+            {% else %}
+            <td>pvp体力满值</td>
+            {% endif %}
+            {% if user_property_obj.newbie %}
+            <td>
+                <form method="post">
+                    <input type="hidden" name="newbie_pass" value="yes" />
+                    <input type="submit" value="跳过新手引导" />
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        <tr>
+            <td colspan=4>
+                <form method="post">
+                    <span style="color:red;">补武将：</span>
+                    <input type="text" size="30" id="add_card_ex" name="add_card_ex" />
+                    <input type="submit" value="补武将" />
+                    (格式(15:2;20:1),其中15,20是武将的id，不需要_card, 2,1是补的个数)
+                </form>
+            </td>
+        </tr>
+
+        <tr>
+            {% if arrive_max_num %}
+            <td valign="bottom">
+                <span style="color:red";>军营已满</span>
+            </td>
+            {% else %}
+            <form method="post">
+                <td valign="bottom">
+                    送武将
+                    <br/>
+                    <select name="add_card" multiple="multiple" size="5">
+                        {% for card in all_cards%}
+                        <option value="{{card.cid}}">{{card.cid|cut:"_card" }}:{{card.name}}{{card.star}}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="submit" value="确定"/>
+                </td>
+            </form>
+            <td></td>
+            {% endif %}
+            <td valign="bottom">
+                <form method="post">
+                    <input type="hidden" name="extend_max_num" value="yes" />
+                    {% if not max_card_num_fg %}
+                    <input type="submit" value="一键扩军营" />
+                    {% else %}
+                    <input type="submit" disabled="disabled" value="已经是最大格子数" />
+                    {% endif %}
+                    {{now_card_num}}/{{max_card_num}}
+                </form>
+            </td>
+            <td valign="bottom">
+                <form method="post">
+                    <input type="hidden" name="extend_store_num" value="yes" />
+                    {% if not max_card_num_fg %}
+                    <input type="submit" value="一键扩仓库" />
+                    {% else %}
+                    <input type="submit" disabled="disabled" value="已经是最大格子数" />
+                    {% endif %}
+                    {{current_max_store_num}}/{{final_max_store_num}}
+                </form>
+            </td>   
+            <td valign="bottom">
+                <form method="post">
+                    <input type="hidden" name="give_all_card" value="yes" />
+                    <input type="submit" value="一键送所有武将" />
+                </form>
+            </td>
+            <td valign="bottom">
+                <form method="post">
+                    <input type="hidden" name="del_other_card" value="yes" />
+                    {% if other_cards|length %}
+                    <input type="submit" value="一键删军营武将" />
+                    {% else %}
+                    <input type="submit" disabled="disabled" value="军营中已无武将" />
+                    {% endif %}
+                </form>
+            </td>
+        </tr>
+        ________________________________________________________________________________________________
+        <tr>        
+            <td colspan=4>
+                <form method="post">
+                    <span style="color:red;">补装备：</span>
+                    <input type="text" size="30" id="add_equips" name="add_equips" />
+                    <input type="submit" value="补装备" />
+                    (格式(15:2;20:1),其中15,20是武将的id，不需要_equips
+                </form>
+            </td>
+            
+        </tr>
+        <tr>    
+            <!--   {% if arrive_max_num %}
+            <td valign="bottom">
+            <span style="color:red";>军营已满</span>
+        </td>   
+        {% else %} -->
+        <form method="post">
+            <td valign="bottom">
+                送装备  
+                <br/>   
+                <select name="add_equips" multiple="multiple" size="5" id="add_equips">
+                    {% for equip in all_equips%}
+                    <option value="{{equip.0}}:1">{{equip.0 }}:{{equip.1.name}}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" value="确定"/>
+            </td>
+        </form>
+        <td></td>
+        <td valign="bottom">
+            <form method="post">
+                <input type="hidden" name="give_all_equips" value="yes" />
+                <input type="submit" value="一键送所有装备" />
+            </form> 
+        </td>       
+        <td valign="bottom">
+            <form method="post">
+                <input type="hidden" name="give_all_equip_soul" value="yes" />
+                <input type="submit" value="一键送所有装备碎片20个" />
+            </form>
+        </td>       
+        <td valign="bottom">
+            <form method="post">
+                <input type="hidden" name="del_all_equip_soul" value="yes" />
+                <input type="submit" value="一键删除所有装备碎片" />
+            </form>
+        </td>
+        <td valign="bottom">
+            <form method="post">
+                <input type="hidden" name="del_other_equips" value="yes" />
+                {% if other_cards|length %}
+                <input type="submit" value="一键删其他装备" />
+                {% else %}
+                <input type="submit" disabled="disabled" value="仓库已无装备" />
+                {% endif %}
+            </form>
+        </td>
+        <!-- {% endif %} --> </tr>
+    <tr>
+        <td colspan=4>
+            <form method="post">
+                <span style="color:red;">补药水：</span>
+                <input type="text" size="30" id="add_items" name="add_items" />
+                <input type="submit" value="补药水" />
+                (格式(15:2;20:1),其中15,20是药水的id，不需要_items
+            </form>
+        </td>
+    </tr>
+
+    <tr>
+        <!--   {% if arrive_max_num %}
+            <td valign="bottom">
+        <span style="color:red";>军营已满</span>
+    </td>
+    {% else %} -->
+    <form method="post">
+        <td valign="bottom">
+            送药水
+            <br/>
+            <select name="add_items" multiple="multiple" size="5">
+                {% for item in all_items%}
+                <option value="{{item.0}}:1">{{item.0 }}:{{item.1.name}}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="确定"/>
+        </td>
+    </form>
+    <td></td>
+    <td valign="bottom">
+        <form method="post">
+                  <span style="color:red;">每种药水的数量：</span>
+            <input name="all_item_num" value="99" />
+            <input type="hidden" name="give_all_items" value="yes" />
+            <input type="submit" value="一键送所有药水" />
+        </form>
+    </td>
+    <td valign="bottom">
+        <form method="post">
+            <input type="hidden" name="del_all_items" value="yes" />
+            <input type="submit" value="一键删药水" />
+        </form>
+    </td>
+     <!-- {% endif %} -->
+</tr>
+
+ <tr>
+        <td colspan=4>
+            <form method="post">
+                <span style="color:red;">补材料：</span>
+                <input type="text" size="30" id="add_mats" name="add_mats" />
+                <input type="submit" value="补材料" />
+                (格式(15:2;20:1),其中15,20是材料的id，不需要_mats
+            </form>
+        </td>
+    </tr>
+        
+    <tr>    
+        <!--   {% if arrive_max_num %}
+            <td valign="bottom">
+        <span style="color:red";>军营已满</span>
+    </td>       
+    {% else %} -->
+    <form method="post"> 
+        <td valign="bottom">
+            送材料
+            <br/>
+            <select name="add_mats" multiple="multiple" size="5">
+                {% for mat in all_materials%}
+                <option value="{{mat.0}}:1">{{mat.0 }}:{{mat.1.name}}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="确定"/>
+        </td>   
+    </form> 
+    <td></td>
+    <td valign="bottom">
+        <form method="post">
+            <input type="hidden" name="give_all_materials" value="yes" />
+            <span style="color:red;">每种材料的数量：</span>
+            <input name="all_materials_num" value="99" />
+            <input type="submit" value="一键送所有材料" />
+        </form>
+    </td>
+    <td valign="bottom">
+        <form method="post">
+            <input type="hidden" name="del_all_materials" value="yes" />
+            <input type="submit" value="一键删材料" />
+        </form>
+    </td>       
+     <!-- {% endif %} -->
+</tr>           
+            
+<tr>        
+    <form method="post">
+        <td valign="bottom">
+            送道具
+            <br/>
+            <select name="add_props" multiple="multiple" size="5">
+                {% for props_id in all_props%} 
+                <option value="{{props_id.0}}:1">{{props_id.0 }}:{{props_id.1.name}}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="确定"/>
+        </td>
+    </form>
+    <td></td>
+    <td valign="bottom">
+        <form method="post">
+            <input type="hidden" name="give_all_props" value="yes" />
+            <span style="color:red;">每种道具的数量：</span>
+            <input name="all_props_num" value="99" />
+            <input type="submit" value="一键送所有道具" />
+        </form>
+    </td>
+    <td valign="bottom">
+        <form method="post">
+            <input type="hidden" name="give_8_props" value="yes" />
+            <span style="color:red;">送1w进阶丹</span>
+            <input name=" give_update_props" value="10000" />
+            <input type="submit" value="点击就送" />
+        </form>
+    </td>
+    <td valign="bottom">
+        <form method="post">
+            <input type="hidden" name="del_all_props" value="yes" />
+            <input type="submit" value="一键删道具" />
+        </form>
+    </td>
+</tr>
+
+
+</table>
+<hr/>
+<h3>充值情况</h3>
+总共充值：{{charge_sum_money}}
+最近一次充值：
+{%if last_charge_record %}
+    时间:{{last_charge_record.createtime}}
+    金额:{{last_charge_record.price}}
+{%else%}
+    无
+{%endif%}
+
+<hr/>
+<h3>军队信息</h3>
+<table  border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+{% for card in deck_cards %}
+<tr class="{% cycle 'odd' 'even'%}">
+    {% if card %}
+    {% if card.is_leader == 1%}
+    <td width="70">
+        <span style="color:red;">主将</span>
+    </td>
+    <td></td>
+    {% else %}
+    <td width="70">
+        <span style="color:red;">副将{{forloop.counter0}}</span>
+    </td>
+    <td width="70">
+        <form method="post">
+            <input type="hidden" name="deck_index" value="{{forloop.counter0}}" />
+            <input type="hidden" name="kick_deck" value="yes" />
+            <input type="submit" value="踢出军队" />
+        </form>
+    </td>
+    {% endif %}
+    <td>
+        <span style="color:red;">{{ card.name }}  {{ card.star}}星</span>
+    </td>
+    <td>级别:</td>
+    <td>
+        <span style="color:red;">{{ card.lv }}</span>
+    </td>
+    <td>经验:</td>
+    <td>
+        <span style="color:red;">{{ card.now_exp}}</span>
+    </td>
+            {% if card.lv != card.max_lv %}
+    <td>加经验:</td>
+    <td>
+        <form method="post">
+            <input type="hidden" name="ucid" value={{card.ucid}} />
+            <input type="text" maxlength="7" size="8" name="add_card_exp" />
+            <input type="submit" value="增加" />
+        </form>
+    </td>
+            {% else %}
+    <td>
+        <span style="color:red;">已经满级</span>
+    </td>
+    <td></td>
+    {% endif %}
+    <td>武将技:</td>
+    {% if card.skid %}
+    <td>
+        <span style="color:red;">{{card.skid}} {{ card.sk_lv}}级</span>
+    </td>
+    {% if card.sk_lv != card.max_sk_lv %}
+    <td>
+        <form method="post">
+            <input type="hidden" name="ucid" value={{card.ucid}} />
+            <input type="hidden" name="add_card_sk_lv" value="yes" />
+            <input type="submit" value="升级" />
+        </form>
+    </td>
+    {% else %}
+    <td>
+        <span style="color:red;">已经满级</span>
+    </td>
+    {% endif %}
+                    {% else %}
+    <td>
+        <span style="color:red;">无技能</span>
+    </td>
+    <td></td>
+    {% endif %}
+    <td>攻击:</td>
+    <td>
+        <span style="color:red;">{{ card.attack }}</span>
+    </td>
+    <td>回复:</td>
+    <td>
+        <span style="color:red;">{{ card.recover }}</span>
+    </td>
+    <td>hp:</td>
+    <td>
+        <span style="color:red;">{{ card.hp}}</span>
+    </td>
+    <td>防御:</td>
+    <td>    
+        <span style="color:red;">{{ card.defense}}</span>
+    </td>
+    <td>装备:</td>
+    <td>
+        <span style="color:red;">{{ card.equip}}</span>
+    </td>
+    {% endif %}
+</tr>
+{% empty %}
+            军队中没有武将
+        {% endfor %}
+</table>
+<hr/>
+<h3>军营其他武将信息</h3>
+<table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+{% for card in other_cards %}
+<tr class="{% cycle 'odd' 'even'%}">
+    <td width="70">
+        <form method="post">
+            <input type="hidden" name="ucid" value={{card.ucid}} />
+            <input type="hidden" name="set_deck_main" value="yes" />
+            <input type="submit" value="设为主将" />
+        </form>
+    </td>
+    <td></td>
+    <td width="70">
+        {% if deck_num != 5 %}
+        <form method="post">
+            <input type="hidden" name="ucid" value={{card.ucid}} />
+            <input type="hidden" name="set_deck_sub" value="yes" />
+            <input type="submit" value="设为副将" />
+        </form>
+        {% endif %}
+    </td>
+    <td>
+        <span style="color:red;">{{ card.name }}  {{ card.star }}星</span>
+    </td>
+    <td>级别:</td>
+    <td>
+        <span style="color:red;">{{ card.lv }}</span>
+    </td>
+    <td>经验:</td>
+    <td>
+        <span style="color:red;">{{ card.now_exp}}</span>
+    </td>
+    {% if card.lv != card.max_lv %}
+    <td>加经验:</td>
+    <td>
+        <form method="post">
+            <input type="hidden" name="ucid" value={{card.ucid}} />
+            <input type="text" maxlength="7" size="8" name="add_card_exp" />
+            <input type="submit" value="增加" />
+        </form>
+    </td>
+    {% else %}
+    <td></td>
+    <td>
+        <span style="color:red;">已经满级</span>
+    </td>
+    {% endif %}
+    <td>武将技:</td>
+    {% if card.skid %}
+    <td>
+        <span style="color:red;">{{card.skid}} {{ card.sk_lv}}级</span>
+    </td>
+    {% if card.sk_lv != card.max_sk_lv %}
+    <td>
+        <form method="post">
+            <input type="hidden" name="ucid" value={{card.ucid}} />
+            <input type="hidden" name="add_card_sk_lv" value="yes" />
+            <input type="submit" value="升级" />
+        </form>
+    </td>
+    {% else %}
+    <td>
+        <span style="color:red;">已经满级</span>
+    </td>
+    {% endif %}
+                    {% else %}
+    <td>
+        <span style="color:red;">无技能</span>
+    </td>
+    <td></td>
+    {% endif %}
+    <td>攻击:</td>
+    <td>
+        <span style="color:red;">{{ card.attack }}</span>
+    </td>
+    <td>回复:</td>
+    <td>
+        <span style="color:red;">{{ card.recover }}</span>
+    </td>
+    <td>防御:</td>
+    <td>
+        <span style="color:red;">{{ card.defense}}</span>
+    </td>
+    <td>hp:</td>
+    <td>    
+        <span style="color:red;">{{ card.hp}}</span>
+    </td>
+    <td>装备:</td>
+    <td>
+        <span style="color:red;">{{ card.equip}}</span>
+    </td>
+    <td>
+        <form method="post">
+            <input type="hidden" name="ucid" value={{card.ucid}} />
+            <input type="hidden" name="sell_card" value="yes" />
+            <input type="submit" value="卖出" />
+        </form>
+    </td>
+</tr>   
+{% empty %}
+            军营中没有其他武将
+        {% endfor %}
+</table>
+<hr/>       
+<h3>仓库信息</h3>
+<table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse" >
+<tr class="{% cycle 'odd' 'even'%}">
+    <td width="70">装备</td>
+    <td>
+        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse" >
+            {%for equip in user_equips%}
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td width="70">名称：</td>
+                <td width="70">{{equip.name}}</td>
+            </tr>
+            {%endfor%}
+        </table>
+    </td> 
+</tr>
+<tr class="{% cycle 'odd' 'even'%}">
+    <td width="70">item药水</td>
+    <td>
+        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse" class="{% cycle 'odd' 'even'%}">
+            {%for iid,value in user_items.iteritems%}
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td>名称：</td>
+                <td width="70">{{value.name}}</td>
+                <td>数量：{{value.num}}</td>
+                <td>
+                <form method="post">
+                <input type="hidden" name="iid" value={{iid}} />
+                <input type="text" maxlength="10" size="8" name="add_item_num" />
+                <input type="submit" value="增加" />
+                </form>
+                </td>
+            </tr>
+            {%endfor%}
+        </table>
+    </td>
+</tr>
+<tr class="{% cycle 'odd' 'even'%}">
+    <td width="70">材料</td>
+    <tr>
+        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+            {%for mid,value in user_materials.iteritems%}
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td>名称：</td>
+                <td width="70">{{value.name}}</td>
+                <td width="70">数量：{{value.num}}</td>
+                <td>
+                <form method="post">
+                <input type="hidden" name="mid" value={{mid}} />
+                <input type="text" maxlength="10" size="8" name="add_materials_sum" />
+                <input type="submit" value="增加" />
+                </form>
+                </td>
+            </tr>
+            {%endfor%}
+        </table>
+    </tr>
+</tr>
+</table>
+
+<hr/>
+<h3>将魂信息</h3>
+    <form method="post">
+            批量添加 普通将魂
+            <input type="text" size="5" maxlength="10" id="dump_normal_soul" name="dump_normal_soul"/>
+            <input type="submit" value="添加" />
+            (格式(15:2;20:1),其中15,20是武将的id，不需要_card, 2,1是补的个数)
+    </form>
+    <br />
+
+    <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+        {%for sid, soul_conf in normal_souls.iteritems%}
+        <tr class="{% cycle 'odd' 'even'%}">
+            <td>名称：</td>
+            <td width="200">{{soul_conf.name}}</td>
+            <td width="70">数量：{{soul_conf.num}}</td>
+            <td>
+                <form method="post">
+                    <input type="hidden" name="sid" value={{sid}} />
+                    <input type="text" maxlength="10" size="8" name="add_normal_soul" />
+                    <input type="submit" value="增加" />
+                </form>
+            </td>
+            <td>
+                <form method="post">
+                    <input type="hidden" name="sid" value={{sid}} />
+                    <input type="hidden" name="delete_card_soul" value='true'/>
+                    <input type="text" maxlength="6" size="6" name="num" value={{soul_conf.num}} />
+                    <input type="submit" value="删除武将碎片" />
+                </form>
+            </td>
+            <td>
+                <form method="post">
+                    <input type="hidden" name="sid" value={{sid}} />
+                    <input type="hidden" name="soul_exchange_card" value='true'/>
+                    <input type="submit" value="兑换武将" />
+                </form>
+            </td>
+        </tr>
+        {%endfor%}
+    </table>
+   <br />
+    <form method="post">
+            批量添加 装备碎片
+            <input type="text" size="15"  id="add_equip_soul" name="add_equip_soul"/>
+            <input type="submit" value="添加" />
+            (普通装备格式  13001_equip:1  宝物装备格式 63001_equip_1:1  )
+    </form>
+
+    <br />
+    <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+        {%for sid, soul_conf in equip_souls_info.iteritems%}
+        <tr class="{% cycle 'odd' 'even'%}">
+            <td>名称：</td>
+            <td width="200">{{soul_conf.name}}</td>
+            <td width="70">数量：{{soul_conf.num}}</td>
+            <td>
+                <form method="post">
+                <input type="hidden" name="sid" value={{sid}} />
+                <input type="text" maxlength="10" size="8" name="add_single_equip_soul" />
+                <input type="submit" value="增加" />
+                </form>
+            </td>
+        </tr>
+        {%endfor%}
+    </table>
+
+<h3>神秘商店信息</h3>
+    <form method="post">
+        <h4>大礼包：</h4>
+        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td width="200">序号：</td>
+                <td>ID:</td>
+                <td width="200">名称：</td>
+                <td width="140">描述：</td>
+                <td width="90">消耗铜钱：</td>
+                <td width="90">消耗元宝：</td>
+                <td width="300">物品：</td>
+                <td width="90">是否已购买</td>
+                <td width="70">购买</td>
+            </tr>
+            {%for package in mystery_store.packages%}
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td>{{ forloop.counter0 }}</td>
+                <td>{{ package.id }}</td>
+                <td width="200">{{ package.name }}</td>
+                <td width="140">{{ package.desc }}</td>
+                <td width="70">{{ package.gold }}</td>
+                <td width="70">{{ package.coin }}</td>
+                <td width="300">{{ package.goods }}</td>
+                <td width="90">{{ package.has_bought }}</td>
+                <td width="70">     
+                    <form method="post">
+                        <input type="hidden" name="store_type" value="packages" />
+                        <input type="hidden" name="goods_index" value={{ forloop.counter0 }} />
+                        <input type="hidden" name="buy_store_goods" value='true'/>
+                        <input type="submit" value="购买" />
+                    </form>
+                </td>
+            </tr>
+            {%endfor%}
+        </table>    
+        <h4>铜钱铺： </h4>
+        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td width="200">序号：</td>
+                <td width="90">消耗铜钱：</td>
+                <td width="300">物品：</td>
+                <td width="90">是否已购买</td>
+                <td width="70">
+                   <form method="post">
+                        <input type="hidden" name="store_type" value="gold_store" />
+                        <input type="hidden" name="goods_index" value={{ forloop.counter0 }} />
+                        <input type="hidden" name="refresh_store_by_self" value='true'/>
+                        <input type="submit" value="刷新商品" />
+                    </form>
+            </tr>
+            {%for package in mystery_store.gold_store%}
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td>{{ forloop.counter0 }}</td>
+                <td width="90">{{ package.gold }}</td>
+                <td width="300">{{ package.goods }}</td>
+                <td width="90">{{ package.has_bought }}</td>
+                <td width="70">
+                    <form method="post">
+                        <input type="hidden" name="store_type" value="gold_store" />
+                        <input type="hidden" name="goods_index" value={{ forloop.counter0 }} />
+                        <input type="hidden" name="buy_store_goods" value='true'/>
+                        <input type="submit" value="购买" />
+                    </form>
+                </td>
+            </tr>
+            {%endfor%}
+        </table>
+        <h4>元宝铺： </h4>
+        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td width="200">序号：</td>
+                <td width="90">消耗元宝：</td>
+                <td width="300">物品：</td>
+                <td width="90">是否已购买</td>
+                <td width="70">
+                   <form method="post">
+                        <input type="hidden" name="store_type" value="coin_store" />
+                        <input type="hidden" name="goods_index" value={{ forloop.counter0 }} />
+                        <input type="hidden" name="refresh_store_by_self" value='true'/>
+                        <input type="submit" value="刷新商品" />
+                    </form>
+            </tr>
+            {%for package in mystery_store.coin_store%}
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td>{{ forloop.counter0 }}</td>
+                <td width="90">{{ package.coin }}</td>
+                <td width="300">{{ package.goods }}</td>
+                <td width="90">{{ package.has_bought }}</td>
+                <td width="70">
+                    <form method="post">
+                        <input type="hidden" name="store_type" value="coin_store" />
+                        <input type="hidden" name="goods_index" value={{ forloop.counter0 }} />
+                        <input type="hidden" name="buy_store_goods" value='true'/>
+                        <input type="submit" value="购买" />
+                    </form>
+                </td>
+            </tr>
+            {%endfor%}
+        </table>
+
+    </form>
+
+</body>
+
+</html>

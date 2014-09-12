@@ -1,0 +1,31 @@
+{%load tags%}
+
+<!--新着情報-->
+
+
+<div style="background-color:#00539e;text-align:center;">
+<img src="{% media_url '/images/core/newline02.gif' %}" width="240" height="3" /><br />
+<span style="color:#FFFFFF;font-size:x-small;">ﾒﾆｭｰ</span><br />
+<img src="{% media_url '/images/core/newline02.gif' %}" width="240" height="3" /><br />
+</div>
+
+
+
+<a id="menu" name="menu"></a>
+<div style="text-align:left;">
+<span style="font-size:x-small;color:#000000;">
+{% emoji 'HOUSE_BUILDING' %}<a href="{% mobile_url '/shop/' %}"><span style="color:#663300;">ショップ</span></a>：ｱｲﾃﾑの購入<br /> 
+{% emoji 'TICKET' %}<a href="{% mobile_url '/property/cards/' %}"><span style="color:#663300;">カード&nbsp;&nbsp;</span></a>：所有ｶｰﾄﾞの確認<br /> 
+{% emoji 'SMILING_FACE_WITH_OPEN_MOUTH' %}<a href="{% mobile_url '/partner/mymixi/' %}"><span style="color:#663300;">仲&nbsp;&nbsp;&nbsp;&nbsp;間</span></a>：交流で応援Pｱｯﾌﾟ<br /> 
+
+{% emoji 'OPEN_BOOK' %}<a href="{% mobile_url '/collection/top/?target_uid=%s' uid %}"><span style="color:#663300;">図&nbsp;&nbsp;&nbsp;&nbsp;鑑</span></a>：今までの成果確認<br />
+{% emoji 'LEFT_RIGHT_ARROW' %}<a href="{% mobile_url '/trade/friends/1/' %}"><span style="color:#663300;">トレード</span></a>：申請はｺﾁﾗ<br />
+{% emoji 'ELECTRIC_LIGHT_BULB' %}<a href="{% mobile_url '/king/history/' %}"><span style="color:#663300;">発見履歴</span></a>：ﾃﾞｰﾓﾝﾊﾞﾄﾙの記録<br />
+
+{% emoji 'RAISED_HAND' %}<a href="{% mobile_url '/invite/top/' %}"><span style="color:#663300;">ﾏｲﾐｸ招待</span></a>：ﾚｱｶｰﾄﾞGET<br /> 
+
+{% emoji 'MEMO' %}<a href="{% mobile_url '/faq/top.html' %}"><span style="color:#663300;">Ｑ＆Ａ&nbsp;&nbsp;</span></a>：困ったらｺｺ<br />
+</div>
+{% spacer 3 %}<br />
+
+

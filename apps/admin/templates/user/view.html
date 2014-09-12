@@ -1,0 +1,355 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>查看用户信息</title>
+    <style type="text/css">
+      tr.odd {background-color:#c7dccc;color:#376400;}
+      tr.even {background-color:white;}
+    </style>
+</head>
+<body>
+    {% ifequal status 1 %}
+    <div class="success">
+        <span style="color:red;">保存成功</span>
+    </div>
+    {% endifequal %}
+    <form method="post">
+        <div>
+            用户ID:&nbsp;{{ user.uid }}
+            <a href="javascript:window.location = window.location">刷新</a>
+        </div>
+        <hr/>
+        <table>
+            <tr>
+                <td>用户名</td>
+                <td>
+                    <span style="color:red;">{{ user.username }}</span>
+                </td>
+                <td>手机号</td>
+                <td>
+                    <span style="color:red;">{% if user_property_obj.mobile_num %}{{ user_property_obj.mobile_num }}{% else %}无{% endif %}</span>
+                </td>
+                <td>性别</td>
+                <td>
+                    <span style="color:red;">{% if user.baseinfo.sex %}男{% else %}女{% endif %}</span>
+                </td>
+                <td>客户端类型</td>
+                <td>
+                    <span style="color:red;">{{ client_type }}</span>
+                </td>
+                <td>安装时间</td>
+                <td>
+                    <span style="color:red;">{{ add_time}}</span>
+                </td>
+                <td>最后登录时间</td>
+                <td>
+                    <span style="color:red;">{{last_login_time }}</span>
+                </td>
+                <td>登录记录</td>
+                <td>
+                    <select name="login_record" size="1">
+                        {% for login_date in login_record%}
+                        <option>{{login_date}}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>级别</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.lv }}</span>
+                </td>
+                <td>经验</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.exp }}</span>
+                </td>
+                <td>铜钱</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.gold }}</span>
+                </td>
+                <td>元宝</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.coin }}</span>
+                </td>
+                <td>宝石</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.stone }}</span>
+                </td>
+                <td>友情点</td>
+                <td>
+                    <span style="color:red;">{{ user_property_obj.gacha_pt }}</span>
+                </td>
+            </tr>
+            <tr>
+            	 <td>用户帐号类型</td>
+            	  <td>
+                    <span style="color:red;">{{ user.platform }}</span>
+                </td>
+                <td>
+                    <label for="state">账号状态</label>
+                </td>
+                <td>
+                    {% if not user.in_frozen %}正常{% else %}冻结{% endif %}
+                </td>
+                <td>
+                    {% if user.in_frozen and not user.frozen and user.baseinfo.unfroze_time %}解封时间:{{user.baseinfo.unfroze_time|date:"Y-m-d H:i:s"}}{% endif %}
+                </td>
+                <td>
+                </td>
+                <td>当前战场进度：</td>
+                <td>
+                    <span style="color:red;">{{current_dungeon.floor_id}}-{{current_dungeon.room_id}}</span>
+                </td>
+                <td>当前体力：</td>
+                <td>
+                    <span style="color:red;">{{user_property_obj.stamina}}</span>
+                </td>
+            </tr>
+            <tr>
+                 <td>pvp 胜负 </td>
+                <td>
+                    <span style="color:red;">win:{{pvp.pvp_info.base_info.win}}</span>
+                    <span style="color:red;">lose:{{pvp.pvp_info.base_info.lose}}</span>
+                </td>
+                 <td>pvp 经验 </td>
+                <td>
+                    <span style="color:red;">{{pvp.pvp_info.base_info.pt}}</span>
+                </td>
+                <td>pvp 等级 </td>
+                <td>
+                    <span style="color:red;">{{pvp.pvp_info.base_info.pvp_level}}</span>
+                </td>
+                <td>pvp称号</td>
+                <td>
+                    <span style="color:red;">{{pvp.pvp_info.base_info.pvp_title}}</span>
+                </td>
+                <td>当前PVP体力：</td>
+                <td>
+                    <span style="color:red;">{{pvp.pvp_stamina}}</span>
+                </td>
+                <td>pvp排名：</td>
+                <td>
+                    <span style="color:red;">{{pvp.rank}}</span>
+                </td>
+            </tr>
+            <tr>
+            	<td>军营格子数 </td>
+              <td>
+                  <span style="color:red;">{{now_card_num}}</span>
+              </td>
+              <td>仓库格子数 </td>
+              <td>
+                  <span style="color:red;">{{current_max_store_num}}</span>
+              </td>
+           </tr>
+        </table>
+    </form>
+<hr/>
+<h3>充值情况</h3>
+总共充值：{{charge_sum_money}}
+最近一次充值：
+{%if last_charge_record %}
+    时间:{{last_charge_record.createtime}}
+    金额:{{last_charge_record.price}}
+{%else%}
+    无
+{%endif%}
+<hr/>
+<h3>军队信息</h3>
+<table  border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+{% for card in deck_cards %}
+<tr class="{% cycle 'odd' 'even'%}">
+    {% if card %}
+    {% if card.is_leader == 1%}
+    <td width="70">
+        <span style="color:red;">主将</span>
+    </td>
+    {% else %}
+    <td width="70">
+        <span style="color:red;">副将{{forloop.counter0}}</span>
+    </td>
+    {% endif %}
+    <td>
+        <span style="color:red;">{{ card.name }}  {{ card.star}}星</span>
+    </td>
+    <td>级别:</td>
+    <td>
+        <span style="color:red;">{{ card.lv }}</span>
+    </td>
+    <td>经验:</td>
+    <td>
+        <span style="color:red;">{{ card.now_exp}}</span>
+    </td>
+    <td>武将技:</td>
+    {% if card.skid %}
+    <td>
+        <span style="color:red;">{{card.skid}} {{ card.sk_lv}}级</span>
+    </td>
+    {% if card.sk_lv != card.max_sk_lv %}
+    <td>
+        {{card.sk_lv}}
+    </td>
+    {% else %}
+    <td>
+        <span style="color:red;">已经满级</span>
+    </td>
+    {% endif %}
+    {% else %}
+    <td>
+        <span style="color:red;">无技能</span>
+    </td>
+    {% endif %}
+    <td>攻击:</td>
+    <td>
+        <span style="color:red;">{{ card.attack }}</span>
+    </td>
+    <td>回复:</td>
+    <td>
+        <span style="color:red;">{{ card.recover }}</span>
+    </td>
+    <td>hp:</td>
+    <td>
+        <span style="color:red;">{{ card.hp}}</span>
+    </td>
+    <td>防御:</td>
+    <td>
+        <span style="color:red;">{{ card.defense}}</span>
+    </td>
+    <td>装备:</td>
+    <td>
+        <span style="color:red;">{{ card.equip}}</span>
+    </td>
+    {% endif %}
+</tr>
+{% empty %}
+            军队中没有武将
+        {% endfor %}
+</table>
+<hr/>
+<h3>军营其他武将信息</h3>
+<table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+{% for card in other_cards %}
+<tr class="{% cycle 'odd' 'even'%}">
+    <td>
+        <span style="color:red;">{{ card.name }}  {{ card.star }}星</span>
+    </td>
+    <td>级别:</td>
+    <td>
+        <span style="color:red;">{{ card.lv }}</span>
+    </td>
+    <td>经验:</td>
+    <td>
+        <span style="color:red;">{{ card.now_exp}}</span>
+    </td>
+    <td>武将技:</td>
+    {% if card.skid %}
+    <td>
+        <span style="color:red;">{{card.skid}} {{ card.sk_lv}}级</span>
+    </td>
+    {% else %}
+    <td>
+        <span style="color:red;">无技能</span>
+    </td>
+    {% endif %}
+    <td>攻击:</td>
+    <td>
+        <span style="color:red;">{{ card.attack }}</span>
+    </td>
+    <td>回复:</td>
+    <td>
+        <span style="color:red;">{{ card.recover }}</span>
+    </td>
+    <td>防御:</td>
+    <td>
+        <span style="color:red;">{{ card.defense}}</span>
+    </td>
+    <td>hp:</td>
+    <td>
+        <span style="color:red;">{{ card.hp}}</span>
+    </td>
+</tr>
+{% empty %}
+            军营中没有其他武将
+        {% endfor %}
+</table>
+
+<hr/>
+<h3>城镇信息</h3>
+<table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+{% for thing,vlaue in user_builds.iteritems %}
+<tr class="{% cycle 'odd' 'even'%}">
+    <td width="70">{{thing}}</td>
+    <td width="70">lv:</td>
+    <td width="70">{{vlaue.lv}}</td>
+    <td width="70">stone:</td>
+    <td width="70">{{vlaue.stone}}</td>
+</tr>
+{%endfor%}
+</table>
+
+<hr/>
+<h3>仓库信息</h3>
+<table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse" >
+<tr class="{% cycle 'odd' 'even'%}">
+    <td width="70">装备</td>
+    <td>
+        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse" >
+            {%for equip in user_equips%}
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td width="70">名称：</td>
+                <td width="70">{{equip.name}}</td>
+            </tr>
+            {%endfor%}
+        </table>
+    </td>
+</tr>
+<tr class="{% cycle 'odd' 'even'%}">
+    <td width="70">item药水</td>
+    <td>
+        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse" class="{% cycle 'odd' 'even'%}">
+            {%for iid,value in user_items.iteritems%}
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td>名称：</td>
+                <td width="70">{{value.name}}</td>
+                <td>数量：{{value.num}}</td>
+                <td>
+            </tr>
+            {%endfor%}
+        </table>
+    </td>
+</tr>
+<tr class="{% cycle 'odd' 'even'%}">
+    <td width="70">材料</td>
+    <tr>
+        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+            {%for mid,value in user_materials.iteritems%}
+            <tr class="{% cycle 'odd' 'even'%}">
+                <td>名称：</td>
+                <td width="70">{{value.name}}</td>
+                <td width="70">数量：{{value.num}}</td>
+            </tr>
+            {%endfor%}
+        </table>
+    </tr>
+</tr>
+</table>
+
+<hr/>
+<h3>将魂信息</h3>
+    <label>英雄将魂数量  {{super_souls_num}}</label>
+    <br>
+    <label>普通将魂详情</label>
+    <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+        {%for sid, soul_conf in normal_souls.iteritems%}
+        <tr class="{% cycle 'odd' 'even'%}">
+            <td>名称：</td>
+            <td width="200">{{soul_conf.name}}</td>
+            <td width="70">数量：{{soul_conf.num}}</td>
+        </tr>
+        {%endfor%}
+    </table>
+
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+{%load tags%}
+<!-- comunity event -->
+<div style="text-align:center;">
+<span style="font-size:x-small;">
+攻略情報・仲間募集♪<br />
+<a href="http://m.mixi.jp/view_community.pl?id=5839958"><span style="font-size:x-small;">公式ｺﾐｭﾆﾃｨへGO！</span></a>
+</span><br />
+ 
+{% spacer 5 %}<br />
+ 
+<div style="font-size:small">
+<span style="font-size:x-small;">{% emoji 'KEY' %}紹介ﾀｸﾞをｺﾋﾟｰ{% emoji 'KEY' %}</span><br />
+<form method="POST" action="#">
+<input name="comment" type="text" size="15" value="{% mobile_url_full '/friend_mypage/init/?fid=%s&%s=no' request.rk_user.uid settings.SESSION_COOKIE_NAME %}" style="font-size:x-small;" /></form>
+<span style="font-size:x-small;">↑ﾏｲﾍﾟｰｼﾞURL↑</span>
+</div>
+</div>
+{% spacer 5 %}<br />
+  
+<!-- comunity event end -->
+

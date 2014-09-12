@@ -1,0 +1,23 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>敌将排序</title>
+</head>
+<body>
+    <div>
+	{% if msg %}
+            <span style="color:red;">{{msg}}</span>
+        {% endif %}
+        <form action="../monster_sort/" method="post">
+        <h3>敌将排序</h3>
+        <span>敌将(输入敌将以逗号分隔)：<textarea name="monster" style="width:300px;height:50px">{{monster}}</textarea></span>
+        <input type="submit" value="开始排序" /><br />
+	{% if result %}
+        <textarea style="width:800px;height:500px">{{ result }}
+        </textarea>
+	{% endif %}
+        </form>
+    </div>
+</body>
+</html>

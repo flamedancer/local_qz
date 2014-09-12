@@ -1,0 +1,14 @@
+{%load tags%}
+<!-- つぶやき start -->
+
+<div style="text-align:center;">
+
+{% spacer 3 %}<br />
+<span style="font-size:x-small;">ﾜﾝﾀﾞｰ･ﾗﾋﾞﾘﾝｽをつぶやこう!</span><br />
+<form method="POST" action="{% voice_url request.get_full_path %}">
+<input stype="font-size:x-small;width:100%;"  type="text" name="body" value="ﾜﾝﾀﾞｰ･ﾗﾋﾞﾘﾝｽでかわいい使い魔を一緒に集めよう(ﾟ∇^*)♪" ></input>
+<input type="hidden" name="mobileUrl" value="http://ma.mixi.net/{{settings.APP_ID}}/" ></input>
+<span style="font-size:x-small;"><input style="font-size:x-small;color:#666666;" type="submit" value="つぶやく" /></span>
+</form>
+</div>
+<!-- つぶやき end -->

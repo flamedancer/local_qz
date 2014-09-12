@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+    <script type="text/javascript" src="../../../admin/js/jquery/jquery-1.7.2.min.js"></script>
+      <script type="text/javascript" src="../../../admin/js/jquery/jquery-1.7.2.js"></script>
+
+</head>
+
+
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+       $('.show_used').click(function(){
+            $(this).hide()
+            $('#hide_used_'+this.id.replace('show_used_','')).show();
+       });
+        $('.hide_used').click(function(){
+            $(this).parent().hide();
+            $(this).parent().next().show()
+       });
+
+        $('.show_not_used').click(function(){
+            $(this).hide()
+            $('#hide_not_used_'+this.id.replace('show_not_used_','')).show();
+       });
+        $('.hide_not_used').click(function(){
+            $(this).parent().hide();
+            $(this).parent().next().show();
+       });
+  })
+</script>
+
+<body>
+    {% ifequal status "1" %}
+    <span style="color:red;">礼品id 不存在</span>
+    {% endifequal %}
+    {% ifequal status "2" %}
+    <span style="color:red;">不能重复生成该礼品</span>
+    {% endifequal %}
+    <div>
+        <h4>生成礼品码</h4>
+    </div>
+    <table>
+        <tr>
+            <form method="post">
+                <td>
+                    礼品ID:
+                    <input type="text" size="5" maxlength="6" id="gift_id" name="gift_id"/>
+                </td>
+                <td>
+                    生成数量:
+                    <input type="text" size="5" maxlength="6" id="add_num" name="add_num"/>
+                    <input type="submit" value="生成"/>
+                    <span style="color:red;">建议：每次不要生成超过5000个</span>
+                </td>
+            </form>
+        </tr>
+    </table>
+
+    <hr/>
+    <div>
+        <h4>生成礼品码记录</h4>
+    </div>
+    <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+        <tr>
+            <th>礼品ID</th>
+            <th>已经使用</th>
+            <th>未使用</th>
+        </tr>
+        {% for record in gift_record %}
+        <tr>
+            <td>{{record.gift_id}}</td>
+            <td >
+                <span  style="display: none" id="hide_used_{{record.gift_id}}">
+                    <div class='hide_used'><button>隐藏</button></div>
+                    <div id="used_{{record.gift_id}}"> {{record.used_code}} </div>
+                </span>
+                <span id="show_used_{{record.gift_id}}" class='show_used'>
+                    <button>展开</button>    
+                </span>
+            </td>
+            <td >
+                <span style="display: none" id="hide_not_used_{{record.gift_id}}">
+                    <div class='hide_not_used'><button>隐藏</button></div>
+                    <div id="not_used_{{record.gift_id}}"> {{record.not_used_code}} </div>
+                </span>
+                <span id="show_not_used_{{record.gift_id}}" class='show_not_used'>
+                    <button>展开</button>    
+                </span>
+            </td>
+          
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

@@ -1,0 +1,1610 @@
+#API文档
+
+一，API调用说明
+
+1)认证
+用户应该先调用登录API登录，才可以调用其它API。第一次登录会注册一个新用户。
+
+2)参数和格式
+参数使用GET或POST方法，少量数据使用GET，大量数据使用POST。
+参数method、timestamp和sig是每个API都有的。
+method是api的名称，timestamp是时间戳，sig是请求的签名(确保请求不被防冒)。
+
+3)返回值格式
+server返回值统一使用这样的json格式{"rc":0,"data":{}}。
+rc是一个状态编码(int型)，data是返回的数据(键值对)。
+data中也可以包含与业务逻辑相关的errcode，这里的code是通用的和具体业务无关。
+
+4)返回状态编码说明
+rc 每一次API调用都要返回一个状态编码code。
+0  没有错误，一切正常。
+1  参数签名错误
+2  重复请求无效
+3  登录认证已过期
+4  该api此时不可用 
+5  权限不足
+6  缺少必要的参数或参数格式错误
+7  服务器异常，请重试
+8  服务器异常，现在不要重试
+9  服务器维护中
+10 帐号被冻结
+11 逻辑异常 
+12 充值验证失败
+13 客户端版本已更新，重新下载
+14 server 关闭 给礼品码
+
+5)请求签名方法
+为了保证请求的数据不被篡改，我们需要对每一次请求签名。
+签名步骤：
+  1客户端在源码中写一个字符串key。
+  2对除了arg以外的所有参数以参数名排序。
+  3用“=”连接参数名和参数值，用“&”顺序连接参数名值对。
+  4在最后加上“&app_key”。
+  5这个字符串的md5值就是arg的值
+例如：
+  key = "xxxxxx", 
+  参数为：method:index,uid:000001,timestamp:1376635293196195
+  排序连接后："method=index&timestamp=1376635293196195&uid=000001"
+  加上key："method=index&timestamp=1376635293196195&uid=000001&xxxxxx"
+  最后：arg = "70c183814fe06da66daa6170ff967034"
+  
+
+二，API列表
+1： url(r'^index/$','index',name = 'index')   
+前端传：时间，timestamp，arg(签名),sig(迷惑参数) ,(第一次没有 pid),，invite_code（邀请码），access_token ，openid  platform ，mac_addr ，
+后端传：{"rc":0,"data":{}}   
+data 中的key 'server_now' ,服务器处理的时间  uid,pid ,newbie 新用户  newbie_step 新手引导 第几步。oc_openid  (pid) ,oc_access_token  生成的密码
+  
+2： url(r'^account_bind/$','account_bind',name = 'account_bind'),
+前端传：timestamp  ，arg ，pid  platform   method   access_token  openid   platform  bind_access_token  bind_openid  
+后端传：{"rc":0,"data":{}}   data 中   server_now pid ，msg ，user_info,
+
+
+3:  url(r'^language_version/$','language_version',name = 'language_version'),
+前端传：前端不需要传啥。
+后端传：：{"rc":0,"data":{"stone": unicode('宝石','utf-8')}} 
+
+
+
+4:  url(r'charge_result/$','charge_result',name = 'charge_result'),
+前端传：version   receipt
+后端传：{"rc":0,"data":{}}   data 中  receipt-data msg  user_info
+
+4:  url(r'^new_charge_result/$','ali_charge_result',name = 'ali_charge_result'),
+前端传给公司支付系统：接口 线上： http://ocpay.newsnsgame.com/aliorder_result/ 
+			 测试： http://42.121.15.153:9139/aliorder_result/
+		参数：  uid     
+				app_id     flhs02  代表 枫林火山 anriod版 
+				pid          
+				product_id （商品id，购买的是你们那个商品）
+				platform  （平台id，没有就不传）
+				ms_index   (分区号，没有就不传)
+公司支付系统传给该游戏：   测试： http://42.121.15.153:9135/new_charge_result/
+                           参数：
+							pid
+							oid    订单号
+							item_id
+							platform
+							ms_index
+
+后端传给系统：{"rc":0,"data":{}}   data 中  receipt-data msg  user_info
+
+
+前端再向后端验证有没充值
+url(r'^verify_ali_charge_result/$','verify_ali_charge_result',name = 'verify_ali_charge_result'),
+参数：
+     oid   
+后端传：
+    {'data':{'server_now':1111,'get_coin':111,'user_info':{}},'rc':0}
+
+5:  url(r'^invite_code/$','invite_code',name = 'invite_code'),
+前端传：invite_code
+后端   {"rc":0,"data":{status:True}}   验证码 可用。
+
+6:  url(r'^tutorial/$','tutorial',name = 'tutorial'),
+前端传：
+       step:1, 选主角&取名字，name:名字，可能会返回rc:11表示名字已存在或敏感词或名字是空格
+       step:2,传入country：1,2,3,4,
+       step:3, 战斗 1 
+       step:4, 卡片升级  ，和 method = card.update 参数一样 
+       step:5, 编队        和 method = card.set_decks 
+       step:6,  升级调和屋
+       step:7, 生成解毒药
+       step:8, 安装解毒药
+       step:9,战斗2
+       step:10,抽将
+       step:11,协议
+
+后端   {
+          "rc":0,
+          "data":{
+                  "user_info":{},
+                  "user_cards":{},
+                  "user_decks":[['','','','',''],['','','','',''],['','','','',''],['','','','',''],['','','','','']],#用户编队
+                  'deck_index':1,#当前队列编号
+                 }
+       }
+
+
+
+
+
+7： url(r'^api/$','api',name = 'api'),  （服务器 返回和三国的参数一样）
+前端传：timestamp，pid  platform   method  根据method 还需再传 一些 
+后端传：{"rc":0,"data":{}}      server_now ,cag ,cog ,user_info, 根据method不同，后端data中的数据还会有其他。
+
+1)method == 'main.index'   返回登录信息
+  返回格式 'data':{
+                'notice':'',#公告url
+                'login_award':'',#登录奖励
+								'lend_info':'',#借卡信息         
+								'invite/d_award':'',#邀请奖励
+								'user_cards':{#用户卡片
+								     '20130819010211' :{
+								            'cid':'1_card',
+                            'lv':1,
+                            'exp':11112,
+                     },
+								},
+								'user_decks':[['','','','',''],['','','','',''],['','','','',''],['','','','',''],['','','','','']],#用户编队
+								'deck_index':1,#当前队列编号   
+								'friend_gift':{#好友礼物信息
+								   'want_gift':['gold','m:1_mat','m:1_mat'],
+								   'gift_award':{
+								           '10232323':{#好友uid
+								                'name':'xxx',
+								                'leader_card':'1_card',#主将卡
+								                'award':{
+								                   'gold':1000,
+								                }
+								            },
+								            '10237899':{#好友uid
+								                'name':'xxxyy',
+								                'leader_card':'2_card',#主将卡
+								                'award':{
+								                   'material':{'1_mat':10},
+								                }
+								            },
+								      }
+								}   
+          }
+2)method == 'main.get_config'   特定method 所提供的数据   
+返回格式：data : {
+                  'common':{'stamina_recover_time':'','max_gacha_point':''}
+                              #stamina_recover_time,max_gacha_point,revive_coin,recover_stamina_coin,dungeon_clear_coin,card_extend_coin,card_extend_num，等
+                  'card_level':{}, # 'exp_type':{'a':{'1':0,'2':11},'b':{}}}
+                  'dungeon':{} #战场配置
+                  'friend_gift_conf':{#好友送礼可选礼物列表
+                              'gold':1000,
+											        'stone':100,
+											        'material':{
+											             '1_mat':10,
+											             '2_mat':15,
+											             '3_mat':3,
+											         }
+                     }  
+                  } 
+
+   method == 'main.get_card_config'
+   返回格式：data : {
+                  '1_card':{
+							        'name':unicode('刘备','utf-8'),
+							        'ctype':'2',
+							        'star':'2',
+							        'cost':2,
+							        'width':3,
+							        'max_lv':5,
+							        'hp':52,
+							        'attack':57,
+							        'recover':8,
+							        'defense':111,
+							        'hp_growth':23,
+							        'attack_growth':3.5,
+							        'recover_growth':1.25,
+							        'defense_growth':1.2,
+							        'skid':'1',
+							        'leader_skid':'1',
+							        'upg_target':'2_card',
+							        'upg_need':['157_card'],
+							        'upg_gold':3000,
+							        'sell_gold':500,
+							        'exp_type':'b',
+							        'category':'1',
+							        'base_exp':150
+							    },
+             }
+   
+   method == 'main.get_monster_config'
+   返回格式：data : {
+							   '1_monster':{
+							        'cid':'41_card',
+							        'hp':50,
+							        'attack':12,
+							        'defense':0,
+							        'recover':0,
+							        'skids':['1','2'],
+							        'attack_turn':[2,5],
+							        'sk_rate':0.3,
+							        'sk_gap':3,
+							    },
+							    '2_monster':{
+							        'cid':'41_card',
+							        'hp':50,
+							        'attack':12,
+							        'defense':0,
+							        'recover':0,
+							        'skids':['1','2'],
+							        'attack_turn':[2,5],
+							        'sk_rate':0.3,
+							        'sk_gap':3,
+							    },
+							 }
+							 
+		 method == 'main.get_equip_config'
+		# buff:装备提升的属性 [(属性id,百分比),(属性id,百分比)] 属性id:1-攻击，2-防御，3-血，4-回复,5-提升暴击率
+		返回格式：data : {
+		              '1_equip':{
+							        'buff': [('1',0.05)],
+							        'sell_gold': 500,
+							        'need_material':{#生成需要材料
+							                 '1_material':1,
+							                 '2_material':1,
+							              },
+							        'cost_stone':500,
+							        'name':unicode('名剑','utf-8'),
+							    },
+							    '2_equip':{
+							        'buff': [('2',0.05),('3',0.05)],
+							        'sell_gold': 500,
+							        'need_material':{#生成需要材料
+							                 '1_material':2,
+							                 '2_material':1,
+							              },
+							        'cost_stone':500,
+							        'name':unicode('盾牌','utf-8'),
+							    },
+		          }
+		  method == 'main.get_item_config'
+		  返回格式：data : {
+										  '1_item':{
+								        'sell_gold': 500,
+								        'need_material':{#生成需要材料
+								            '1_material':1,
+								            '2_material':5,
+								            },
+								        'name':unicode('回血药','utf-8'),
+								    },
+								    '2_item':{
+								        'sell_gold': 100,
+								        'need_material':{#生成需要材料
+								            '1_material':1,
+								            '2_material':5,
+								            },
+								        'name':unicode('解毒药','utf-8'),
+								    },
+		            }
+		 method == 'main.get_material_config'
+		 返回格式：data : {
+		                '1_material':{
+								        'sell_gold': 500,
+								        'name':unicode('树叶','utf-8'),
+								    },
+								    '2_material':{
+								        'sell_gold': 500,
+								        'name':unicode('石头','utf-8'),
+								    },
+		           }
+	method == 'main.weibo_back'
+   前端传：send_type: 0:新浪，1：qq，2：facebook
+
+method = main.set_signature
+前端传 words
+后端无。
+
+#获取用户最接近的充值礼包信息
+method = main.get_charge_award_info
+前端传 无
+后端:need_charge_money:还需要充值多少钱
+     now_charge_money:已经充了多少钱
+     award：{#礼包的奖励内容:
+	            'gold':100,
+	            'gacha_pt':100,
+	            'coin':100,
+	            'card':{'1_card':{'lv':1,'num':2},'2_card':{'lv':1,'num':2}},
+	            'equip':{'1_equip':{'num':2},'2_equip':{'num':2},},
+	            'item':{'1_item':1,'2_item':2,},
+	            'material':{'1_mat':2,'2_mat':2,},
+	            'stone':100,
+            }
+
+
+#  重命名道具使用
+method = main.rename_user
+前端传 name
+后端无。
+
+#########  新绑定手机（需验证码）
+# user_info  字段bind_phone_number_info
+{
+    'has_bind': False,      # 是否已成功绑定
+    'phone_number': '',     # 绑定的手机号
+    'validate_code': '',    # 记录验证码
+    'bind_time': None,      # 最后一次发绑定请求的时间戳
+    'bind_cnt': 0,          # 最后一次发绑定请求当天的请求次数
+}
+# 玩家输入手机号后，请求绑定
+method = main.request_bind_phone
+前端传 mobile ： 手机号码
+后端无。
+
+# 玩家输入验证码后，请求验证
+method = main.reserve_identifying_code
+前端传 validate_code ： 验证码
+后端无。
+
+# 玩家解除手机绑定
+method = main.unbind_phone_number
+前端无。
+后端无。
+
+注：
+    配置表需配：
+        提示语配置__msg_config
+            'bind':{
+                    'miss_mobile_num':unicode('参数缺少手机号码','utf-8'),
+                    'mobile_num_not_find':unicode('请输入正确的手机号码','utf-8'),
+                    'cannot_bind_mobile':unicode('您今日的验证次数已超过3次，请明日再试','utf-8'),
+                    'phone_msg':unicode('尊敬的用户，您在《风林火山》中绑定手机的验证码为{}，有效时间为1小时，请及时输入。','utf-8'),
+                    'out_of_time':unicode('验证码已过期','utf-8'),
+                    'miss_validate_code':unicode('参数缺少验证码', 'utf-8'),
+                    'validate_fail':unicode('验证失败', 'utf-8')
+            },  
+#########
+
+——————————————————————————————logics.card—————————————————————————————————————    
+3)method  =  card.set_decks   #设置编队   
+前端加传: 5组编队。
+          deck_index - 0-4
+          new_deck   ucid:ueid:0,ucid:ueid:1,ucid:ueid:0,,ucid:ueid:0_ucid:ueid:0,ucid:ueid:1,ucid:ueid:0,,ucid:ueid:0
+返回格式：data               data':{}                   
+          有错误的话 提示    'data':{
+                                     'msg':''
+                                    }
+
+4)method =   card.update     #武将升级
+前端加传：base_ucid    cost_ucids = ['1','2','3']  #基本卡 。被吃的卡
+返回格式：data #新卡的信息
+          'data' = { 
+                     'new_card_info':{'ucid':'',}
+                      'success_type': 'normal'  ####还可以是 big  ,super  #成功 ，大成功，超成功。    
+                   }
+
+
+5)method = card.upgrade      # 武将转生
+前端加传:base_ucid cost_ucids  '13,3,5,4'    数字ucid
+返回格式：data  #新卡的信息
+          'data' = { 
+                     'new_card_info':{'ucid':'',}
+                   }
+
+
+6)method = card.sell        #卖出武将
+前端加传：sell_ucids     '1,2,3,4,5'
+返回格式：data       #卖出武将得到的钱
+          'data' = { 
+                     'get_gold':''
+                   }
+
+
+7)method = card.extend_num   #扩充军营
+前端加传：无
+返回格式：data #新卡的信息
+          'data' = { 
+                     'new_card_info':{'ucid':'',}
+                   }
+
+
+8)method = card.get_collection
+前端加传 ：无 
+后端加传 ：collection  用户已获得的图鉴
+返回格式：data #新卡的信息
+          'data' = { 
+                     'collection':{'ucid':'','ucid':''}
+                   }
+
+
+9)method = card.get_all
+前端加传 ：无 
+返回格式：data #新卡的信息
+          'data' = { 
+                     'all_cards':{'ucid':'','ucid':''}
+                   }
+                   
+9)method = card.lock
+前端加传 ：ucids   以逗号分隔的武将ucid 
+返回格式：rc:0,成功
+
+
+——————————————————————————————logics.gacha—————————————————————————————————————    
+
+10) method = gacha.free
+前端加传 ：无 
+返回格式：data #新卡的信息
+          'data' = { 
+                     'new_card': {'lv': 30, 'is_first': True, 'upd_time': 1377141597, 'sk_lv': 1, 'exp': 200239, 'ucid': '201308221119572493923', 'cid': '316_card'}})
+                   }
+
+11) method = gacha.charge
+前端加传 ：无 
+返回格式：data #新卡的信息
+          'data' = { 
+                     'new_card': {'lv': 30, 'is_first': True, 'upd_time': 1377141597, 'sk_lv': 1, 'exp': 200239, 'ucid': '201308221119572493923', 'cid': '316_card'}})
+                   }
+
+10) method = gacha.free_multi
+#免费十连抽
+前端加传 ：无 
+返回格式：data #新卡的信息
+          'data' = { 
+                     'new_card': [{'lv': 30, 'is_first': True, 'upd_time': 1377141597, 'sk_lv': 1, 'exp': 200239, 'ucid': '201308221119572493923', 'cid': '100_card','category':'1','quality':'A'},
+                                   {'lv': 10, 'is_first': False, 'upd_time': 1377141533, 'sk_lv': 1, 'exp': 200239, 'ucid': '201308221119572493912', 'cid': '121_card'}
+                                 ]
+                   }
+10) method = gacha.charge_multi
+#付费十连抽
+前端加传 ：无 
+返回格式：data #新卡的信息
+          'data' = { 
+                     'new_card': [{'lv': 30, 'is_first': True, 'upd_time': 1377141597, 'sk_lv': 1, 'exp': 200239, 'ucid': '201308221119572493923', 'cid': '100_card','category':'1','quality':'A'},
+                                   {'lv': 10, 'is_first': False, 'upd_time': 1377141533, 'sk_lv': 1, 'exp': 200239, 'ucid': '201308221119572493912', 'cid': '121_card'}
+                                 ]
+                   }
+——————————————————————————————logics.friend—————————————————————————————————————    
+
+
+12) method = friend.extend
+前端加传 ：无 
+返回格式：data #新卡的信息
+          'data' = {} 
+
+13) method = friend.help_me
+前端加传 ：无 
+返回格式：data #新卡的信息
+          'data' = {} 
+
+14) method = friend.add_request   #发送好友请求
+前端加传 ：fid
+返回格式：data #新卡的信息
+          'data' = {} 
+
+15) method = friend.refuse_request #拒绝好友请求
+前端加传 ：fid 
+返回格式：data #新卡的信息
+          'data' = {} 
+
+16) method = friend.accept_request  #接受好友请求
+前端加传 ：fid
+返回格式：data #新卡的信息
+          'data' = {} 
+
+17) method = friend.del_friend    #删除好友
+前端加传 ：fid
+返回格式：data #新卡的信息
+          'data' = {} 
+
+18) method = friend.get_friend_list    #获取朋友；列表
+前端加传 ：无 
+返回格式：data #新卡的信息
+          "data" =    {'max_num': 35, 'friends': [{'name': u'', 'country': 0, 'lv': 1, 'fid': u'1377153814', 'leader_card': {}, 'is_bind_account': False, 'login_time': 1377068629}], 'now_num': 1}
+                   
+
+19) method = friend.get_request_list    #获取自己发送的请求 。以及其他人发给他的亲戚 
+前端加传 ：无 
+返回格式：data =  {'friend_requests': [{'name': u'', 'country': 0, 'lv': 1, 'fid': u'1377138595', 'leader_card': {}, 'login_time': 1377154879}]
+                  'self_requests':[],
+                  }
+                 
+20) method = friend.search_friend   #查找好友
+前端加传 ：fid
+返回格式 ：data = { 'friend_info': {'now_friend_num': 0, 'name': u'', 'max_friend_num': 15, 'country': 0, 'lv': 1, 'fid': '1377153814', 'leader_card': {}}}
+
+
+21) method = friend.del_request   # 撤销请求 
+前端加传 ：fid
+返回格式 ：无 
+
+21) method = friend.gift   # 好友互赠礼物
+#当天每个人可以送所有好友一份礼物，可以从所有好友处接受每人一份礼物
+前端加传 ：
+       want: 设置希望得到的礼物格式如:  gold,stone,m-1_mat
+       send: 送的礼物给好友，好友id对应的礼物，格式如：uid:gold,uid:stone,uid:m-1_mat,uid:m-2_mat
+       get_gift:领取礼物：uid,uid,uid,uid
+返回格式 ：rc:11-表示礼物id不存在，重复送礼
+
+
+21) method = friend.lock_friend   # 锁定/解锁好友
+前端加传 ：fid
+返回：rc：11-非好友，0-正常
+
+21) method = friend.get_invite_award   # 兑换邀请码
+前端加传 ：invite_code
+返回：rc：11-无效邀请码，0-正常
+
+21) method = friend.get_invite_info   # 兑换邀请码
+前端加传 ：无
+返回：
+      total_invited_usernum:总邀请人数
+      invite_award：邀请奖励信息
+                    [{
+                        'award_id':'1',#奖励id
+                        'type':1,类型对应宝箱图片
+                        'content':'xxxxx',宝箱里的物品
+                        'condition':'领取条件',
+                        'can_get':False,#能否领取
+                        'has_got':True,是否已领取
+                        
+                    },
+                    {
+                        'award_id':'2',#奖励id
+                        'type':1,类型对应宝箱图片
+                        'content':'xxxxx',宝箱里的物品
+                        'condition':'领取条件',
+                        'can_get':False,#能否领取
+                        'has_got':True,是否已领取
+                        
+                    }
+                    ]
+21) method = friend.get_invite_friend_award    领取奖励
+前端加传 :
+       award_id:奖励id
+返回：
+    rc:11,无效的奖励id或已经领取过或不符合条件
+——————————————————————————————logics.dungeon—————————————————————————————————————    
+22) method = dungeon.recover_stamina
+前端加传 ：无
+返回格式 ：无 
+
+
+22) method = dungeon.start
+前端加传 ：rty .是否是重复请求 （与三国一致）
+          new_deck 'ucid:ueid:0,ucid:ueid:1,ucid:ueid:0,,ucid:ueid:0_ucid:ueid:0,ucid:ueid:1,ucid:ueid:0,,ucid:ueid:0' 
+          deck_index deck_index:当前编队编号0-4
+          dungeon_type    normal ,special 
+          floor_id      1
+          room_id       1
+          help_type     friend other
+          helper_id     uid
+
+
+返回格式 :
+          rc:0, 
+          data:
+              {'boss_monster': ['2_monster'], 
+	'dungeon_uid': '201309041503084852740',
+	
+	 'steps_info': [
+	               [{'monster_id': '1_monster', 'box': {'stone': 1000}, 'stone': 19, 'gold': 1822, 'mat_drop_kind': [2_mat],'card': '43_card'},
+	                {'monster_id': '2_monster', 'box': {'monster': {'card': '43_card', 'stone': 19, 'mid': '1_monster', 'gold': 1535}}, 'stone': 18, 'gold': 1076, 'mat_drop_kind': []}, 
+	                {'monster_id': '4_monster', 'stone': 15, 'gold': 1212, 'mat_drop_kind': [1_mat]}], 
+	               [{'monster_id': '4_monster', 'box': {}, 'stone': 19, 'gold': 1073, 'mat_drop_kind': []}, 
+	                {'monster_id': '2_monster', 'box': {'monster': {'card': '43_card', 'stone': 16, 'mid': '3_monster', 'gold': 1013}}, 'stone': 19, 'gold': 1015, 'mat_drop_kind': []},
+	                {'monster_id': '1_monster', 'box': {'stone': 1000}, 'stone': 16, 'gold': 1295, 'mat_drop_kind': []}], 
+
+	               [{'monster_id': '1_monster', 'box': {'material': {'1_mat':10,'2_mat':12}}, 'stone': 16, 'gold': 1346, 'mat_drop_kind': []}, 
+	                {'monster_id': '2_monster', 'box': {'monster': {'card': '43_card', 'stone': 19, 'mid': '3_monster', 'gold': 1696}}, 'stone': 17, 'gold': 1398, 'mat_drop_kind': []}, 
+	                {'monster_id': '4_monster', 'stone': 15, 'gold': 1688, 'mat_drop_kind': []}], 
+
+	                [{'monster_id': '1_monster', 'box': {'stone': 1000}, 'stone': 19, 'gold': 1265, 'mat_drop_kind': []}, 
+	                 {'monster_id': '2_monster', 'box': {'monster': {'card': '43_card', 'stone': 17, 'mid': '1_monster', 'gold': 1200}}, 'stone': 16, 'gold': 1109, 'mat_drop_kind': []}, 
+	                 {'monster_id': '4_monster', 'box': {}, 'stone': 15, 'gold': 1529, 'mat_drop_kind': []}], 
+
+	                 [{'monster_id': '4_monster', 'box': {'HBC': {'BC_num':10,'HC_num':12}}, 'stone': 15, 'gold': 1244, 'mat_drop_kind': []}, 
+	                 {'monster_id': '2_monster', 'box': {'monster': {'card': '43_card', 'stone': 19, 'mid': '3_monster', 'gold': 1620}}, 'stone': 17, 'gold': 1677, 'mat_drop_kind': []}, 
+	                 {'monster_id': '1_monster', 'box': {'stone': 1000}, 'stone': 19, 'gold': 1174, 'mat_drop_kind': []}], 
+
+	                 [{'monster_id': '1_monster', 'box': {'stone': 1000}, 'stone': 17, 'gold': 1072, 'mat_drop_kind': []}, 
+	                 {'monster_id': '2_monster', 'box': {'monster': {'card': '43_card', 'stone': 18, 'mid': '1_monster', 'gold': 1838}}, 'stone': 17, 'gold': 1208, 'mat_drop_kind': []},
+           	         {'monster_id': '4_monster', 'stone': 17, 'gold': 1744, 'mat_drop_kind': []}], 
+
+           	         [{'monster_id': '1_monster', 'box': {'stone': 1000}, 'stone': 15, 'gold': 1348, 'mat_drop_kind': []}, 
+           	         {'box': {'monster': {'card': '43_card', 'stone': 19, 'mid': '1_monster', 'gold': 1656}}, 'stone': 18, 'gold': 1769, 
+           	         'monster_id': '2_monster', 'mat_drop_kind': [], 'card': '43_card'}, {'box': {}, 'stone': 18, 'gold': 1483, 
+           	         'monster_id': '4_monster', 'mat_drop_kind': [], 'card': '47_card'}]],
+ 'total_material_drop_monster': {'2_mat': 8, '1_mat': 5}})
+
+22) method = dungeon.end
+前端加传 ：
+          dungeon_type    normal ,special 
+          floor_id      1
+          room_id       1
+          help_type     friend other
+          helper_id     uid     
+          user_gold              用户得到的钱
+          user_stone             用户得到的stone
+          user_material_drop     格式为 'mid:2,mid:3'
+          dungeon_uid
+          use_items,  如果有消耗药品，则传，格式：药品id:数量,药品id:数量,药品id:数量
+
+返回格式：
+         lv_up_coin     用户升级获得的钱
+         get_cards      用户获得卡
+         get_stone      
+         get_gold
+         get_all_material
+
+
+22) method = dungeon.revive
+前端加传 ：
+        rty  (可以没有)
+
+返回格式：
+        返回 无 。
+
+22) method = dungeon.use_item
+战斗消耗药品
+前端加传： items：药品id:数量,药品id:数量,药品id:数量
+返回格式 ：rc:11,药品数量不足 
+
+
+——————————————————————————————logics.pvp————————————————————————————————————— 
+
+
+method = pvp.pvp_first_show  #首次进入 pvp页面
+前端加传：无
+返回格式: 无
+
+method = pvp.get_pvp_detail
+前端加传：无
+返回格式: {'pvp_info':{
+			
+          }}
+
+method = pvp.choose_player # 
+前端加传：无
+返回格式: {'vs_player':{
+             'pvp_base_info':
+             'user_name':
+             'leader_card':
+			
+          }}
+
+
+method = pvp.start
+前端加传：无
+返回格式: data = {'vs_player':{'deck':[],'user_name':'','pvp_base_info':{}}}
+
+method = pvp.end
+前端加传： 'self_result':'win'            # 战斗结果  。win or lose
+           'time_out_win' :'1'            #如果是时间结束胜利 那么就 传
+           'perfect_win' :'1'             #如果是perfect_win胜利 那么就 传    
+           'bb_win' :'1'                  #如果是bb_win胜利 那么就 传    
+           'max_spark_time':'2'           #战斗一回合最大spark次数
+           'one_bout_max_attack':'2222'   #战斗一回合最大伤害数
+           'kill_attack':'2'              #Over Kill Attack数
+           'total_attack':                #战斗总计伤害量
+           'total_recove':                #战斗总计回复量
+           'total_spark_time':1           #累积spark次数
+           'BB_total_time':1              #累积BB技能使用次数
+           1_property_kill                #火属性武将击破数                
+					 2_property_kill                #水属性武将击破数
+					 3_property_kill                #木属性武将击破数
+					 4_property_kill                #金属性武将击破数
+					 5_property_kill                #阳属性武将击破数
+					 6_property_kill                #阴属性武将击破数
+					 1_star_kill                    #1星武将击破数
+					 2_star_kill                    #2星武将击破数
+					 3_star_kill                    #3星武将击破数
+					 4_star_kill                    #4星武将击破数
+					 5_star_kill                    #5星武将击破数
+					 
+
+返回格式: dat阳属性武将击破数  a = {'update_award':{},'next_leve奖励 ，距离下一等级 差多少
+
+method = pvp.recover_pvp_stamina
+#回复pvp体力
+前端加传：无
+返回格式: 无
+
+method = pvp.top_pvp
+前端加传：无
+返回格式: data = {'friend':[],'all_player':[]}er分两种情况。如果本身不在前30名中。自己则在最后并且加了一个名次
+
+——————————————————————————————logics.equip————————————————————— 
+method = equip.get_all
+#返回装备信息
+前端加传：无
+返回格式: 
+   user_equips:{'ueid':{'eid':'1_equip'}}
+   equip_used:{'ueid':['ucid','','','','']
+
+
+——————————————————————————————logics.gift————————————————————— 
+method = gift.new_gift_list
+#返回装备信息
+前端加传：无
+返回格式: 
+                    new_gifts:   {
+                                  '1':{
+                                          
+                                          
+                                          card':{
+                                                 'num':5,
+                                                 'lv':2
+                                                 },
+                                          
+                                          
+                                          t(time.time()),
+                                          5系统故障补偿',
+                                    },
+                                   '2':{
+                                          a_pt':1000,},
+                                          (time.time()),
+                                          5系统故障补偿',
+                                          
+                                   '3':{  
+                                          
+                                          
+                                          uip':{'num':2}
+                                          
+                                          
+                                          (time.time()),
+                                          5系统故障补偿',
+                                          
+                                   '4':{  
+                                          ':13,},
+                                          (time.time()),
+                                          5系统故障补偿',
+                                          
+                                   '5':{  
+                                          ':1000,},
+                                          (time.time()),
+                                          5系统故障补偿',
+                                          
+                                   '6':{
+                                          e':10,},
+                                          (time.time()),
+                                          5系统故障补偿',
+                                          
+                                   '7':{
+                                          e':10,},
+                                          (time.time()),
+                                          5系统故障补偿',
+                                          
+                                   '8':{
+                                          
+                                          rial':{
+                                           '1_mat':2, 
+                                          
+                                          
+                                          (time.time()),
+                                          5系统故障补偿',
+                                    },
+                                   '9':{
+                                          
+                                          ':{
+                                          _item':2,
+                                          
+                                          
+                                          t(time.time()),
+                                          5系统故障补偿',
+                                  },
+                                }
+
+
+method = gift.get_gift  
+前端加传：gift_ids    '2013060713_11111'    礼物的收取 就是 gift_ids == all
+返回格式: 
+     get_info:得到的东西
+
+method  == main.get_gift   
+前端加传： gift_code     /礼品码 
+
+
+
+method == equip.binding_or_not  
+前端传 ：    equip    格式 ucid:ueid,ucid:ueid  d:''    可以 传 ucid:ueid,ucid:'',ueid:ucid    代表  中间的 解绑， 其他的  绑定装备
+				
+
+返回无 ：
+
+                                          
+——————————————————————————————logics.soul—————————————————————————————————————                                          
+method = soul.get_all
+#返回拥有魂信息
+前端加传：无
+返回格式: 
+        'normal_souls': {cid:{'num': n}，....}    #   普通魂将拥有情况
+        'super_souls_num': n                      #   英雄魂将数量 
+
+
+method = soul.exchange_card
+#征召  将魂卡兑换成武将
+前端加传：'cid'：要转换成的武将cid
+          'prior_type':  'normal' (优先使用普通魂将) 或 'super'(优先使用英雄魂将)
+返回格式: 
+        data= 
+        {
+            'new_card': {'lv': 30, 'is_first': True, 'upd_time': 1377141597, 'sk_lv': 1, 'exp': 200239, 'ucid': '201308221119572493923', 'cid':     '316_card'}})
+
+            'consume_normal_soul':  消耗的普通魂数量
+            'consume_super_soul': 消耗的英雄魂将数量 
+        }
+
+method = soul.tranform_normal_to_super
+#释放魂卡
+前端加传：'cid'：要释放魂将卡的cid
+        'num'：要释放魂将卡的num
+返回格式: 
+        data= 
+        {
+            'cid':  释放的魂将卡的cid
+            'consume_normal_soul': 消耗的普通魂数量,
+            'get_super_soul': 得到的英雄魂将数量 
+        }
+
+method = soul.buying_super_soul 
+#用元宝购买英雄魂将
+前端加传：无
+
+返回格式: 无
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+三国Q传的一些逻辑的接口
+
+
+
+
+
+
+
+###############################logics.activity###################### 活动的逻辑 主要包括 美味大餐 和探索功能
+初始化接口
+method=activity.banquet_info
+#返回美味大餐的信息和探索的道具的内容
+
+前端加传：不需要 只需要基本的传递的额参数即可
+
+后端返回
+返回格式: 
+        data= 
+        {
+            'user_info': {}
+            "banquet_info": {
+                "am_end": "1407214800", #上午的截止时间
+                "pm_start": "1407232800", #下午的开始时间
+                "pm_end": "1407236400", #下午的截止时间
+                "banquet_msgs": [ #美味大餐的一些信息
+                    "08:00 -- 13:00:\u6d3b\u52a8\u8fdb\u884c\u4e2d", 
+                    "18:00 -- 19:00:\u6d3b\u52a8\u672a\u5f00\u542f"
+                ], 
+                "can_get": true, #当前时间段时候可以进行美味大餐
+                "pm_flag": false, #下午获取的标志位  也就是说 未获取
+                "desc": { #描述信息
+                    "08:00 -- 13:00": "\u6d3b\u52a8\u8fdb\u884c\u4e2d", 
+                    "18:00 -- 19:00": "\u6d3b\u52a8\u672a\u5f00\u542f"
+                }, 
+                "am_flag": false, #上午获取的标志位
+                "am_start": "1407196800"#上午开始美味大餐的时间
+            }, 
+            "explore_info": {
+                "explore_gold_cost": 70, #探索金类型需要消耗多少元宝
+                "user_copper": 99, #用户有多少个铜铲子
+                "explore_silver_cost": 50, #探索银类型需要消耗多少元宝
+                "cost_copper": 1, #探索一次需要消耗的铜铲子
+                "cost_silver": 1, #探索一次需要消耗的银铲子
+                "user_silver": 99, #用户所拥有的银铲子
+                "explore_copper_cost": 30, #探索铜类型需要消耗多少元宝
+                "user_gold": 99, #用户所拥有的金铲子
+                "cost_gold": 1   #探索一次需要消耗的金铲子
+            },
+        }
+
+
+
+//////////////////////////////////////////////
+进行探索的接口
+method=activity.explore
+
+前端加传：
+        times 探索的次数  
+        shovel 铲子类型   
+        use_coin 是否是使用元宝探索
+        times  探索多少次
+
+后端返回格式
+
+    data = {
+        "explore_info": {
+            "item": {
+                "4_item": 1, 
+                "21_item": 1, 
+                "23_item": 1
+            }, 
+            "materials": {
+                "38_mat": 5, 
+                "28_mat": 5
+            }, 
+            "soul": {
+                "equip": {
+                    "24004_equip": 1, 
+                    "53003_equip_3": 1
+                }
+            }, 
+            "props": {
+                "10_props": 1, 
+                "15_props": 2, 
+                "19_props": 2
+            }
+            }, 
+    }
+
+#######################logics.cards############################## 武将逻辑
+武将升级的接口
+method=card.card_update
+
+前端加传：
+        base_ucid 要升级的武将的 id  
+        update_type  升级的类型   auto   or  update    
+
+后端返回格式
+
+    data = {
+        "new_card_info": {
+            'ucid':ucid,
+            'cid':cid,
+            'lv':clv,
+            'exp':new_exp,
+            'talent_lv':talent_lv,
+            'upd_time':int(time.time()),
+        }, 
+    }
+
+
+///////////////////////////////////// advanced_talent
+
+武将天赋进阶
+method=card.advanced_talent
+
+前端加传：
+        ucid 要进行天赋进阶的武将的 id  
+        cost_cards  天赋进阶需要消耗的基础武将   可以没有这个字段
+
+后端返回格式
+
+    data = {
+        "new_card_info": {
+            'ucid':ucid,
+            'cid':cid,
+            'lv':clv,
+            'exp':new_exp,
+            'talent_lv':talent_lv,
+            'upd_time':int(time.time()),
+        }, 
+    }
+
+///////////////////////////////////// sell
+
+武将卖出的接口
+method=card.sell
+
+前端加传：
+        sell_ucids ucid,ucid,ucid
+
+后端返回格式
+
+    data = {
+        "get_gold": 1000000  卖出获取的金币数目
+    }
+
+///////////////////////////////////// set_decks
+
+武将设置编队的接口
+method=card.set_decks
+
+前端加传：
+        deck_index:当前编队编号0-9
+        new_deck:  武将id:是否是主将 1是 0 否
+            ucid:0,ucid:1,ucid:0,,ucid:0_ucid:0,ucid:1,ucid:0,,ucid:0
+
+后端返回格式
+
+    data = {
+        
+    }
+
+
+///////////////////////////////////// lock
+
+武将加锁的接口
+method=card.lock
+
+前端加传：
+        ucids:ucid,ucid,ucid,ucid
+
+后端返回格式
+
+    data = {
+    }
+
+
+
+###########################logics.dungeon########################战场的逻辑处理
+进入战场的逻辑处理
+前端传递的参数
+method=dungeon.start&pid=1deee986d78408d63ad4a902a7c16b6d&platform=oc&sig=t7023pueavais6n97nvtuf9jygh9ctv5&rty=1407287996&version=1.50&subarea=1&floor_id=1&room_id=1&dungeon_type=normal&new_deck=201408041817337501703:1,201408041817337587659:0,201408041817337597840:0,201408041817337608025:0,201408041817337618367:0,201408041817338375780:0_201408041817337501703:1,:0,:0,:0,:0,:0_201408041817337501703:1,:0,:0,:0,:0,:0_201408041817337501703:1,:0,:0,:0,:0,:0_201408041817337501703:1,:0,:0,:0,:0,:0_201408041817337501703:1,:0,:0,:0,:0,:0_201408041817337501703:1,:0,:0,:0,:0,:0_201408041817337501703:1,:0,:0,:0,:0,:0_201408041817337501703:1,:0,:0,:0,:0,:0_201408041817337501703:1,:0,:0,:0,:0,:0&deck_index=0&item_deck=,,,,&timestamp=1407288018&arg=6e8a0bbf72&
+
+后端返回的内容
+
+    data = {
+        "exp_point": 900, 
+        "copy_times": {  当天战场可以打的次数
+            "left_times": 98,  剩余次数
+            "room_id": "1",  当前打的 roomid
+            "floor_id": "1",   当前打的 floorid
+            "all_times": 99  当天可以打的总次数
+        }, 
+        "all_drop_info": {  战场掉落的所有的信息
+            "equip": {
+                "42002_equip": 1, 
+                "43004_equip": 1, 
+                "52002_equip": 1
+            }, 
+            "mat": {
+                "10_mat": 3
+            }, 
+            "soul": {
+                "equip": {
+                    "14002_equip": 1, 
+                    "53001_equip_1": 1
+                }
+            }
+        }
+        "steps_info":   战场中的每一个小节的内容
+        [
+            [
+                {
+                "monster_id": "1_1_1_1_monster",  敌将 id
+                "equip_drop_kind": [   该敌将掉落的内容
+                    "42002_equip", 
+                    "52002_equip"
+                    ], 
+                "gold": 22 打死该敌将掉落的金币数量
+                }
+            ], 
+            [
+                {
+                    "monster_id": "1_1_1_1_monster", 
+                    "gold": 30, 
+                    "equip_soul_drop_kind": [
+                        "14002_equip", 
+                        "53001_equip_1"
+                    ]
+                }
+            ], 
+            [
+                {
+                    "monster_id": "1_1_1_1_monster", 
+                    "mat_drop_kind": [
+                        "10_mat", 
+                        "10_mat", 
+                        "10_mat"
+                    ], 
+                    "gold": 23
+                }, 
+                {
+                    "monster_id": "1_1_1_2_monster", 
+                    "equip_drop_kind": [
+                        "43004_equip"
+                    ], 
+                    "gold": 29
+                }
+            ]
+        ], 
+
+    }
+
+
+
+
+战场结束的时候的逻辑
+前端传递的参数
+method=dungeon.end
+&pid=1deee986d78408d63ad4a902a7c16b6d&platform=oc&sig=a5sk5xel94pjy1m2zl4zu85bk2m3tr1t&rty=1407288018&version=1.50&
+subarea=1&floor_id=1&room_id=1&dungeon_type=normal&hard_ratio=normal&user_gold=0&dungeon_uid=201408060920196307562&use_items=&result=1&star_ratio=3&timestamp=1407289989&arg=d7081d89f2&
+    floor_id 大战场的id
+    room_id  小战场的 id
+    dungeon_type  战场类型 normal daily
+    hard_ratio  难度系数
+    user_gold  使用的金币
+    dungeon_uid  战场的 id
+    use_items   使用的药品
+    result      战场的结果  失败还是顺利打完
+    star_ratio  该战场获得的星数
+后端返回的内容
+
+
+    data = {
+        "get_material": {
+            "10_mat": 3
+        }, 
+        "server_now": 1407289989, 
+        "item_deck": [
+            {}, 
+            {}, 
+            {}, 
+            {}, 
+            {}
+        ], 
+        "get_equip": 
+        [
+            {
+                "cur_lv": 1, 
+                "ueid": "201408060953098589593", 
+                "upd_time": 1407289989, 
+                "used_by": "", 
+                "cur_experience": 0, 
+                "eid": "42002_equip"
+            }, 
+            {
+                "cur_lv": 1, 
+                "ueid": "201408060953098598458", 
+                "upd_time": 1407289989, 
+                "used_by": "", 
+                "cur_experience": 0, 
+                "eid": "43004_equip"
+            }, 
+            {
+                "cur_lv": 1, 
+                "ueid": "201408060953098606647", 
+                "upd_time": 1407289989, 
+                "used_by": "", 
+                "cur_experience": 0, 
+                "eid": "52002_equip"
+            }
+        ], 
+        "star_ratio": 3, 
+        "get_card": [], 
+        "get_props": {}, 
+        "get_souls": {
+            "equip": {
+                "14002_equip": 1, 
+                "53001_equip_1": 1
+            }
+        }, 
+        "get_item": {}, 
+    }
+
+
+
+
+[{'floor_id':2,'room_id':1}]
+
+
+
+########################logics.equip################ 装备接口里面的东西
+
+
+///////////////////////////////////// binding_or_not
+
+装备绑定的接口
+method=equip.binding_or_not
+
+前端加传：
+        ucid = ucid
+        ueid = ueid,ueid,ueid
+
+后端返回格式
+
+    data = {
+        'equips':equips 该用户的所有的装备信息
+    }
+
+
+///////////////////////////////////// update
+
+装备强化的接口
+method=equip.update
+
+前端加传：
+        base_ueid = base_ueid 要强化对装备 id
+        base_type = base_type 要强化的装备类型
+        auto_flag = auto_flag 是否是自动强化的标志  这个字段只有在自动强化时候才有
+
+后端返回格式
+
+    data = {
+        'up_lv':[up_lv,up_lv,up_lv] 升级强化的等级信息
+        'new_equip_info':{
+            'ueid':ueid,
+            'eid':eid,
+            'upd_time':int(time.time()),
+            'used_by':'',
+            'cur_lv':lv,
+            'cur_experience':real_exp,
+        }
+    }
+
+///////////////////////////////////// sell
+
+装备强化的接口
+method=equip.sell
+
+前端加传：
+        sell_ueids = ueid,ueid,ueid  要卖出的装备的 id
+
+后端返回格式
+
+    data = {
+        'get_gold':get_gold  卖出装备获取的金币
+    }
+
+
+#######################logics.gacha###############招募逻辑
+现在招募只有元宝招募和时间招募 没有金币招募  但是金币招募暂存 
+//////////////////////////////////////////charge
+招募一次的接口和免费招募的接口是一样的
+前端传递的参数
+method=gacha.charge
+前端加传参数
+  无
+
+后端返回的参数
+    data = {
+        "new_card": {
+            "lv": 1, 
+            "is_first": false, 
+            "upd_time": 1407294530, 
+            "exp": 0, 
+            "ucid": "201408061108505968627", 
+            "talent_lv": 0, 
+            "cid": "84_card"
+        }
+    }
+
+/////////////////////////////////////////////////////charge_multi
+加速十次的接口  次数是去读配置的
+method=gacha.charge_multi
+前端加传参数
+  无
+
+后端返回的参数
+    data = {
+        "new_cards": [
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112272818046", 
+                "talent_lv": 0, 
+                "cid": "71_card"
+            }, 
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112273217229", 
+                "talent_lv": 0, 
+                "cid": "58_card"
+            }, 
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112273240211", 
+                "talent_lv": 0, 
+                "cid": "102_card"
+            }, 
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112273261201", 
+                "talent_lv": 0, 
+                "cid": "95_card"
+            }, 
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112273282110", 
+                "talent_lv": 0, 
+                "cid": "67_card"
+            }, 
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112273392948", 
+                "talent_lv": 0, 
+                "cid": "78_card"
+            }, 
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112273414442", 
+                "talent_lv": 0, 
+                "cid": "81_card"
+            }, 
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112273435403", 
+                "talent_lv": 0, 
+                "cid": "93_card"
+            }, 
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112273454917", 
+                "talent_lv": 0, 
+                "cid": "73_card"
+            }, 
+            {
+                "lv": 1, 
+                "is_first": false, 
+                "upd_time": 1407294747, 
+                "exp": 0, 
+                "ucid": "201408061112273471684", 
+                "talent_lv": 0, 
+                "cid": "14_card"
+            }
+            ]
+    }
+
+
+########################logic.main##################
+
+获取新手引导的名字的接口
+method = main.get_random_names
+
+前端加传参数  不需要
+
+后端返回信息
+    data = {
+        'man_names':[],#角色是男的名字  默认给20个
+        'female_names':[],#角色是女的名字集合  默认给20个
+
+    }
+
+////////////////////////////////////////////////////set_name
+
+新手引导设置用户名字的接口
+method = main.set_name
+
+前端加传参数  
+    name 用户选择的用户名
+    step 新手引导的步骤
+
+后端返回信息
+    data = {}
+
+show_vedio
+
+////////////////////////////////////////////////////show_vedio
+
+新手引导观看动画的接口
+method = main.show_vedio
+
+前端加传参数  
+    step 新手引导的步骤
+
+后端返回信息
+    data = {}
+
+########################logics.pack################背包信息
+初始化接口
+method=pack.get_store
+
+前端加传参数  不需要
+
+后端返回信息
+    data = {
+        'drop_item_info':{}, #药品的掉落信息
+        'drop_mat_info':{}, #素材的掉落信息
+        'items':{},  #用户的所有药品
+        'item_deck':[], #用户的药品编队信息
+        'materials':{}, #用户的素材
+        'props':{ #用户的道具
+            "18_props": 99,  #道具 id  数量 
+            "8_props": 99, 
+            "20_props": 99, 
+            "11_props": 99, 
+            "4_props": 89, 
+        }
+
+    }
+////////////////////////////////////////////////produce_item
+药品的合成
+method=pack.produce_item
+
+前端加传的参数  item = item_id,item_id,....
+
+后端返回信息 data = {}
+
+
+
+///////////////////////////////////////////////set_item_deck
+#设置药品编队新
+method=pack.set_item_deck
+
+
+前端需要加传的参数 
+        item_deck = item_id:num,item_id:num,item_id:num,item_id:num
+        #实际上我们使用到的只有 item_id  num 是根据用户所拥有的最大数量和药品编队的额对大数量来决定的   取他们的最小值
+
+
+后端返回的信息
+
+    data = {
+
+    }
+
+
+///////////////////////////////////////////// sell
+
+#背包的内容的出售
+method=pack.sell
+前端需要加传的参数 
+        items:
+            itemid:num,itemid:num,itemid:num
+        materials:
+            materialid:num,materialid:num
+
+后端的返回信息
+
+    data = {
+        'get_gold':10000,#卖出物品所获得的金钱
+    }
+
+
+///////////////////////////////////
+
+#使用道具添加体力
+method=pack.add_stamina
+前端需要加传的参数 
+    cost_props = props_id:num,props_id:num,props_id:num
+
+后端的返回信息
+    data={
+        'get_stamina':10000,#该次获取的体力值
+    }
+
+
+///////////////////////////////////
+
+#使用更名令进行重命名
+
+method=pack.rename
+前端需要加传的参数 
+    cost_props = props_id
+    new_name = new_name
+
+后端的返回信息
+    data={
+        'new_name':new_name,#新的名字
+    }
+
+
+/////////////////////////////////////
+
+
+#添加经验点接口
+
+method=pack.add_exp_point
+前端需要加传的参数 
+    props_id = props_id
+    num = num
+
+后端的返回信息
+    data={
+        'add_exp_point':add_exp_point,#新的名字
+    }
+
+
+
+
+/////////////////////////////////////buy_props
+
+
+#购买道具的接口   因为前端可以获取购买的数量 不需要后端的消息  所以后端不需要给传递消息  
+
+method=pack.buy_props
+前端需要加传的参数 
+    props_id = props_id
+    num = num
+
+后端的返回信息
+    data={
+        
+    }
+
+
+##########################logics.soul#####################################
+
+#兑换武将的接口
+method = soul.exchange_card
+
+前端需要加传的参数 
+    cid = cid
+
+后端的返回信息
+    data={
+        'new_card':{
+            'ucid':ucid,
+            'is_first':is_first,
+            'cid':cid,
+            'lv':clv,
+            'exp':self.game_config.card_level_config['exp_type'][exp_type][str(clv)],
+            'talent_lv':0,
+            'upd_time':int(time.time()),
+        }
+    }
+
+
+/////////////////////////////////////tranform_equip_soul_to_equip
+#装备碎片兑换装备的接口
+method = soul.tranform_equip_soul_to_equip
+
+前端需要加传的参数 
+    equip_id = equip_id
+
+后端的返回信息
+    data={
+        'equips':{
+            'ueid':ueid,
+            'is_first':is_first,
+            'eid':eid,
+            'upd_time':int(time.time()),
+            'used_by':'',
+            'cur_lv':1,
+            'cur_experience':real_exp,
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

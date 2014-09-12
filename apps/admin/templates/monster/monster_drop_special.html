@@ -1,0 +1,68 @@
+{% include 'monster/monster_drop_index.html' %}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>敌将掉落信息</title>
+</head>
+<body>
+<div style="float:left;">
+	<h3>{{query_dungeon_type_title}}</h3>
+  <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
+  <tr>
+   <th>战场名称</th>
+   <th>common</th>
+   <th>special</th>
+   <th>BOSS</th>
+   <th>剩余</th>
+  </tr>
+  	{% for card in Monster_drop_info %}
+  	<tr>
+  	<td>{{ card.0 }}</td>
+  	
+  	<td>
+  	{% for common_card in card.1 %}
+  	   <img src= "{{settings.BASE_URL}}/static/images/head/{{common_card.0}}" width="55" height="54" />
+  	   {% if common_card.2 %}
+  	   <span style="color:red;">{{common_card.1}}</span>
+  	   <span style="color:red;">{{common_card.3}}</span>
+  	   {% else %}
+  	   否
+  	   {{common_card.3}}
+  	   {% endif %}
+  	{% endfor %}
+  	</td>
+  	
+  	<td>
+  	{% for special_card in card.2 %}
+  		<img src= "{{settings.BASE_URL}}/static/images/head/{{special_card.0}}" width="55" height="54" />
+      {% if special_card.2 %}
+      <span style="color:red;">{{special_card.1}}</span>
+      <span style="color:red;">{{special_card.3}}</span>
+      {% else %}
+      否
+      {{special_card.3}}
+      {% endif %}
+  	{% endfor %}
+  	</td>
+  	
+  	<td>
+  	{% for boss_card in card.3 %}
+        <img src= "{{settings.BASE_URL}}/static/images/head/{{boss_card.0}}" width="55" height="54" />
+        {% if boss_card.2 %}
+        <span style="color:red;">{{boss_card.1}}</span>
+        <span style="color:red;">{{boss_card.3}}</span>
+        {% else %}
+        否
+        {{boss_card.3}}
+        {% endif %}
+     {% endfor %}
+  	</td>
+  	<td>{{ card.4 }}</td>
+   </tr>
+   {% endfor %}
+  </table>
+  </div>
+</body>
+</html>
+

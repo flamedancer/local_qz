@@ -1,0 +1,90 @@
+1:武将配置
+#武将id格式统一为数字_card，如1_card
+#  name：武将名
+#  ctype:武将属性类型（'1'为水，'2'为火，'3'为木，'4'为光，'5'为暗）
+#  star：星级的字符
+#  cost：武将消耗的统率力
+#  width：武将的体积
+#  max_lv：最大级别
+#  hp：初始血量
+#  attack：初始攻击力
+#  recover：初始恢复力
+#  defence: 防御
+#  defence_growth  :防御成长
+#  hp_growth：血量成长
+#  attack_growth：攻击力成长
+#  recover_growth：回复力成长
+#  skid：武将技id，没有时为''
+#  leader_skid：统帅技id，没有是为''
+#  upg_target：转生目标武将id，没有时为''
+#  upg_need：需要的转生道具id
+#  upg_gold：转生时消耗的铜钱
+#  sell_gold：卖出价格
+#  exp_type：经验曲线类型
+#  category：武将类型，'1'为国士无双，'2'为攻守兼备，'3'为生生不息，'4'为骁勇善战，'5'为金石之坚，'6'为神将，'7'为转生道具，'8'为强化合成 
+#  base_exp：强化合成时，提供的素材经验值基数
+#  'find_me':"", 武将来源
+
+
+
+    '237_card':{
+        'name': unicode('关兴','utf-8'),
+        'star':'5',
+        'ctype':'2',
+        'category':'2',
+        'cost':16,
+        'max_lv':99,
+        'hp':479,
+        'attack':567,
+        'recover':261,
+        'defense':111,
+        'hp_growth':6.765,
+        'attack_growth':7.694,
+        'recover_growth':1.337,
+        'defense_growth':1.2,
+        'skid':'88',
+        'leader_skid':'59',
+        'exp_type':'c',
+        'base_exp':750,
+        'upg_target':'192_card',
+        'upg_need':['356_card', '355_card', '352_card', '254_card', '199_card'],
+        'width':8,
+        'upg_gold':10000,
+        'sell_gold':1000,
+        'find_me':"周二限时战场",
+
+    }
+
+
+2.武将技能 
+#最外层key为技能id，里面max_lv为该技能最大级别
+    '1':{ #赤焰
+        'max_lv':10,
+        'name':unicode('赤炎','utf-8'),
+        'type':'1'  #1 攻击，2回复 ,3防御。
+    },
+
+3.用户等级参数配置__user_level_config
+###########################用户等级配置说明############################
+# 最外层key为等级（配置中所有的key都是字符型）
+# exp：该级别所需要的经验
+# stamina：该级别的最大体力
+# cost：该级别的最大统率力
+# friend_num：该级别的最大好友数量
+# award中是升到该级别的奖励
+# 'award':{
+#      'coin':3,
+#  },
+####################################################################
+    '10':{
+        'exp': 3566,
+        'stamina': 23,
+        'cost': 28,
+        'friend_num': 24,
+        'award':{
+             'coin':5,
+         },
+
+
+
+

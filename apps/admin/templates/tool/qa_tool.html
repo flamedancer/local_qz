@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>QA工具</title>
+</head>
+{% if settings.DEBUG %}
+    <body>
+        <form action="../qa_tool/" method="get">
+        <h3>重新关联一个游戏ID</h3>
+        <span>游戏内ID：<input name="account_delete" type="text" size="9" maxlength="9"/></span>
+        <input type="submit" value="重新关联" />
+        </form>
+        <hr />
+        
+        <h3>{{ msg }}</h3>
+
+        <form action="../qa_tool/" method="get">
+        <h3>一键过新手引导</h3>
+        <span>游戏内ID：<input name="newbie_pass" type="text" size="9" maxlength="9" {% if uid %}value="{{uid}}"{%endif%}/></span>
+        <input type="submit" value="一键过新手" />
+        </form>
+        <hr />
+    </body>
+{% else %}
+    <body>
+    <h3>线上服务器禁止操作</h3>
+    </body>
+{% endif %}
+</html>

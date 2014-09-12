@@ -1,0 +1,18 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>菜单</title>
+</head>
+<body>
+{% for ind in index_list %}
+    <a href="{{ ind.path }}" target="mainFrame">{{ ind.name }}</a><br/>
+
+{% endfor %}
+
+{% if message%}
+    <a href="/admin/moderator/agree_inreview/" target="mainFrame">注册帐号提醒</a><br/>
+{% endif %}
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+{% extends "admin/base.html" %}
+{% block head %}
+{% endblock head %}
+
+{% block main %}
+
+<div>
+	<div>
+		配置选项：{% for config in game_config_name_list %}
+		<a href="?config_name={{ config.0 }}">{{ config.1 }}</a> 
+		{% endfor %}
+	</div>
+</div>
+<hr />
+
+<div id="report">
+	{% if config_name %}
+    <div>
+        <form action="../make_single_config/?config_name={{ config_name }}" method="post" enctype="multipart/form-data">{{ config_name }}
+        <input type="file" name='xls' value="上传文件" /><br />
+        <input type="submit" value="开始生成配置" /><br />
+        </form>
+        <form action="../is_dict/" method='post'>
+        <textarea name = 'dict_value' style="width:800px;height:400px">{{ data }}</textarea>
+        <br /><input type="submit" value="填写检测与格式整理" />
+        </form>
+    </div>
+	{% endif %}
+</div>
+
+{% endblock main %}

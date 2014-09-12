@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% block head %}
+{% endblock head %}
+
+{% block main %}
+
+
+<form action="/admin/upload/confirm/" method="post" enctype="multipart/form-data">
+<fieldset>
+<legend>上传文件</legend>
+<input type="file" name="xls" />
+<input type="submit" value="上传"/>
+</fieldset>
+</form>
+
+<br/><br/>
+{{msg}}
+
+{% endblock main %}

@@ -1,0 +1,38 @@
+﻿1:修改 settings 	  正式版	  测试版
+	ENVIRONMENT_TYPE  prd         stg
+	BASE_ROOT         运维提供    一般为我们自己部署的目录
+	BASE_URL          运维提供    http://sangoioscn.newsnsgame.com   ＃test2 
+	ADMINS  (错误邮箱)运维提供    可以没有   
+	TIME_ZONE         看情况  （面对的用户是哪一地区）
+	STORAGE_CONFIG    运维提供
+	APP_NAME
+        OC_PLATFORM_ID    平台id用来生成uid，不同服务器的此项值一定要不同，保证所有服务器间uid唯一性。
+
+2:导入配置
+	从其他mongo中导入配置 。
+	mongoexport -d maxstrike_appstore -c config -o /home/liuhu/config.dat   需要 自己的目录  否则没权限读写
+	mongoimport -d maxstrike_appstore -c config config.dat 
+	mongoimport -d maxstrike_appstore -c moderator moderator.dat
+	############mongo导出config配置################
+	/opt/mongodb/bin/mongoexport -h 10.200.55.32 -d maxstrike_appstore -c config -o appstore_config_20131108.dat
+	###########mongo导入配置###############
+	/usr/bin/mongoimport -h 54.238.211.123 -u awsmaxstrikeuser1a -pawsmaxstrikeuPwD1ao% -d awsmaxstrikedb1a -c config appstore_config_20131108.dat
+
+
+3:执行3个脚本 
+   创建索引。  执行 scripts create_index.sh  ，需要改一下  DIR   DJANGO_SETTINGS_MODULE
+   创建用户名（替用户取名）。 scripts random_name_update.py 修改下 MONGO_CONF
+   异步写。   修改 start_async_write.sh中的 REDIS_LIST， 为 0 代表  async_write.py 中的REDIS_CONF[0]
+   		      再交给运维 执行
+
+4:在mongo中创建sequence并初始化：
+   db.sequence.insert(
+	   {
+	      _id: "userid",
+	      seq: 100213343
+	   }
+	)
+
+
+
+

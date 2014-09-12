@@ -1,0 +1,321 @@
+#-*- coding: utf-8 -*-
+""" filename:equip.py
+    该文件里面的主要功能有
+    1  获取装备碎片掉落的关卡信息
+    2  装备的升级
+    3  装备的售出
+    4  装备的绑定和卸载
+"""
+import copy
+from apps.models.user_equips import UserEquips
+from apps.models.user_cards import UserCards
+from apps.models.user_property import UserProperty
+from apps.models.user_pack import UserPack
+from apps.common import utils
+from apps.config.game_config import game_config
+
+def get_equip_drop_info():
+    '''
+    * 获取装备碎片掉落的关卡信息
+    * miaoyichao
+    '''
+    equip_drop_info = {}
+    equip_soul_drop_info = {}
+    #初始化所有的掉落
+    #获取战场信息
+    dungeon_config = game_config.normal_dungeon_config
+    for floor_id in dungeon_config:
+        #遍历所有的floor
+        floor_info = dungeon_config[floor_id]
+        for room_id in floor_info['rooms']:
+            #遍历所有的room
+            equip_soul_drop = floor_info['rooms'][room_id].get('drop_info',{}).get('soul',[])
+            equip_drop = floor_info['rooms'][room_id].get('drop_info',{}).get('equip',[])
+            for equip_id in equip_soul_drop:
+                if 'equip' in equip_id:
+                    if equip_id not in equip_soul_drop_info:
+                        equip_soul_drop_info[equip_id] = []
+                    #遍历所有的装备碎片 然后将相关的floor和room添加进去
+                    equip_soul_drop_info[equip_id].append({'floor_id':floor_id,'room_id':room_id})
+            for equip_id in equip_drop:
+                if equip_id not in equip_drop_info:
+                    equip_drop_info[equip_id] = []
+                #遍历所有的装备 然后将相关的floor和room添加进去
+                equip_drop_info[equip_id].append({'floor_id':floor_id,'room_id':room_id})
+    #结果返回
+    return {'equip_drop_info':equip_drop_info,'equip_soul_drop_info':equip_soul_drop_info}
+
+def __check_can_update(base_equip,user_lv):
+    """
+    * 检查是否可以强化
+    * 装备强化上限等级是玩家当前等级的2倍 或者是装备预设的最大等级
+    """
+    update_flag = 1
+    #判断最大等级
+    if base_equip['cur_lv']>= game_config.equip_config[base_equip['eid']].get('equipMaxLv',0):
+        update_flag = 0
+    else:
+        #判断当前等级是否是用户等级的2倍
+        if base_equip['cur_lv'] >= 2*user_lv:
+            #判断上限等级是玩家当前等级的2倍 
+            update_flag = 0
+    return update_flag
+
+def get_user_lv(uid):
+    '''
+    * 获取用户的等级
+    '''
+    up = UserProperty.get(uid)
+    return up.property_info.get('lv',1)
+
+def __check_same_type(user_equips_lists,uetype,cost_list):
+    '''
+    * 检查消耗的素材的类型是否和要升级的装备的类型是一致的
+    * miaoyichao
+    '''
+
+    #对要消耗的装备遍历
+    for cost in cost_list:
+        #获取装备的eid
+        cost_eid = user_equips_lists[cost]['eid']
+        #获取装备的类型
+        cost_type = game_config.equip_config[cost_eid]['eqtype']
+        #如果类型不一致 直接返回false
+        if not cost_type == uetype:
+            return False
+    #装备类型一致返回true
+    return True
+
+def binding_or_not(rk_user,params):
+    """
+    装备到武将
+    ucid = ucid
+    ueid = ueid,ueid,ueid
+    """
+    '''
+    ucid = ucid
+    version=1.4&equip=201403201020331655305:201403141616374665652
+    user_equips equips 存储格式 {'uid':{'eid':'','upd_time':'','used_by':''}} 
+    '''
+    params_ucid = params['ucid']
+    params_ueids = params['ueid']
+    #如果武将为空
+    if not params_ucid:
+        return 11,{'msg':utils.get_msg('card','no_card')}
+    user_equip_obj = UserEquips.get(rk_user.uid)
+    user_card_obj = UserCards.get(rk_user.uid)
+    params_ueids = utils.remove_null(params_ueids.split(','))
+    #获取用户的所有的武将和装备的 id
+    all_cards = user_card_obj.cards.keys()
+    user_equips = user_equip_obj.equips
+    if params_ucid not in all_cards:
+        return 11,{'msg':utils.get_msg('card','no_card')}
+    all_eqtype = []
+    equip_config = game_config.equip_config
+    #判断装备是否存在
+    if params_ueids:
+        for ueid in params_ueids:
+            if ueid not in user_equips:
+                return 11,{'msg':utils.get_msg('equip','no_equip')}
+            eid = user_equips[ueid]['eid']
+            eqtype = equip_config[eid].get('eqtype',1)
+            if eqtype in all_eqtype:
+                return 11,{'msg':utils.get_msg('equip','invalid_deck')}
+            else:
+                all_eqtype.append(eqtype)
+    #开始绑定信息
+    user_equip_obj.bind_equip(params_ucid,params_ueids)
+    #返回当前装备信息
+    data = {}
+    user_equip_obj = UserEquips.get(rk_user.uid)
+    data['equips'] = user_equip_obj.equips
+    #判断新手引导
+    newbie_step = int(params.get('newbie_step',0))
+    if newbie_step:
+        rk_user.user_property.set_newbie_steps(newbie_step)
+    return 0,data
+
+def update(rk_user,params):
+    """
+    * 装备的升级
+    * miaoyichao
+    """
+    #获取要升级的装备和升级所需要的参数  要升多少级 或者是升级的经验
+    base_ueid = params['base_ueid']
+    #获取前台传递过来的装备类型
+    try:
+        base_type = int(params['base_type'])
+    except:
+        #传递过来的参数不合法
+        return 11,{'msg':utils.get_msg('equip','params_wrong')}
+    #获取装备配置信息
+    user_equips_obj = UserEquips.get_instance(rk_user.uid)
+    #获取该用户的装备信息
+    user_equips_lists = user_equips_obj.equips
+    #武器、护甲、头盔、饰品4类通过游戏中的铜钱来升级强化  兵法及坐骑，升级方式通过消耗特定素材进行强化
+    #获取装备的类型 1:武器(攻击),2:护甲（防御）,3:头盔（血量）,4:饰品（回复）,5:兵法,6:坐骑
+    base_eid = user_equips_lists[base_ueid]['eid']
+    uetype = int(game_config.equip_config[base_eid]['eqtype'])
+    #传递过来的参数类型和从配置数据库得到的不一致
+    if not base_type == uetype:
+        return 11,{'msg':utils.get_msg('equip','params_wrong')}
+    #检查要强化的武器是不是在用户装备中
+    if base_ueid not in user_equips_lists.keys():
+        return 11,{'msg':utils.get_msg('equip','no_equip')}
+    #获取用户的该装备信息
+    base_ueid_info = user_equips_obj.get_equip_dict(base_ueid)    
+    #获取用户的等级
+    user_lv = get_user_lv(rk_user.uid)
+    #检查base卡是是否满级
+    if not __check_can_update(base_ueid_info,user_lv):
+        return 11,{'msg':utils.get_msg('equip','cannot_update')}
+    #只需要金钱就可以强化的
+    if uetype<=4:
+        #获取vip等级
+        vip_lv = rk_user.user_property.vip_cur_level
+        #获取装备的当前等级
+        cur_equip_lv = base_ueid_info['cur_lv']
+        cur_cost_gold = game_config.equip_exp_conf['common_gold'].get(str(cur_equip_lv),0)
+        next_cost_gold = game_config.equip_exp_conf['common_gold'].get(str(cur_equip_lv+1),100)
+        #获取装备的星级
+        star = game_config.equip_config[base_ueid_info['eid']].get('star',2)
+        #获取系数
+        coefficient =  game_config.equip_exp_conf['common_gold_coe'][str(star)]
+        update_gold = int((next_cost_gold - cur_cost_gold)*coefficient)
+        # #判断用户金币是否足够
+        if not rk_user.user_property.is_gold_enough(update_gold):
+            return 11,{'msg':utils.get_msg('user','not_enough_gold')}
+        try:
+            auto_flag = params['auto_flag']
+        except:
+            auto_flag = ''
+        if not auto_flag:
+            #给装备增加经验和等级
+            new_equip_info = user_equips_obj.add_com_equip_exp(base_ueid,vip_lv,user_lv,where='common_equip_update')
+            #扣除消费的金币
+            rk_user.user_property.minus_gold(update_gold,'common_equip_update')
+            #格式化返回的数据的内容
+            data = {}
+            # tmp = {}
+            # tmp['ueid'] = base_ueid
+            # user_equips_obj = UserEquips.get_instance(rk_user.uid)
+            # user_equips_lists = user_equips_obj.equips
+            # tmp.update(user_equips_lists[base_ueid])
+            data['up_lv'] = [new_equip_info['cur_lv']]
+            data['new_equip_info'] = new_equip_info
+        else:
+            #自动强化装备
+            data = user_equips_obj.auto_update_equip(rk_user,base_ueid,vip_lv,user_lv,where='common_equip_auto_update')
+        return 0,data
+    elif 5<=uetype<=6:
+        #该部分需要特定的道具进行升级
+        #检查参数是否合法
+        try:
+            cost_props = params['cost_props']
+        except:
+            return 11,{'msg':utils.get_msg('equip','params_wrong')}
+        cost_props_list = cost_props.split(',')
+        cost_props_list = utils.remove_null(cost_props_list)
+        #格式化消耗的道具
+        all_cost_props = {}
+        for cost_props_id in cost_props_list:
+            if cost_props_id not in all_cost_props:
+                all_cost_props[cost_props_id] = 0
+            all_cost_props[cost_props_id] += 1
+        #获取用户背包信息
+        user_pack_obj = UserPack.get_instance(rk_user.uid)
+        check_use_type = 'equip%s' %uetype
+        all_exp = 0
+        #检查用户背包是否有这么多的道具和道具的使用类型
+        for props_id in all_cost_props:
+            num = int(all_cost_props[props_id])
+            #检查数量是否足够
+            if not user_pack_obj.is_props_enough(props_id,num):
+                return 11,{'msg':utils.get_msg('pack', 'not_enough_props')}
+            if not check_use_type == game_config.props_config[props_id]['used_by']:
+                return 11,{'msg':utils.get_msg('pack', 'wrong_used')}
+            all_exp = int(game_config.props_config[props_id]['exp']) * num
+        #计算升级所消耗的金钱 强制转化为int类型的
+        update_gold = int(all_exp * game_config.equip_exp_conf['gold_exp_transform_coe'].get('treasure_update_coe',1))
+        #判断用户金币是否足够
+        if not rk_user.user_property.is_gold_enough(update_gold):
+            return 11,{'msg':utils.get_msg('user','not_enough_gold')}
+        #所有条件都满足的情况下 开始扣除金币和道具 然后开始添加经验
+        #扣除消费的金币
+        rk_user.user_property.minus_gold(update_gold,'treasure_equip_update')
+        #扣除道具
+        user_pack_obj.minus_multi_props(all_cost_props,where='treasure_equip_update')
+        #添加经验
+        new_equip_info = user_equips_obj.add_treasure_equip_exp(base_ueid,all_exp,user_lv,where='treasure_equip_update')
+        #格式化返回的数据的内容
+        data = {}
+        data['up_lv'] = [new_equip_info['cur_lv']]
+        data['new_equip_info'] = new_equip_info
+        return 0,data
+    else:
+        return 11,{'msg':utils.get_msg('equip','params_wrong')}
+
+def sell(rk_user,params):
+    """
+    *   modify by miaoyichao
+    *   func 卖出装备
+    """
+    sell_ueids = params['sell_ueids']
+    #卖出的装备为空的时候的处理
+    if not sell_ueids:
+        return 11,{'msg':utils.get_msg('equip','no_equip')}
+    #获取装备的列表
+    sell_ueids = sell_ueids.split(',')
+    #装备列表去空
+    sell_ueids = utils.remove_null(sell_ueids)
+    #这里执行两次的原因是防止前台传递过来的是 ,,
+    if not sell_ueids:
+        return 11,{'msg':utils.get_msg('equip','no_equip')}
+    #获取用户装备对象
+    user_equip_obj = UserEquips.get_instance(rk_user.uid)
+    user_equips = user_equip_obj.equips
+    #循环要卖出的装备 判断是否可以卖出
+    for sell_ueid in sell_ueids:
+        #检查装备是否存在
+        if sell_ueid not in user_equips:
+            return 11,{'msg':utils.get_msg('equip','no_equip')}
+        #检查装备是否装备武将
+        try:
+            sell_ueid_bind = user_equips[sell_ueid]['used_by']
+        except:
+            sell_ueid_bind = ''
+        #判断装备是否已经装备在武将身上
+        if sell_ueid_bind:
+            return 11,{'msg':utils.get_msg('equip','is_used')}
+    #计算卖出获得的铜钱数量
+    get_gold = 0
+    #获取用户的装备的eid和等级
+    sell_eids_info = [user_equip_obj.get_equip_dict(ueid) for ueid in sell_ueids]
+    treasure_sell_gold = game_config.equip_exp_conf['treasure_sell_gold']
+    common_base_gold = game_config.equip_exp_conf['common_base_gold']
+    for sell_eid_info in sell_eids_info:
+        #获取装备的eid
+        eid = sell_eid_info['eid']
+        #获取装备的经验值
+        sell_equip_exp = sell_eid_info['cur_experience']
+        #获取装备的类型  不同类型的转换系数不一样 如果找不到就默认为1 武器
+        sell_equip_config = game_config.equip_config.get(eid,{})
+        sell_equip_type = sell_equip_config.get('eqtype',1)
+        sell_equip_star = str(sell_equip_config.get('star',2))
+        if sell_equip_type>=5:
+            #5 6 是宝物类型
+            sell_type = 'treasure_sell_coe'
+            base_gold = treasure_sell_gold.get(sell_equip_star,1000)
+        else:
+            #1 2 3 4 是普通装备类型
+            sell_type = 'common_exp_coe'
+            base_gold = common_base_gold.get(sell_equip_star,1000)
+        #卖出装备需要一个当前经验和一个转换系数  以及每个装备的卖出初始值  系数是在配置信息中查找
+        get_gold += base_gold + int(sell_equip_exp*game_config.equip_exp_conf['gold_exp_transform_coe'][sell_type])
+    #用户加钱
+    rk_user.user_property.add_gold(get_gold,where='sell_equip')
+    #用户删除装备
+    user_equip_obj.delete_equip(sell_ueids,where='sell_equip')
+
+    return 0,{'get_gold':get_gold}
+

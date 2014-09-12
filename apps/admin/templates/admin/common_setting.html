@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+{% block head %}
+{% endblock head %}
+
+{% block main %}
+
+<div>
+	<div>
+		运营设置：{% for config in common_config_name_list %}
+     
+		<a href="?config_name={{ config.0 }}">{{ config.1 }}</a> 
+		{% endfor %}
+	</div>
+</div>
+
+<hr />
+
+<div id="report">
+	{% if saved %}
+	<span style="color: red">保存成功</span>
+	{% endif %}
+
+	{% if config_name %}
+	<form action='' method='post'>
+	正在修改：{{ config_name }}<br />
+	<textarea name="config_value" style="width:90%;height:500px">{{ config_value }}</textarea>
+	<br /><input type="submit" value="提交" />
+	</form>
+	{% endif %}
+</div>
+
+{% endblock main %}

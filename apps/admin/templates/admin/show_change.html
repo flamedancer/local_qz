@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+{% block head %}
+{% endblock head %}
+
+{% block main %}
+
+<div>
+</div>
+
+<hr />
+
+<div id="report">
+	<form action='/admin/upload/' method='post'>
+	<textarea name="config_value" style="width:90%;height:500px">{{ config_value }}</textarea>
+	<input type="hidden" name="file_name" value="{{ file_name }}" />
+	<br /><input type="submit" value="确认修改" />
+	</form>
+</div>
+
+{% endblock main %}

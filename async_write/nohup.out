@@ -1,0 +1,25 @@
+login_info
+uid 0100213406
+userbase 0100213406
+gacha_info {u'coin': 0, u'first_tenth_charge_multi': True}
+usergacha 0100213406
+uid 0100213406
+usergacha 0100213406
+charge_award_info {}
+userproperty 0100213406
+property_info {u'newbie': False, u'gold': 500002700, u'need_upgrade_tutorial': False, u'pvp_newbie': True, u'leader_card': {u'lv': 1, u'talent_lv': 0, u'cid': u'66_card', u'exp': 0, u'ucid': u'201408251628471588898'}, u'need_bind_equip': False, u'get_card': False, u'leader_role_card': u'201408251628471588898', u'newbie_steps': 63, u'friend_extend_num': 0, u'lv': 12, u'card_exp_point': 10230, u'charged_fg': None, u'charge_sumcoin': 0, u'stamina': 41, u'double_charge_date': [], u'charged_user': False, u'max_card_num': 500, u'login_time': 1409109942, u'open_func': {}, u'need_upgrade_ucid': u'', u'tapjoy': {u'coins': 0, u'points': 0}, u'stamina_upd_time': 1409109942, u'vip_charge_info': [], u'charge_sum_money': 0, u'system_award_time': None, u'bind_award': True, u'coin': 28060, u'gacha_pt': 0, u'need_produce_equip': False, u'update_award': [], u'newbie_step': 10, u'country': 0, u'recover_times': {u'recover_stamina': 0, u'recover_copy': {u'daily': 0, u'special': 0, u'normal': 0}, u'recover_pvp_stamina': 0, u'today_str': u'2014-08-27', u'recover_mystery_store': 0}, u'qz_newbie': False, u'first_charge_date': None, u'exp': 1770, u'special_first_charge': True, u'first_charge': True}
+userproperty 0100213406
+month_item_info {u'coin00': {u'can_buy': True, u'can_get_today': False, u'start_time': u'', u'charge_date': [], u'end_time': u''}, u'coin001': {u'can_buy': True, u'can_get_today': False, u'start_time': u'', u'charge_date': [], u'end_time': u''}}
+userproperty 0100213406
+uid 0100213406
+userproperty 0100213406
+dungeon_info {u'last': {u'exp_point': 110, u'dungeon_data': {u'dungeon_uid': u'201408261745105239714', u'exp_point': 110, u'steps_info': [[{u'monster_id': u'1_3_1_1_monster', u'gold': 27}, {u'monster_id': u'1_3_1_2_monster', u'gold': 29}, {u'monster_id': u'1_3_1_3_monster', u'gold': 24}, {u'monster_id': u'1_3_1_4_monster', u'gold': 30}, {u'monster_id': u'1_3_1_5_monster', u'gold': 48}]], u'copy_times': {u'left_times': 98, u'room_id': u'1', u'floor_id': u'3', u'all_times': 99}, u'all_drop_info': {}}, u'floor_id': u'3', u'dungeon_gold': 1100, u'enter_rty_count': 0, u'dungeon_uid': u'201408261745105239714', u'dungeon_stamina': 6, u'room_id': u'1', u'total_gold': 158, u'exp': 110, u'dungeon_type': u'normal', u'all_drop_info': {}, u'limit_time': u'2014-08-26', u'enter_rty': u'1409020981'}, u'special': {u'1': {u'status': 0, u'rooms': {u'1': 0}}, u'8': {u'status': 0, u'rooms': {u'1': 0}}, u'13': {u'status': 0, u'rooms': {u'1': 0}}, u'14': {u'status': 0, u'rooms': {u'1': 0}}}, u'daily': {u'1': {u'status': 0, u'rooms': {u'1': 0, u'3': 0, u'2': 0}}, u'3': {u'status': 0, u'rooms': {u'1': 0, u'3': 0, u'2': 0}}, u'2': {u'status': 0, u'rooms': {u'1': 0, u'3': 0, u'2': 0}}, u'4': {u'status': 0, u'rooms': {u'1': 0, u'3': 0, u'2': 0}}}, u'record': {u'special': {}}, u'normal_current': {u'status': 0, u'floor_id': u'3', u'room_id': u'1'}, u'free_stamina_cnt': 0, u'today': u'2014-08-27', u'weekly': {u'1': {u'status': 0, u'rooms': {u'1': 0, u'2': 0}}, u'3': {u'status': 0, u'rooms': {u'1': 0, u'2': 0}}, u'2': {u'status': 0, u'rooms': {u'1': 0, u'3': 0, u'2': 0}}, u'5': {u'status': 0, u'rooms': {u'1': 0, u'3': 0, u'2': 0}}, u'4': {u'status': 0, u'rooms': {u'1': 0, u'3': 0, u'2': 0, u'4': 0}}, u'6': {u'status': 0, u'rooms': {u'1': 0, u'3': 0, u'2': 0}}}}
+userdungeon 0100213406
+dungeon_repeat_info {u'daily': {}, u'special': {}, u'today_str': u'2014-08-26', u'normal': {u'3': {u'1': 1}}}
+userdungeon 0100213406
+dungeon_fail_list []
+userdungeon 0100213406
+has_played_info {u'weekly': {}, u'daily': {}, u'special': {}, u'normal': {u'1': {u'floor_all_star': 6, u'gold_box': False, u'cur_star': 6, u'rooms': {u'1': {u'perfect': True, u'room_get_star': 3, u'normal': {u'get_star': 3}}, u'2': {u'perfect': True, u'room_get_star': 3, u'normal': {u'get_star': 3}}}, u'silver_box': False, u'bronze_box': False}}}
+userdungeon 0100213406
+uid 0100213406
+userdungeon 0100213406

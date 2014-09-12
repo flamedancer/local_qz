@@ -1,0 +1,2 @@
+- Added mongodb 2.4.5
+- Added redis 2.2.12

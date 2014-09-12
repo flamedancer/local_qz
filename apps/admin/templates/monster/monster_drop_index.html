@@ -1,0 +1,21 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>敌将掉落信息</title>
+</head>
+<body>
+  <h3>敌将掉落信息</h3>
+  <form action="../monster_drop/" method="post">
+   <span>战场类型：
+        <select name="query_dungeon_type">
+            <option value="normal" {% ifequal query_dungeon_type 'normal' %} selected="selected" {% endifequal %}>普通战场敌将掉落</option>
+            <option value="today_special"  {% ifequal query_dungeon_type 'today_special' %} selected="selected" {% endifequal %}>特殊战场今天武将掉落</option>
+            <option value="special"  {% ifequal query_dungeon_type 'special' %} selected="selected" {% endifequal %}>特殊战场敌将掉落</option>
+       </select>
+   </span>
+   <input type="submit" value="查询" />
+    </form>
+  <hr/>
+</body>
+</html>

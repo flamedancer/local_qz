@@ -1,0 +1,23 @@
+{% extends "admin/base.html" %}
+{% block head %}
+{% endblock head %}
+
+{% block main %}
+
+<div>
+</div>
+
+<hr />
+
+<div id="report">
+	{% if saved %}
+	<span style="color: red">保存成功</span>
+	{% endif %}
+
+	<form action='/admin/game_setting/' method='post'>
+	<textarea name="config_value" style="width:90%;height:500px">{{ config_value }}</textarea>
+	<br /><input type="submit" value="提交" />
+	</form>
+</div>
+
+{% endblock main %}

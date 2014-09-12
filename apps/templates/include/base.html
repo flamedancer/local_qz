@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="{{request.agent_device.encoding }}" ?>
+{% if agent_device.device.is_docomo %}
+<!DOCTYPE html PUBLIC "-//i-mode group (ja)//DTD XHTML i-XHTML(Locale/Ver.=ja/2.0) 1.0//EN" "i-xhtml_4ja_10.dtd">
+{% else %}
+{% if agent_device.device.is_ezweb %}
+<!DOCTYPE html PUBLIC "-//OPENWAVE//DTD XHTML 1.0//EN" "http://www.openwave.com/DTD/xhtml-basic.dtd">
+{% else %}
+{% if agent_device.device.is_softbank %}
+<!DOCTYPE html PUBLIC "-//JPHONE//DTD XHTML Basic 1.0 Plus//EN" "xhtml-basic10-plus.dtd">
+{% else %}
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.1//EN" "http://www.openmobilealliance.org/tech/DTD/xhtml-mobile11.dtd">
+{% endif %}
+{% endif %}
+{% endif %}
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+{% if agent_device.device.is_softbank %}
+<meta http-equiv="Content-Type" content="application/xhtml+xml;charset=UTF-8" />
+{% else %}
+<meta http-equiv="Content-Type" content="application/xhtml+xml;charset=Shift_JIS" />
+{% endif %}
+{% block meta_cache_control %}
+<meta http-equiv="pragma" content="no-cache" />
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="expires" content="0" />
+{% endblock %}
+<meta name="robots" content="ALL" />
+<meta name="description" content="" />
+<meta name="keywords" content="" />
+{% if agent_device.device.is_docomo %}
+<meta name="disparea" content="qvga" />
+{% endif %}
+<title>{%block title%}ﾜﾝﾀﾞｰ･ﾗﾋﾞﾘﾝｽ{%endblock%}</title>
+<style type="text/css">
+<!--
+  a:link {color:#ffa900;}
+  a:visited {color:#ffa900;}
+  td {font-size:x-small;}
+  span {font-size:x-small;}
+  select,input{font-size:x-small;color:#000000;}
+-->
+</style>
+</head>
+{% block body_control %}
+<body style="background-color:#152650;font-size:x-small;color:#ffffff;">
+{% endblock %}
+{% if msg %}
+<div>{{msg}}</div>
+{% endif %}
+<a id="top" name="top"> </a>
+{% block main_control %}
+<div style="background-color:#152650;font-size:x-small;color:#ffffff;">
+{% endblock %}
+{%block main%}
+{%endblock%}
+</div>
+<a id="bottom" name="bottom"> </a>
+{%block footer%}
+{%include "include/footer.html"%}
+{%endblock%}
+
+{% if canot_prev %}
+<wml:do type="prev">
+<noop />
+</wml:do>
+{% endif %}
+
+</body>
+</html>

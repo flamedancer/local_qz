@@ -1,0 +1,9 @@
+{%load tags%}
+{{ request.rk_user.user_property.property_info.self_common|default:"ﾜﾝﾀﾞｰ･ﾗﾋﾞﾘﾝｽをつぶやこう!" }}
+<div style="text-align:center">
+<form method="post" action="{% mobile_url '/core/greet_confirm/' %}">
+<input id="page_path" name="page_path" type="hidden" value="{{request.get_full_path}}" />
+<input id="greet" style="text" name="greet" {% if agent_device.device.is_docomo %} maxlength="60" {% else %} maxlength="30" {% endif %} width="100%" value="{{request.rk_user.user_property.property_info.self_common|default:"ﾜﾝﾀﾞｰ･ﾗﾋﾞﾘﾝｽをつぶやこう!"}}" /><br />
+<input style="font-size:x-small;color:#666666;" type="submit" value="つぶやく" />
+</form>
+</div>
