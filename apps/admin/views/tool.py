@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 import copy
-import os
-import json
+import os, os.path
+#import json
 
 from django.conf import settings
 from django.shortcuts import render_to_response
@@ -9,23 +9,28 @@ from django.http import HttpResponse
 from django.template import RequestContext
 
 from apps.admin.decorators import require_permission
-from apps.admin.decorators import get_moderator_username
+#from apps.admin.decorators import get_moderator_username
 from apps.common import utils
 from apps.config.game_config import game_config
 from apps.logics import dungeon
 from apps.logics.gacha import __select_gacha_card
 from apps.models.virtual.card import Card
+from apps.admin.bulletin import Bulletin
+import glob, datetime, time
 
 import shutil
 from apps.models import data_log_mod
 from apps.common.utils import string_toDatetime
 from apps.oclib import app
 from apps.common import utils
+from urllib import urlencode
 
 from apps.models import data_log_mod
 ChargeRecord = data_log_mod.get_log_model("ChargeRecord")
-ConsumeRecord = data_log_mod.get_log_model("ConsumeRecord")
+ConsumeRecord = data_log_mod.get_log_model("CoinConsume")
 
+
+total_notice_versions = 10
 
 def index(request):
     """
@@ -33,6 +38,8 @@ def index(request):
     debug = settings.DEBUG
     data = {'support': False, 'debug':debug}
     data['app_name'] = ''
+    data['notice_versions'] = range(total_notice_versions)
+
     return render_to_response('tool/index.html', data, RequestContext(request))
 
 
@@ -391,20 +398,94 @@ def _get_consume_record(uid,start_date,end_date):
     result = ConsumeRecord.find(match_query)
     return result
 
-def update_static(request):
-    file = request.FILES.get('html', None)
-    filename = str(file.name)
-    file_path = settings.BASE_ROOT + '/static/' + filename
-    dir_path = settings.BASE_ROOT + '/static/'
-    shutil.rmtree(file_path,True)
-    shutil.rmtree(file_path.replace('.zip',''),True)
-    destination = open(file_path, 'w+')
-    for chunk in file.chunks():
-        destination.write(chunk)
-    destination.close()
-    if filename.endswith('.zip'):
-        os.system('unzip %s -d %s' % (file_path,dir_path))
-    return HttpResponse('ok')
+def upload_static(request):
+    '''
+    上传到指定的静态HTML目录， 若 空文件，则删除服务器上同名文件。
+    '''
+    remote_dir = request.POST.get('remote_dir', '')
+    force_overwrite = request.POST.get('force_overwrite', '')
+
+    local_file = request.FILES.get('local_file', '')
+
+    if remote_dir not in ('/static', '/static/html', '/static/html/image_ui'):
+        return HttpResponse(u'错误的远程服务器端的目录: ' + remote_dir)
+
+    if not local_file:
+        return HttpResponse(u'需要选择一个本地文件')
+
+    filename = str(local_file.name)
+    file_path = settings.BASE_ROOT + remote_dir + '/' + filename
+
+    if os.path.exists(file_path) and force_overwrite != 'true':
+        return HttpResponse(u'服务器上已存在一个同名文件, 而你又没有选择要覆盖/替换')
+
+#   dir_path = settings.BASE_ROOT + '/static/'
+#   shutil.rmtree(file_path,True)
+#   shutil.rmtree(file_path.replace('.zip',''),True)
+
+#   destination = open(file_path, 'w')
+#   for chunk in file.chunks():
+#       destination.write(chunk)
+#   destination.close()
+
+    f = open(file_path, 'w')
+    print >>f, local_file.file.read(),
+    f.close()
+    os.system('/bin/chmod 644 ' + file_path)
+
+    if os.path.getsize(file_path) == 0:
+        os.remove(file_path)
+        return HttpResponse(u'成功删除了: ' + remote_dir + '/' + filename )
+
+    return HttpResponse(u'成功上传到: ' + remote_dir + '/' + filename)
+
+
+#def update_bulletin(request):
+#    file = request.FILES.get('html', None)
+#    filename = str(file.name)
+#    file_path = settings.BASE_ROOT + '/static/html/' + filename
+#    dir_path = settings.BASE_ROOT + '/static/html/'
+#    shutil.rmtree(file_path,True)
+#    shutil.rmtree(file_path.replace('.zip',''),True)
+#    destination = open(file_path, 'w+')
+#    for chunk in file.chunks():
+#        destination.write(chunk)
+#    destination.close()
+#    if filename.endswith('.zip'):
+#        os.system('unzip %s -d %s' % (file_path,dir_path))
+#    return HttpResponse('ok')
+
+
+@require_permission
+def view_static(request):
+    ''' 只让看指定的几个目录
+    '''
+    server_dir = request.GET.get('dir', '')
+    if server_dir not in ('/static', '/static/html', '/static/html/image_ui'):
+        return HttpResponse('Wrong remote directory: ' + server_dir)
+
+    server_abs_dir = settings.BASE_ROOT + server_dir + '/'
+    n = len(server_abs_dir)
+    files = glob.glob(server_abs_dir + '*')
+
+    mtime_dict = dict( [ (f, os.path.getmtime(f) ) for f in files ] )
+    files.sort(key=lambda x: mtime_dict[x] )
+    files.reverse()
+
+    #filenames = [ f[n:] for f in files ]
+    html_list = []
+    for f_abs in files:
+        f = f_abs[n:]   #filename only, no path
+
+        if os.path.isdir( server_abs_dir + f):
+            html_list += [ server_dir + '/' + f + ' >' ]
+        else:
+            html_list += [ 
+                    str(datetime.datetime.fromtimestamp(mtime_dict[f_abs]))[:19] + ' <a href="' + server_dir + '/' + urlencode({'A':f})[2:] + '">' + server_dir + '/' + f + '</a>' ]
+
+    return HttpResponse( '<br>'.join(html_list),  
+            content_type="text/html; charset=UTF8" )
+
 
 
 def cards_product_statistic(request):
@@ -447,3 +528,132 @@ def cards_product_statistic(request):
 
     return render_to_response('tool/cards_product_statistic.html', {'start_date': start_date, 'end_date': end_date, 'product_cards': product_cards , 'info': info, 'sort_by': sort_by}, RequestContext(request))
 
+
+
+
+
+@require_permission
+def bulletin(request):
+    '''
+    登录公告编辑助手
+    '''
+    action_result = ''
+
+    id = request.GET.get('id','')
+    if not id:
+        id = request.POST.get('id', 0)
+    id=id.strip()
+
+    b = Bulletin.get_instance(id=id)
+
+    all_pic = ['important.png', 'new.png']
+    all_pic.sort()
+
+
+    if request.POST.get('add_title','').strip():
+        title = request.POST.get('title','').strip()
+        img = request.POST.get('img','').strip()
+        detail = request.POST.get('detail','').strip().replace(u'\u2028', '\n')
+        b.add_title(title=title, img=img, detail=detail)
+        b.generate_html()
+
+    elif request.POST.get('edit_title','').strip():
+        title_index = request.POST.get('title_index','').strip()
+        b.data[int(title_index)]['publish_date'] = str( datetime.datetime.fromtimestamp( b.data[int(title_index)]['time'] ).date() )
+        b.data[int(title_index)]['publish_time'] = str( datetime.datetime.fromtimestamp( b.data[int(title_index)]['time'] ).time() )[:8]
+
+        data = {
+                'all_pic': all_pic,
+                'title_index': title_index,
+                'title_max_index': len(b.data) - 1,
+                'bulletin': b.data[int(title_index)],
+                'id': id,
+                }
+        return render_to_response('tool/bulletin_edit.html', data, 
+            RequestContext(request) )
+
+    elif request.POST.get('save_title','').strip():
+        title_index = request.POST.get('title_index','').strip()
+        d=b.data[ int(title_index) ]
+        new_title_index = int(request.POST.get('new_title_index','').strip())
+
+        if new_title_index < 0 or new_title_index >= len(b.data):
+            return HttpResponse(u'错误的新的排序名次: ' + str(new_title_index) )
+
+
+        d['title'] = request.POST.get('title','').strip()
+        d['img'] = request.POST.get('img','').strip()
+
+        title_color = request.POST.get('title_color','').strip()
+        d['title_color'] = title_color
+
+        d['detail'] = request.POST.get('detail','').strip().replace(u'\u2028', '\n')
+        d['more_body'] = request.POST.get('more_body','').strip().replace(u'\u2028', '\n')
+        d['more_title'] = request.POST.get('more_title','').strip().replace(u'\u2028', '\n')
+        d['more_title_color'] = request.POST.get('more_title_color','').strip().replace(u'\u2028', '\n')
+
+        #detail 与  more_body 要求 <div 与 </div>的数量必须相等， 因为
+        #公告页的排版中，div很重要
+        ldetail = d['detail'].lower()
+        if ldetail.count('<div') != ldetail.count('</div>'):
+            return HttpResponse('简介中的 &lt;div&gt; 与 &lt;/div&gt; 数量不匹配. div 对公告页的排版很重要, 请确保全部配对.')
+        lmore_body = d['more_body'].lower()
+        if lmore_body.count('<div') != lmore_body.count('</div>'):
+            return HttpResponse('更多详情正文中的 &lt;div&gt; 与 &lt;/div&gt; 数量不匹配. div 对公告页的排版很重要, 请确保全部配对.')
+
+        title_index = int(title_index)
+
+        if title_index == new_title_index:
+            pass
+        else:
+            d=copy.deepcopy(b.data[ int(title_index) ])
+            #if title_index < new_title_index:
+            del(b.data[title_index])
+            b.data.insert(new_title_index, d)
+
+        b.put()
+        b.generate_html()
+
+        action_result=u"数据已保存, 预览网页已生成."
+
+    elif request.POST.get('update_online_bulletin','').strip():
+        id = request.POST.get('id','0').strip()
+        b.generate_html(online_or_preview='online', id=id)
+        action_result=u"线上网页已经更新."
+
+    elif request.POST.get('delete_title','').strip():
+        title = request.POST.get('title','').strip()
+        b.delete_title(title=title)
+        b.generate_html()
+
+    elif request.POST.get('update_html','').strip():
+        b.generate_html()
+        return HttpResponse('Done to update 0_notice.html and 1_notice.html')
+
+
+    notice_files = ['0_notice_preview.html', '1_notice_preview.html']
+    for i in range(total_notice_versions):
+        notice_files += ['0_notice_v' + str(id) + '.html', 
+                '1_notice_v' + str(id) + '.html'] 
+
+    server_abs_dir = settings.STATIC_ROOT + 'html/'
+
+    notice_mtime = {}
+    for f in notice_files:
+        if not os.path.exists( server_abs_dir+f ):
+            notice_mtime[ f[:-5] ] = ''
+            continue
+        notice_mtime[ f[:-5] ] = str(datetime.datetime.fromtimestamp( os.path.getmtime(server_abs_dir+f) ) )[:19]
+
+    data = {'bulletins': b.data, 
+            'all_pic': all_pic,
+            'action_result': action_result,
+            'notice_mtime': notice_mtime,
+            'id': id,
+            'notice_versions': range(total_notice_versions),
+            '0_notice_file_head': '0_notice_v' + str(id),
+            '1_notice_file_head': '1_notice_v' + str(id),
+            }
+
+    return render_to_response('tool/bulletin.html', data, 
+            RequestContext(request) )

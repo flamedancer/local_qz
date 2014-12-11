@@ -304,21 +304,7 @@
         </table>
     </td>
 </tr>
-<tr class="{% cycle 'odd' 'even'%}">
-    <td width="70">item药水</td>
-    <td>
-        <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse" class="{% cycle 'odd' 'even'%}">
-            {%for iid,value in user_items.iteritems%}
-            <tr class="{% cycle 'odd' 'even'%}">
-                <td>名称：</td>
-                <td width="70">{{value.name}}</td>
-                <td>数量：{{value.num}}</td>
-                <td>
-            </tr>
-            {%endfor%}
-        </table>
-    </td>
-</tr>
+
 <tr class="{% cycle 'odd' 'even'%}">
     <td width="70">材料</td>
     <tr>

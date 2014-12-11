@@ -222,7 +222,7 @@ def charge(rk_user,params):
     rate_conf = __get_rate_conf('charge', rk_user)
     cid,clv = __select_gacha_card(rate_conf)
     can_get_soul = True
-    if rk_user.user_property.minus_coin(cost_coin,'charge'):
+    if rk_user.user_property.minus_coin(cost_coin, 'gacha'):
         #加卡,初始6级
         success_fg,p1,ucid,is_first = user_card_obj.add_card(cid,clv,where='gacha_charge')
         new_card = {
@@ -235,14 +235,7 @@ def charge(rk_user,params):
             __set_safety_coin(rk_user, cid, cost_coin)
         if can_get_soul:
             __get_soul(rk_user)
-        #记录消费日志信息
-        data_log_mod.set_log("ConsumeRecord", rk_user, 
-                        lv=rk_user.user_property.lv,
-                        num=cost_coin,
-                        consume_type='gacha_record',
-                        before_coin=rk_user.user_property.coin + cost_coin,
-                        after_coin=rk_user.user_property.coin
-        )
+
         #写入跑马灯
         user_marquee_obj = UserMarquee.get(rk_user.subarea)
         marquee_params = {
@@ -291,7 +284,7 @@ def __timer_gacha(rk_user,params):
     #判断新手引导
     newbie_step = int(params.get('newbie_step',0))
     if newbie_step:
-        rk_user.user_property.set_newbie_steps(newbie_step)
+        rk_user.user_property.set_newbie_steps(newbie_step, "gacha")
     #结果返回
     return 0,{'new_card':new_card}
 
@@ -307,7 +300,7 @@ def charge_multi(rk_user,params):
         return 11,{'msg':utils.get_msg('user','not_enough_coin')}
 
     total_cost_coin = cost_coin * multi_gacha_cnt
-    if rk_user.user_property.minus_coin(total_cost_coin,'charge_multi'):
+    if rk_user.user_property.minus_coin(total_cost_coin, 'gacha_multi'):
         new_cards = []
         cids = []
         for cnt in range(multi_gacha_cnt):
@@ -328,14 +321,7 @@ def charge_multi(rk_user,params):
             new_card.update(user_card_obj.get_card_dict(ucid))
             new_cards.append(new_card)
             #__get_soul(rk_user)
-        #增加消费记录
-        data_log_mod.set_log("ConsumeRecord", rk_user, 
-                        lv=rk_user.user_property.lv,
-                        num=total_cost_coin,
-                        consume_type='gacha_multi',
-                        before_coin=rk_user.user_property.coin + total_cost_coin,
-                        after_coin=rk_user.user_property.coin
-        )
+
         return 0,{'new_cards':new_cards}
 
     else:
@@ -402,7 +388,7 @@ def  __safety_charge_rate(rk_user, rate_conf):
 
     return rate_conf
 
-def __is_reach_safety_gacha_condition(has_consuem_coin):
+def __is_reach_safety_gacha_condition(has_consume_coin):
     """
     是否达到保底条件
     """
@@ -412,7 +398,7 @@ def __is_reach_safety_gacha_condition(has_consuem_coin):
     gacha_black_conf = game_config.gacha_config.get('gacha_black_conf',{})
     if not gacha_black_conf.get('coin',0):
         return False
-    return  has_consuem_coin + cost_coin >= gacha_black_conf.get('coin', 20000)
+    return  has_consume_coin + cost_coin >= gacha_black_conf.get('coin', 20000)
 
 def __has_safety_card(rk_user):
     """
@@ -424,7 +410,7 @@ def __has_safety_card(rk_user):
 
 def __set_safety_coin(rk_user, cid, cost_coin):
     """
-    修改保底机制中的consuem——coin记录
+    修改保底机制中的consume——coin记录
     """
     user_gacha_obj = UserGacha.get_instance(rk_user.uid)
     if cid in [card_conf[0] for card_conf in game_config.gacha_config['gacha_black_conf']['safety_cards']]:

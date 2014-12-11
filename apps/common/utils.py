@@ -13,7 +13,8 @@ from django.conf import settings
 from django.core.mail import send_mail
 from apps.models.redis_tool import RedisTool
 from apps.config.game_config import game_config
-import special_config
+import sms_config
+import socket
 
 UUID_STR = 'fWv3wFvwSIJ0RuNthkCBeRXnfk5635kufiD5G84MCRcDydAmpD0zxE8QsPjGsAsI'
 UPWD_STR = 'JpHot0lcJascWXF5lGP5YNTiKvEEf6RUfrCQI95R7QMIEJQej73CaWMNFgsrm0Ho'
@@ -140,6 +141,15 @@ def get_item_by_random_simple(item_weight_list):
 
     return get_item_by_random(item_list, weight_list)
 
+
+def get_items_by_weight_dict(item_weight_dict, num):
+    item_weight_list = []
+    for item_dict in copy.deepcopy(item_weight_dict).values():
+        if "weight" in item_dict:
+            item_weight_list.append([item_dict, item_dict['weight']])
+    return get_items_by_random_simple(item_weight_list, num)
+
+
 def get_items_by_random_simple(item_weight_list, num):
     """ 根据权重数组中设定的各权重值随机指定个数item列表中的item 
         注： 个数不足返回全部！
@@ -162,6 +172,27 @@ def get_items_by_random_simple(item_weight_list, num):
         pop_index = all_items.index(item)
         item_weight_list_copy.pop(pop_index)
         all_items.pop(pop_index)
+    return selected_items
+
+def get_items_by_random_simple_repeat(item_weight_list, num):
+    """ 根据权重数组中设定的各权重值随机指定个数item列表中的item 
+        注： 个数不足返回全部！
+        args:
+            * item_weight_list - item,权重数组
+            * num  返回个数
+
+        returns: 随机的items  
+    """
+    selected_items = []
+    item_weight_list_copy = copy.deepcopy(item_weight_list)
+
+    all_items = [simple[0] for simple in item_weight_list_copy]
+
+    if len(all_items) <= num:
+        return all_items
+    for cnt in range(0, num):
+        item = get_item_by_random_simple(item_weight_list_copy)
+        selected_items.append(item)
     return selected_items
     
 
@@ -254,8 +285,11 @@ def send_exception_mail(request):
     msg += str(request)
     error_path = request.path
     error_ml = __get_admin_mail_list()
-    send_mail('[%s]: Django Error (EXTERNAL IP):' % settings.EMAIL_TITLE+error_path, msg, 'maxstrike_ios_cn@touchgame.net', error_ml, fail_silently=False,\
-    auth_user='maxstrike_ios_cn',auth_password='oneclick101')
+    send_mail('[%s]: Django Error (EXTERNAL IP):' % settings.EMAIL_TITLE+error_path, msg, 
+        settings.EMAIL_ACCOUNT, error_ml, fail_silently=False,\
+        auth_user=settings.EMAIL_ACCOUNT.split('@')[0],
+        auth_password=settings.EMAIL_PASSWORD )
+
     if not settings.DEBUG:
         send_mobile_message()
 
@@ -268,8 +302,11 @@ def send_exception_mailEx():
     msg += traceback.format_exc() +'\n'
     msg += '--'*30+'\n'
     error_ml = __get_admin_mail_list()
-    send_mail('[%s]: Django Error (EXTERNAL IP):' % settings.EMAIL_TITLE+'fatal error', msg, 'maxstrike_ios_cn@touchgame.net', error_ml, fail_silently=False,\
-    auth_user='maxstrike_ios_cn',auth_password='oneclick101')
+    send_mail('[%s]: Django Error (EXTERNAL IP):' % settings.EMAIL_TITLE+'fatal error', msg, 
+        settings.EMAIL_ACCOUNT, error_ml, fail_silently=False,\
+        auth_user=settings.EMAIL_ACCOUNT.split('@')[0],
+        auth_password=settings.EMAIL_PASSWORD )
+
     if not settings.DEBUG:
         send_mobile_message()
     
@@ -277,7 +314,7 @@ def send_mobile_message():
     #"""发送手机短信
     #"""
     try:
-        if special_config.SEND_MOBILE_MESSAGE is False:
+        if sms_config.SEND_MOBILE_MESSAGE is False:
             return 
         error_msg = traceback.format_exc()
         if error_msg.find('com.zeptolab.ctrbonus') >= 0:
@@ -313,7 +350,8 @@ def send_mobile_message():
             if total_second < 60 * 3:
                 return 
 
-        urllib2.urlopen(special_config.MOBILE_URL, timeout=12)
+        urllib2.urlopen(sms_config.MOBILE_URL + socket.gethostname(), 
+                timeout=12)
         RedisTool.set(settings.CACHE_PRE+'mobile_time', now, 0) 
         RedisTool.set(settings.CACHE_PRE+'mobile_error_num', 0, 0)
         RedisTool.set(settings.CACHE_PRE+'mobile_error_time', now, 0)
@@ -333,9 +371,10 @@ def send_middlewares_exception_mail(request, exception_info):
     msg += str(request)
     error_path = request.path
     error_ml = __get_admin_mail_list()
-    send_mail('[MiddleWares %s]: Django MiddleWares Error (EXTERNAL IP):' % settings.EMAIL_TITLE+error_path, msg, 'maxstrike_ios_cn@touchgame.net', error_ml, fail_silently=False,\
-    auth_user='maxstrike_ios_cn',auth_password='oneclick101')
-
+    send_mail('[MiddleWares %s]: Django MiddleWares Error (EXTERNAL IP):' % settings.EMAIL_TITLE+error_path, msg,
+        settings.EMAIL_ACCOUNT, error_ml, fail_silently=False,\
+        auth_user=settings.EMAIL_ACCOUNT.split('@')[0],
+        auth_password=settings.EMAIL_PASSWORD )
 
 def __get_admin_mail_list():
     mail_list = [a[1] for a in settings.ADMINS]
@@ -525,17 +564,6 @@ def in_speacial_time(floor_conf,include_taday=True):
     return tag , return_start_time ,return_end_time
 
 
-def is_card_or_store_arrive_max(uid):
-    """
-    军营或仓库已满
-    """
-    from apps.models.user_cards import UserCards
-    
-    if UserCards.get(uid).arrive_max_num():
-        return True
-    return False
-
-
 def get_marquee_config(user_model=None):
     """获得跑马灯配置"""
     if user_model:
@@ -563,34 +591,6 @@ def get_push_info(user_model=None):
     data['popen'] = copy.deepcopy(game_config.system_config.get('popen', False))
     return data
 
-def get_pvp_config(user_model=None):
-    """pvp竞技场配置"""
-    if user_model:
-        global game_config
-        game_config = user_model.game_config
-    pvp_config = copy.deepcopy(game_config.pvp_config)
-    return pvp_config
-
-def get_rank_awards_by_rank(rank):
-    """pvp竞技场配置,具体等级区间对应的信息"""
-    rank = int(rank)
-    data = {
-        'awards': {
-            'renown': 1,#声望
-            'gold': 1,#
-        },
-    }
-    pvp_rank_awards_config = get_pvp_config().get('rank_awards', {})
-    for rank_range in pvp_rank_awards_config:
-        if rank_range[0] <= rank <= rank_range[1]:
-            data = pvp_rank_awards_config[rank_range]
-        if 11 <= rank <= 50:
-            data['awards']['gold'] = 1800 - 10 * (rank - 10)
-            data['awards']['renown'] = 1800 - 10 * (rank - 10)
-        if 51<= rank <= 200: 
-            data['awards']['gold']  = 1400 - 4 * (rank - 50)
-            data['awards']['renown'] = 1400 - 4 * (rank - 50)
-    return copy.deepcopy(data)
 
 def windex(lst): 
     '''

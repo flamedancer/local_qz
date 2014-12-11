@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+    <style type="text/css">
+      tr.odd {background-color:#eee;color:#360;}
+      tr.even {background-color:white;}
+    </style>
+</head>
+<body>
+    <h3>配置变动记录</h3>
+
+ <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse" >
+		<tr class="{% cycle 'odd' 'even'%}">
+			<th>#</th>
+			<th>登录用户</th>
+			<th>时间</th>
+			<th>分区号 : 配置名称</th>
+			<th>更改内容</th>
+
+		</tr>
+		{% for log in logs %}
+		<tr class="{% cycle 'odd' 'even'%}">
+			<td>{{forloop.counter}}</td>
+			<td>{{log.username}}</td>
+			<td>{{log.date_time}}</td>
+                        <td>{{log.subarea}} : {{log.config_name}}</td>
+			<td><pre>{{log.diff}}</pre></td>
+		</tr>
+		{%endfor%}
+	</table>
+
+ <br>
+ <p style="color: gray">* 暂时只保留最多 1000 条记录, 或最长 30 天。</p>
+
+</body>

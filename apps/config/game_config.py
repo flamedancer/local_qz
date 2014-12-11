@@ -3,7 +3,10 @@
 import time
 
 from apps.models.config import Config
+from apps.config import config_version
 from apps.config import config_list
+
+from apps.config.backup import generate_backup
 
 class GameConfig(object):
     subarea_num = ''            #   当前请求玩家的 分区号
@@ -27,9 +30,18 @@ class GameConfig(object):
         return str_config_name_by_subarea
 
     def reload_config(self):
+        #print '#### self.configs.keys()=', self.configs.keys()
+        #so only backup, when config changed, need reload. Backup only once 
+        #a day.
+        generate_backup()   #每天的第一次配置改动前，备份一次改动前的内容。
+        if self.reload_time > config_version.get_config_version('1', config_name="ALL_config"):
+            return
         for subarea_config_name in self.configs:
-            self.configs[subarea_config_name] = eval(Config.get(subarea_config_name).data)
-        self.reload_time =  int(time.time())
+            if not subarea_config_name.startswith('ruby_skill_params_config'):
+                conf_obj = Config.get(subarea_config_name)
+                if conf_obj:
+                    self.configs[subarea_config_name] = eval(conf_obj.data)
+        self.reload_time = int(time.time())
  
     def subareas_conf(self):
         """获取 分区配置
@@ -43,12 +55,20 @@ class GameConfig(object):
 
     def get_game_config(self, config_name, subarea):
         #config_name, 配置名; subarea, 分区号
+        if not subarea:
+            subarea = '1'
+
         subarea_config_name = self._get_subarea_config_name(config_name, subarea)        
         if subarea_config_name not in self.configs:
             config_obj = Config.get(subarea_config_name)
             if not config_obj:
-                raise Exception, "config name '{}' is empty in subarea '{}'".format(config_name, subarea)
-            self.configs[subarea_config_name] = eval(config_obj.data)
+                config_obj = Config.create(subarea_config_name)
+                #raise Exception, "config name '{}' is empty in subarea '{}'".format(config_name, subarea)
+            try:
+                self.configs[subarea_config_name] = eval(config_obj.data)
+            except SyntaxError: #something wrong
+                self.configs[subarea_config_name] = {}
+
         return self.configs[subarea_config_name]
 
     def __getattr__(self, config_name):

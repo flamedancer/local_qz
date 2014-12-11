@@ -1,0 +1,87 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息
+  </h2> 
+
+  <hr clear=all>
+  <h3>热点战场</h3>
+  <h3>以类型分类</h3>
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th> 战场编号 </th> 
+      <th> 昨天 </th> 
+    </tr>
+  {% for dungeon_type, users in yesterday_dict.items|sort  %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{dungeon_type}}</td> 
+      <td>{{users}}</td>
+    </tr>
+  {% endfor %}
+  
+  </table>
+  
+  <p><br></p>
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th> 战场 </th> 
+      <th> 总数 </th> 
+    </tr>
+  {% for dungeon_type, users in total_dict.items|sort  %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{dungeon_type}}</td> 
+      <td>{{users}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+
+
+
+  <p><br></p>
+
+  <!--
+  <h4>按关卡分类</h4>
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th> 昨日特殊战场 </th> 
+      <th> 昨日 </th> 
+    </tr>
+  {% for dungeon_type, users in special_dungeon_floor_yestoday.items|sort  %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{dungeon_type}}</td> 
+      <td>{{users}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+
+  <p><br></p>
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th> 特殊关卡 </th> 
+      <th> 总数 </th> 
+    </tr>
+  {% for dungeon_type, users in special_dungeon_floor.items|sort  %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{dungeon_type}}</td> 
+      <td>{{users}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+
+  -->
+
+</body>
+</html>

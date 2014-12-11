@@ -1,0 +1,47 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息 Statistics Info
+  </h2> 
+
+  <hr clear=all>
+  <p>用户等级与每周充值次数统计
+
+  <table style="border:1px solid #ccc">
+    <tr><th>用户等级</th> 
+      <th> 用户数量</th>
+      <th> 充值次数<br>
+        <span style="color:gray">(总数 / 每用户)</span></th>
+    </tr>
+  {% for level_span in total_level_spans reversed %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{level_span_names|dictValue:level_span}}</td> 
+      <td>
+        {{level_stat|dictValue:level_span}}
+      </td>
+      <td>
+        {{charge_counts|dictValue:level_span}} /
+        {{charge_counts_per_user|dictValue:level_span|floatformat:3}}
+      </td>
+
+    </tr>
+
+  {% endfor %}
+  </table>
+
+  <p>总用户数: {{total_users}}
+
+
+</body>
+</html>

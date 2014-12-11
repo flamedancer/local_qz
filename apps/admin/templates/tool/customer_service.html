@@ -13,6 +13,8 @@
         <div>
             <label for="uid">用户ID:</label>
             <input type="text" size="9" id="uid" name="uid" {% if uid %}value={{uid}}{% endif %}>
+
+            <br>
             <span>从
             <input name="start_date" type="text" id="start_date" size="10" maxlength="10" onclick="new Calendar().show(this);" 
             {% if start_date %}value="{{start_date}}"{% endif %} readonly="readonly" />
@@ -21,13 +23,18 @@
             <input name="end_date" type="text" id="end_date" size="10" maxlength="10" onclick="new Calendar().show(this);" 
             {% if end_date %}value="{{end_date}}"{% endif %} readonly="readonly" />
         </span>
+
+        <br>
             <select name="search_type">
                 <option value="all" {% ifequal search_type 'all' %}selected="selected"{% endifequal %}>所有</option>
                 <option value="charge" {% ifequal search_type 'charge' %}selected="selected"{% endifequal %}>充值</option>
                 <option value="consume" {% ifequal search_type 'consume' %}selected="selected"{% endifequal %}>消费</option>
             </select>
+
+            <br>
             <input type="submit" value="确定"/>
         </div>
+
     <hr />
     </form>
      <table bgcolor="#C7EDCC" border="2">
@@ -64,6 +71,8 @@
         <div>
             <label for="uid">用户ID:</label>
             <input type="text" size="9" id="uid" name="uid_charge" {% if uid_charge %}value={{uid_charge}}{% endif %}>
+
+            <br>
             <span>从
             <input name="start_date_charge" type="text" id="start_date" size="10" maxlength="10" onclick="new Calendar().show(this);" 
             {% if start_date_charge %}value="{{start_date_charge}}"{% endif %} readonly="readonly" />
@@ -72,8 +81,12 @@
             <input name="end_date_charge" type="text" id="end_date" size="10" maxlength="10" onclick="new Calendar().show(this);" 
             {% if end_date_charge %}value="{{end_date_charge}}"{% endif %} readonly="readonly" />
             </span>
+
+            <br>
             <label for="oid">订单号oid:</label>
             <input type="text" size="9" id="oid" name="oid" {% if oid %}value={{oid}}{% endif %}>
+
+            <br>
             <input type="submit" value="确定"/>
         </div>
     <hr />

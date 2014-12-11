@@ -119,7 +119,7 @@ def tranform_equip_soul_to_equip(rk_user, params):
         #判断新手引导
         newbie_step = int(params.get('newbie_step',0))
         if newbie_step:
-            rk_user.user_property.set_newbie_steps(newbie_step)
+            rk_user.user_property.set_newbie_steps(newbie_step, "tranform_equip_soul_to_equip")
         return 0, data
     else:
         return 11, {'msg': utils.get_msg('pack','not_enough_material')}

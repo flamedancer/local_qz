@@ -1,0 +1,119 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息 Statistics Info
+  </h2> 
+
+  <hr clear=all>
+  <h3>晶体消耗统计 (Crystals/Coins Consumed)</h3>
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>日期 <br>Date </th> 
+      <th>ガチャ <br>抽将 <br>gacha_record</th>
+      <th>回復体力 <br>恢复体力 <br>recover_stamina</th>
+      <th>コンティニュー <br>复活 <br>revive</th>
+      <th>ユニット枠拡張 <br>扩军营 <br>extend_card</th>
+      <th>コロシアム回復 <br>竞技场恢复 <br>recover_pvp_stamina</th>
+
+      <th>其它 <br>Other</th>
+    </tr>
+
+  {% for date_str, type_num in coins_by_date.items|sort %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{ date_str }}</td> 
+
+      <td>
+        {{type_num.gacha_record}} 
+      </td>
+      <td>
+          {{type_num.recover_stamina}}
+      </td>
+      <td>
+          {{type_num.revive}}
+      </td>
+      <td>
+          {{type_num.extend_card}}
+      </td>
+      <td>
+          {{type_num.recover_pvp_stamina}}
+      </td>
+
+      <td>
+        {% for t, n in type_num.items|sort %}
+          {% if t != "recover_stamina" and t != 'revive' and t != 'gacha_record' and t != 'extend_card' and t != 'recover_pvp_stamina' %}
+          {{t}} : {{n}}<br>
+          {% endif %}
+        {% endfor %}
+      </td>
+
+    </tr>
+  {% endfor %}
+
+  </table>
+
+
+
+  <p><br>
+  <hr clear=all>
+
+<h3>消耗晶体的唯一用户数 (Unique users who consumed coins)</h3>
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>日期 <br>Date </th> 
+      <th>ガチャ <br>抽将 <br>gacha_record</th>
+      <th>回復体力 <br>恢复体力 <br>recover_stamina</th>
+      <th>コンティニュー <br>复活 <br>revive</th>
+      <th>ユニット枠拡張 <br>扩军营 <br>extend_card</th>
+      <th>コロシアム回復 <br>竞技场恢复 <br>recover_pvp_stamina</th>
+
+      <th>其它 <br>Other</th>
+    </tr>
+
+  {% for date_str, type_num in users_by_date.items|sort %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{ date_str }}</td> 
+
+      <td>
+        {{type_num.gacha_record}} 
+      </td>
+      <td>
+          {{type_num.recover_stamina}}
+      </td>
+      <td>
+          {{type_num.revive}}
+      </td>
+      <td>
+          {{type_num.extend_card}}
+      </td>
+      <td>
+          {{type_num.recover_pvp_stamina}}
+      </td>
+
+      <td>
+        {% for t, n in type_num.items|sort %}
+          {% if t != "recover_stamina" and t != 'revive' and t != 'gacha_record' and t != 'extend_card' and t != 'recover_pvp_stamina' %}
+          {{t}} : {{n}}<br>
+          {% endif %}
+        {% endfor %}
+      </td>
+
+    </tr>
+  {% endfor %}
+
+  </table>
+
+
+</body>
+</html>

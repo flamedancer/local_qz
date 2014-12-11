@@ -51,13 +51,13 @@ class UserCards(GameModel):
         uc.cards_info = {
             "cur_deck_index":0,
         }
-        uc.cards_info['decks'] = [[{}] * 5] * 10
+        uc.cards_info['decks'] = [[{}] * 5] * 5
 
         #初始化给的武将
         deck_index = 0
         leader = True
         for cid in uc.game_config.user_init_config['init_cards']:
-            fg,p1,ucid,is_first = uc.add_card(cid,where='init_cards')
+            fg,p1,ucid,is_first = uc.add_card(cid, where='init_cards')
             if deck_index < uc.game_config.system_config['deck_length']:
                 if leader:
                     uc.deck[deck_index] = {'ucid':ucid,'leader':1}
@@ -139,9 +139,6 @@ class UserCards(GameModel):
         """
         return self.cards_info['cur_deck_index']
 
-    def init_cards(self,country='1'):
-        pass
-
     def get_cards(self):
         """
         获得平台UID 对应的用户对象
@@ -190,7 +187,7 @@ class UserCards(GameModel):
                 return True
         return False
 
-    def advanced_talent(self,ucid):
+    def advanced_talent(self, ucid):
         '''
         *天赋进阶
         miaoyichao
@@ -206,24 +203,17 @@ class UserCards(GameModel):
             self.cards[ucid]['talent_lv'] = max_talent_lv
         else:
             self.cards[ucid]['talent_lv'] += 1
-        #天赋进阶后的天赋等级
-        after_lv = copy.deepcopy(self.cards[ucid]['talent_lv'])
-        #开始记录日志信息
-        cid = self.cards[ucid]['cid']
-        cid_config = self.game_config.card_config[cid]
 
-        card_msg = {
-            'cid': cid,
-            'ctype': cid_config['ctype'],
-            'lv': self.cards[ucid]['lv'],
-            'exp': self.cards[ucid]['exp'],
+        #开始记录日志信息
+        cid_config = self.game_config.card_config[self.cards[ucid]['cid']]
+        log_data = {
+            'cid': self.cards[ucid]['cid'],
+            'ucid': ucid,
+            'before_talent_lv': before_lv,
+            'after_talent_lv': self.cards[ucid]['talent_lv'],
+            'card_msg': self.cards[ucid],
             'name': cid_config['name'],
             'star': cid_config['star'],
-        }
-
-        log_data = {
-            'ucid':ucid,
-            'card_msg': card_msg,
         }
 
         data_log_mod.set_log('CardTalentUpdate', self, **log_data)
@@ -246,11 +236,6 @@ class UserCards(GameModel):
         """
         return len(self.cards)
 
-    def arrive_max_num(self):
-        user_base_obj = UserBase.get(self.uid)
-        reach_max = self.get_cards_num() >= user_base_obj.user_property.max_card_num
-        return reach_max
-
     def is_equip_used(self,ucids):
         if not ucids:
             return False
@@ -265,7 +250,7 @@ class UserCards(GameModel):
     def arrive_max_cost(self):
         return self.get_now_cost() > UserPropertyMod.get(self.uid).cost
 
-    def add_card(self,cid,lv=1,where=None):
+    def add_card(self, cid, lv=1, where=""):
         """将得到的卡加入背包中
         args
             cid: string 卡ID
@@ -278,26 +263,19 @@ class UserCards(GameModel):
             string:卡的自定义ID
             is_first:是否是首次得到该卡片
         """
-        ucid,is_first = self.__add_card(cid,lv,where=where)
+        ucid,is_first = self.__add_card(cid, int(lv), where=where)
         cid_config = self.game_config.card_config[cid]
         all_cards_num = self.get_cards_num()
-        if cid_config.get('star', '1') >= '4' and where:
-            card_msg = {
-                'cid': cid,
-                'ctype': cid_config['ctype'],
-                'lv': lv,
-                'exp': self.cards[ucid]['exp'],
-                'name': cid_config['name'],
-                'star': cid_config['star'],
-            }
 
-            log_data = {
-                'where':where,
-                'ucid':ucid,
-                'card_msg': card_msg,
-            }
+        log_data = {
+            'where':where,
+            'ucid':ucid,
+            'card_msg': self.cards[ucid],
+            'name': cid_config['name'],
+            'star': cid_config['star'],
+        }
 
-            data_log_mod.set_log('CardProduct', self, **log_data)
+        data_log_mod.set_log('CardProduct', self, **log_data)
         return True,all_cards_num,ucid,is_first
     
     def __can_get_supercategory(self,where):

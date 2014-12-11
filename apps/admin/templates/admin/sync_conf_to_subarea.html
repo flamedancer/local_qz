@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% load tags %}
+
+{% block main %}
+
+<h3>当前配置: {{ config_description }}, 分区{{subarea}}: {{subarea_name}} </h3>
+
+<p>当前配置已保存。
+
+   <p>
+   配置内容已相同的其它分区: <br> &nbsp; &nbsp;
+         {% for subarea_index, subarea_name in same_contents_subareas.items|sort %}
+             {{ subarea_index }}区: {{ subarea_name }} ,
+         {% endfor %}
+
+   <p>
+      配置内容不同的其它分区: 
+   <form action="/admin/game_setting/sync_conf_to_subarea/">
+      <input type=hidden name=config_name value="{{ config_name }}">
+      <input type=hidden name=current_subarea value="{{ subarea }}">
+
+      <table>
+          <tr valign=top>
+              <td>
+     <select name="subarea_list" multiple="multiple">
+         {% for subarea_index, subarea_name in diff_contents_subareas.items|sort %}
+             <option value="{{ subarea_index }}">{{ subarea_index }}区: {{ subarea_name }}</option>
+         {% endfor %}
+     </select>
+
+     <br>
+     <span style="color:gray">(上面可多选, 用Ctrl+鼠标左键, <br> 或 Shift+鼠标左键)</span>
+            </td>
+            <td>
+                详细差别:<br>
+         {% for subarea_index, subarea_name in diff_contents_subareas.items|sort %}
+         <a href="/admin/game_setting/config_diff/?config1={{config_name}}&area1={{subarea}}&config2={{config_name}}&area2={{subarea_index}}"> {{subarea_index}}区: {{subarea_name}}</a>
+         <br>
+         {% endfor %}
+
+           </td>
+         </tr>
+        </table>
+
+
+
+     <p>
+     <input type=submit  value="同步到所选分区">
+
+     </form>
+
+     <p>不同步, 继续编辑: <a href=/admin/game_setting/?config_name={{config_name}}&subarea={{subarea}}>{{subarea}}分区: {{config_description}}</a>
+
+{% endblock main %}

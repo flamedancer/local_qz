@@ -110,7 +110,6 @@ class UserSouls(GameModel):
                 'where':where, 
                 'soul_id':soul_id,
                 'num': num,
-                'user_lv': self.user_base.user_property.lv,
             }
             data_log_mod.set_log('SoulProduct', self, **log_data)
         return True, soul_id, num
@@ -135,8 +134,8 @@ class UserSouls(GameModel):
         else:
             #不符合要求
             return False,'',0
-        #判断 equip_id 是否存在配置中
-        if check_id not in self.game_config.equip_config:
+        #判断 equip_id 是否存在配置中, 并且可以用碎片合成（有need_souls且不为0）
+        if not self.game_config.equip_config.get(check_id, {}).get('need_souls'):
             return False,'',0
         #判断equip_souls_info 是否为空
         if not self.equip_souls_info:
@@ -154,7 +153,6 @@ class UserSouls(GameModel):
                 'where':where,
                 'soul_id':soul_id,
                 'num': num,
-                'user_lv': self.user_base.user_property.lv,
             }
             data_log_mod.set_log('SoulProduct', self, **log_data)
         #结果返回
@@ -205,7 +203,6 @@ class UserSouls(GameModel):
                 'where': where,
                 'soul_id': soul_id,
                 'num': num,
-                'user_lv': self.user_base.user_property.lv,
             }
             data_log_mod.set_log('SoulConsume', self, **log_data)
         return True
@@ -232,7 +229,6 @@ class UserSouls(GameModel):
                 'where': where,
                 'soul_id': soul_id,
                 'num': num,
-                'user_lv': self.user_base.user_property.lv,
             }
             data_log_mod.set_log('SoulConsume', self, **log_data)
         return True

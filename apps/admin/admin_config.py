@@ -60,6 +60,12 @@ views_perms_mappings={
             "order": 0,
             "permissions": "submit_setting",
         },
+        {
+           'path':"/admin/config_changes/",
+           "name": '配置变动',
+           "order": 0,
+           "permissions": "all",
+        },
         #{
             #"path": '/admin/common_setting/',
             #"name": '运营设置',
@@ -137,8 +143,8 @@ views_perms_mappings={
         #     "permissions": "all",
         # },
         {
-            "path": '/admin/pvp_top/',
-            "name": 'pvp排名',
+            "path": '/admin/pk_top/',
+            "name": 'PK 排名',
             "order": 0,
             "permissions": "all",
         },
@@ -172,12 +178,21 @@ views_perms_mappings={
         #     "order": 0,
         #     "permissions": "super",
         # },
+
         {
             "path": '/admin/tool/customer_service/',
             "name": '客服工具',
             "order": 0,
             "permissions": "customer_service",
         },
+
+        {
+            "path":'/admin/statistics/',
+            "name":"统计数据",
+            "order":0,
+            "permissions":"view_charge",
+        },
+
         {
             "path":'/admin/logout/',
             "name":"登出",
@@ -201,7 +216,7 @@ views_perms_mappings={
             "permissions" : "tool"
         },
         {
-            "path" : r'/admin/moderator/moderator_list/',
+            "path" : r'^/admin/moderator/',
             "permissions" : "super"
         },
         {
@@ -245,6 +260,10 @@ views_perms_mappings={
             "permissions":"submit_setting"
         },
         {
+            "path":r"/admin/config_changes/",
+            "permissions":"all"
+        },
+        {
             "path":r"/admin/user/",
             "permissions":"edit_user"
         },
@@ -273,7 +292,7 @@ views_perms_mappings={
             "permissions":"all"
         },
         {
-            "path":r"/admin/pvp_top/",
+            "path":r"/admin/pk_top/",
             "permissions":"all"
         },
         {
@@ -287,6 +306,26 @@ views_perms_mappings={
         {
             "path":r"/admin/xls_to_dict/submit_game_settings_by_excel/",
             "permissions":"submit_setting"
+        },
+        {
+            "path":r"/admin/statistics/",
+            "permissions":"view_charge"
+        },
+        {
+            "path":r"/admin/view_setting_backup/",
+            "permissions":"all"
+        },
+        {
+            "path":r"/admin/setting_backup_diff/",
+            "permissions":"all"
+        },
+        {
+            "path":r"^/admin/tool/bulletin/",
+            "permissions":"all"
+        },
+        {
+            "path":r"^/admin/tool/view_static/",
+            "permissions":"all"
         },
     ],
 }

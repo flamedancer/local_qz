@@ -62,8 +62,15 @@
          {% endfor %}
     </tbody>
     </table>
+
+<p style="color:gray">* 按最后登录时间排序. Total: {{moderator_list|length}}</p>
+
 <p>
-    <a href="/admin/moderator/add_moderator/">增加管理员</a>
+    <a href="/admin/moderator/add_moderator/"><button>增加管理员</button></a>
+</p>
+
+<p>
+    <a href="/admin/moderator/view_all_permissions/"><button>各管理员权限一览</button></a>
 </p>
 </body>
 </html>

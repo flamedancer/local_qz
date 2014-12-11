@@ -1,4 +1,6 @@
+
 {% extends "admin/base.html" %}
+{% load tags %}
 {% block head %}
 <link rel="stylesheet" href="../../../admin/js/bootstrap/dist/css/bootstrap.min.css" />
 {% endblock head %}
@@ -7,10 +9,11 @@
 <div class="panel panel-primary">
     <div class="panel-body">
         {% if not subarea %}
-            <h4>当前默认分区{{ subarea_default }} </h4>
+            当前默认分区: {{ subarea_default }} <br>
         {% else %}
-            <h4>当前分区号  {{subarea}} </h4>
+            当前分区号:  {{subarea}} <br>
         {% endif %}
+
             {% for config in subareas_conf %}
                 {% if config.0 == subarea%}
                     <a href="/admin/game_setting/?subarea={{ config.0 }}" style="color:red;font-size:14px;">{{ config.0 }}区：{{ config.1 }}</a>&nbsp;<span style="color:grey;font-size:1.3em;">|</span> 
@@ -21,19 +24,24 @@
     </div>
 </div>
 {% if not subarea %}
-<a href="?config_name=subareas_conf" style="color:blue;font-size:14px;">分区设置</a>
+<a href="?config_name=subareas_conf&subarea=1" style="color:blue;font-size:14px;">分区设置</a>
 {% endif %}
 
 {% if subarea %}
 <div class="panel panel-primary">
     <div class="panel-body">
-        {% for config in g_l_config %}
+      {% for category, config_list in categories.items|sort %}
+        <b>{{category|title}}:</b>
+        {# for config in g_l_config #}
+        {% for config in config_list %}
             {% if forloop.last %}
                 <a href="?config_name={{ config.name }}&subarea={{subarea}}" style="color:blue;font-size:14px;">{{ config.description }}</a>
             {% else %}
                 <a href="?config_name={{ config.name }}&subarea={{subarea}}" style="color:blue;font-size:14px;">{{ config.description }}</a>&nbsp;<span style="color:grey;font-size:1.3em;">|</span>
             {% endif %}
         {% endfor %}
+        <br>
+      {% endfor %}
     </div>
 </div>
 {% endif %}
@@ -42,7 +50,8 @@
 	{% if saved %}
 	<span style="color: red">保存成功</span>
 	{% endif %}
-    {% if config_name %}
+
+    {% if config_name %} 
         <div class="alert alert-danger hide">你提交的设置有问题喔，没有成功保存设置：&nbsp;<span class="error-message"></span></div>
         <form action="/admin/xls_to_dict_test/submit_game_settings_by_excel/?config_name={{ config_name }}" method="post" enctype="multipart/form-data">
            <input type="file" name='xls' value="上传文件" />
@@ -53,13 +62,16 @@
            {% endif %}
            <input type="submit" value="开始生成配置" />
         </form>
+
         {% if subarea %}
             <form id='settings_form' action="/admin/game_setting/?config_name={{ config_name }}&subarea={{ subarea }}" method="post" enctype="multipart/form-data">
         {% else %}
             <form id='settings_form' action="/admin/save_game_settings/?config_name={{ config_name }}" method="post" enctype="multipart/form-data">
         {% endif %}
+
         <span style="color: red">正在修改:{{ config_title }}</span>
         <input type="submit" id="submit_game_settings" value="提交" /> 
+
         {% if submit_game_settings_by_excel %}
             <input type="hidden" name="subarea_default_save" value="{{ subarea_default }}">
             <select name="subarea_list" multiple="multiple">
@@ -68,15 +80,73 @@
                {% endfor %}
             </select>
         {% endif %}
+
         <textarea name="config_value" class="hide">{{ config_value }}</textarea>
+
         <div id="ace-editor" style="width:90%;height:500px;font-size:12px;border:1px solid black;">{{ config_value }}</div><br />
+
+        <input type="hidden" name="config_md5sum" value="{{config_md5sum}}" />
+
         </form>
+
+        <p style="color:gray">* 配置的缩进, 将根据每行中大,中,小括号配对情况，来自动进行。有不雅处, 找后台 -- 正在测试效果。2014/11/4. </p>
+
+
+    {% elif subarea == '1' %}
+        {{config_error|safe}}
+
+    {% elif not subarea %}
+
+        <br>
+        <p>最近的修改一览:
+        <table border=1>
+            <tr>
+                <th>用户名</th>
+                <th>时间</th>
+                <th>分区号</th>
+                <th>配置名称</th>
+                <th>登录IP</th>
+            </tr>
         {% for record in updateconfrecord %}
-            {{record}}
-            <br/>
+            <tr>
+                <td>{{record.username}} </td>
+                <td>{{record.date}} </td>
+                <td>{{record.subarea}} </td>
+                <td>{{record.configname}} </td>
+                <td>{{record.REMOTE_ADDR}} </td>
+            </tr>
         {% endfor %}
+        </table>
+
+    {% endif %}
+
+
+    {% if config_name %}
+        <br>
+        <p>本配置的上次凌晨备份:
+        <a href=/admin/view_setting_backup/?conf={{config_name}}&area={{subarea}}&date={{conf_backup_date}} target=_blank>{{conf_backup_date}}</a>
+
+        <p>上次备份与当前配置的差别:
+        {% if backup_diff_from_now %}
+        <a href=/admin/setting_backup_diff/?conf={{config_name}}&area={{subarea}}&date={{conf_backup_date}} target=_blank>{{conf_backup_date}}</a> ({{backup_diff_from_now}})
+        {% else %} 
+            No
+        {% endif %}
+
+        <br>
+        <br>
+        <p style="color:gray">* 目前是在某天的第一次配置改动后，备份所有配置. 一天只备份那一次.</p>
+
+    {% else %}
+
+        {% if subarea %}
+        <p>
+        <p>上次备份以来有变动的配置: {{changed_from_today|safe}}
+        {% endif %}
+
     {% endif %}
 </div>
+
 <script type="text/javascript" src="../../../admin/js/jquery/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="../../../admin/js/ace/ace.js"></script>
 <script type="text/javascript" src="../../../admin/js/ace/theme-github.js"></script>
@@ -103,4 +173,25 @@
         });
     }
 </script>
+
+
+<script type="text/javascript">
+    var intervalID = setInterval( function() {
+	var conf_ms = document.getElementsByName("config_md5sum")[0].value;
+        $.ajax( { 
+url:"/admin/game_setting/config_md5sum/?config_name={{config_name}}&subarea={{subarea}}",
+            success:function(result){
+                if ( conf_ms != result ) {
+/*                   alert ('后台本配置已被改变, 请在作出自己的修改前, 更新内容. Config on server has been changed by somebody else, please update before making your own modification. <p>My config_md5sum=' + conf_ms + ', <br>server/backend config_md5sum=' + result);
+*/
+                    alert ('后台本配置已被别人改动, 或你在其它浏览器中重新登录了后台。 请在作出自己的修改前, 更新内容.');
+
+                    //notice only once, or too many, user unhappy
+                    clearInterval(intervalID);  
+                }
+            }
+        }) 
+     }, 120000 ); //120000; LiuHu want 2 hour, or pop ups disturb his mind
+</script>
+
 {% endblock main %}

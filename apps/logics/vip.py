@@ -4,119 +4,106 @@
 检查各种需求的回复次数  以及 vip 礼包的内容
 """
 import copy
-import time
 from apps.config.game_config import game_config
-from apps.models.user_property import UserProperty
-from apps.models.user_gift import UserGift
 from apps.common import utils
+from apps.common import tools
+from apps.common.exceptions import GameLogicError
+
+
 
 def get_vip_config(rk_user,params):
-    '''
-    * 获取vip的配置信息
-    * miaoyichao
-    '''
     data = {}
-    data['vip_config'] = game_config.user_vip_conf
-    return 0,data
+    data['vip_config'] = game_config.user_vip_config
+    return data
 
-def check_limit_recover(rk_user,where,dtype=None):
-    '''
-    * 根据用户的vip等级判断用户当天是否达到回复次数
-    * miaoyichao
-    '''
-    #获取用户的属性信息
-    user_property_obj = UserProperty.get(rk_user.uid)
-    vip_lv = user_property_obj.vip_cur_level
+
+def check_limit_recover(rk_user, where, dtype='', floor_id=''):
+    """根据用户的vip等级判断用户当天是否达到回复次数"""
+    user_property_obj = rk_user.user_property
+    vip_lv = str(user_property_obj.vip_cur_level)
     today_str = utils.get_today_str()
+    now_recover_times = 0
     if today_str == user_property_obj.property_info['recover_times']['today_str']:
-        if where in ['recover_stamina','recover_pvp_stamina','recover_mystery_store','recover_copy']:
-            #回复体力的处理
-            recover_stamina_times = game_config.user_vip_conf[str(vip_lv)].get('can_'+where+'_cnt',10)
-            if recover_stamina_times > user_property_obj.property_info['recover_times'][where]:
-                return True
-            else:
-                return False
+        if where in ['recover_stamina', 'recover_mystery_store']:
+            # 回复体力的处理
+            max_recover_times = game_config.user_vip_config[vip_lv].get('can_'+where+'_cnt', 0)
+            now_recover_times = user_property_obj.property_info['recover_times'][where]
+            if max_recover_times <= now_recover_times:
+                raise GameLogicError('user','max_times')
         elif where == 'recover_copy':
-            #重置战场的处理
-            recover_times = game_config.user_vip_conf[str(vip_lv)].get('can_'+where+'_cnt',{}).get(dtype,5)
-            if recover_times > user_property_obj.property_info['recover_times'][where].get(dtype,0):
-                return True
-            else:
-                return False
-        else:
-            #不在那些要检测的里面 可以无限制刷新
-            return True
+            # 重置战场的处理
+            if dtype == 'normal':
+                max_recover_times = game_config.user_vip_config[vip_lv]['can_recover_copy_cnt']['normal']
+                now_recover_times = user_property_obj.property_info['recover_times']['recover_copy']['normal']
+            elif dtype == 'daily':
+                max_recover_times = game_config.user_vip_config[vip_lv]['can_recover_copy_cnt']['daily'][floor_id]
+                now_recover_times = user_property_obj.property_info['recover_times']['recover_copy']['daily'].get(floor_id, 0)
+            if max_recover_times <= now_recover_times:
+                raise GameLogicError('user','max_times')
     else:
-        #重置时间和副本次数
+        # 重置时间和副本次数
         user_property_obj.reset_recover_times()
-        return True
+    return now_recover_times
 
-def vip_gift_sale_list(uid):
-    '''
-    vip用户礼包列表
-    '''
+
+def vip_gift_sale_list(rk_user):
+    """vip用户礼包列表"""
     data = {}
-    user_property_obj = UserProperty.get_instance(uid)
-    user_gift_obj = UserGift.get_instance(uid)
-    vip_charge_info = user_property_obj.property_info['vip_charge_info']
-   #读取商店vip礼包配置
-    vip_gift_sale_config = game_config.shop_config.get('vip_gift_sale',{})
-    if vip_gift_sale_config:
-        #vip礼包格式化函数
-        data = user_gift_obj.vip_gift_format(vip_gift_sale_config,vip_charge_info)
+    user_property_obj = rk_user.user_property
+    # 已购买的vip礼包id list
+    has_bought_ids = user_property_obj.property_info['vip_charge_info']
+    # 读取商店vip礼包配置
+    vip_gift_sale_config = game_config.vip_store_config.get('vip_sale',{})
+    data = _pack_store_info(vip_gift_sale_config, has_bought_ids)
     return data
 
 
-def test(uid):
-    '''
-    格式化礼包信息
-    '''
-    data = {}
-    #获取用户属性信息
-    user_property_obj = UserProperty.get(uid)
-    #获取已经购买的 vip 礼包的 id
-    vip_charge_info = user_property_obj.property_info['vip_charge_info']
-    #获取 vip 礼包的配置
-    vip_gift_sale_conf = game_config.shop_config.get('vip_gift_sale',{})
-    for vip_lv in vip_gift_sale_conf:
-        #遍历 所哟 vip 等级礼包内容
-        data = format_vip_gift(data,vip_lv,vip_gift_sale_conf,vip_charge_info)
-    print data 
+def buy_vip_gift(rk_user, params):
+    "购买vip礼品包"
+    vip_gift_id = params.get('vip_gift_id', '')
+    vip_gift_sale_config = game_config.vip_store_config.get('vip_sale',{})
+
+    user_property_obj = rk_user.user_property
+    vip_cur_level = user_property_obj.vip_cur_level
+
+    # 已购买的vip礼包id list
+    has_bought_ids = user_property_obj.property_info['vip_charge_info']
+
+    # 判断vip礼包id是否有效
+    if not vip_gift_id:
+        raise GameLogicError('gift', 'gift_code_error')
+    # 判断是否存在该vip礼包
+    if vip_gift_id not in vip_gift_sale_config:
+        raise GameLogicError('gift','gift_code_not_exist')
+    # 判断玩家的vip等级是否达到
+    if int(vip_gift_id) > int(vip_cur_level):
+        raise GameLogicError('gift','level_not_enough')
+    # 判断玩家是否已经购买相应的vip礼包
+    if vip_gift_id in has_bought_ids:
+        raise GameLogicError('gift','gift_already_buy')
+
+    need_coin = vip_gift_sale_config[vip_gift_id]['coin']
+    # 判断玩家的元宝是否达到
+    if not user_property_obj.is_coin_enough(need_coin):
+        raise GameLogicError('user', 'not_enough_coin')
+
+    goods_list = vip_gift_sale_config[vip_gift_id]['goods_list']
+    all_get_goods = tools.add_things(rk_user, [{"_id": good_id, "num": num} for good_id, num in goods_list.items()])
+    # 扣除元宝
+    user_property_obj.minus_coin(need_coin, where="buy_vip_gift")
+
+    user_property_obj.add_vip_gift_id(vip_gift_id)
+    return {'get_info': all_get_goods}
+    
+    
+def _pack_store_info(store_info, has_bought_ids):
+    store_info = copy.deepcopy(store_info)
+    for vip_level, good_info in store_info.items():
+        good_info["has_bought"] = (vip_level in has_bought_ids)
+        goods_list = []
+        for good_id, num in good_info['goods_list'].items():
+            goods_list.append(tools.pack_good(good_id, num))
+        good_info['goods_list'] = goods_list
+    return store_info
 
 
-def format_vip_gift(data,vip_lv,vip_gift_sale_conf,vip_charge_info):
-    '''
-    格式化vip等级礼包的信息
-    '''
-    data[vip_lv] = {}
-    #获取购买的价格
-    coin = vip_gift_sale_conf[vip_lv].get('coin',0)
-    #获取礼包内容
-    gift = vip_gift_sale_conf[vip_lv].get('gift',{})
-    tmp = {}
-    for gift_info in gift:
-        #遍历礼包内容
-        if gift_info:
-            gift_id , num = gift_info
-            #碎片
-            if 'soul' in gift_id:
-                gift_id = gift_id.replace('_soul','')
-                if 'soul' not in tmp:
-                    tmp['soul'] = {}
-                if gift_id not in tmp['soul']:
-                    tmp['soul'][gift_id] = 0
-                tmp['soul'][gift_id] += num
-            else:
-                return_type = gift_id.split('_')[1]
-                if return_type not in tmp:
-                    tmp[return_type] = {}
-                if gift_id not in tmp[return_type]:
-                    tmp[return_type][gift_id] = 0
-                tmp[return_type][gift_id] += num
-    if 'mat' in tmp:
-        tmp['materils'] = tmp['mat']
-        tmp.pop('mat')
-    data[vip_lv]['coin'] = coin
-    data[vip_lv]['gift'] = tmp
-    data[vip_lv]['has_buy'] = vip_lv in vip_charge_info
-    return data

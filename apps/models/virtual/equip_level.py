@@ -20,5 +20,5 @@ class EquipLevel(object):
         * 获取该等级所需要的经验
         '''
         obj = cls(lv)
-        obj.exp = game_config.equip_exp_conf.get(str(lv),0)
+        obj.exp = game_config.equip_exp_config.get(str(lv),0)
         return obj

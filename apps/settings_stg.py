@@ -12,16 +12,18 @@ WALKER_APP_ID = ''
 BASE_ROOT = '/alidata/sites/stg/qz'
 BASE_URL = 'http://sangoioscn.newsnsgame.com'
 
-ADMINS = (
-    #('jinming.zhang', 'sg_error@touchgame.net'),
-)
-
-MANAGERS = ADMINS
-EMAIL_TITLE = 'qz-appstore'
-
 EMAIL_HOST = 'mail.touchgame.net'
 EMAIL_PORT = 25
+EMAIL_ACCOUNT = 'sgqz@touchgame.net'
+EMAIL_PASSWORD = 'jnwUZV47i08S'
 EMAIL_USE_TLS=False
+EMAIL_TITLE = 'sqqz email'
+
+ADMINS = (
+    ('sgqz', EMAIL_ACCOUNT),
+)
+MANAGERS = ADMINS
+
 
 TIME_ZONE = 'Asia/Shanghai'
 LANGUAGE_CODE = 'ja'
@@ -59,10 +61,10 @@ TEMPLATE_DIRS = (
 INSTALLED_APPS = (
     'apps.admin',
     'apps.common',
-    'apps.ocadmin',
+    'django.contrib.humanize', #to use intcomma, show integer with ","
 )
 
-AUTH_AGE = 12
+AUTH_AGE = 30 
 SECRET_KEY = 'bdm@ktf0p7ee_sa7^mvg%i-d=b66jpd4qqomhb%upzg^s*05#v'
 SIG_SECRET_KEY = 'e#!(MO4gfu!^392)_()rm3'
 #tapjoy key
@@ -99,21 +101,21 @@ STORAGE_INDEX = '1'
 STORAGE_CONFIG = {
     "1":{
         'redis':[{'host':'10.200.55.32','port':6391,'db':'0'}],  #一组redis 用来存储游戏数据
-        'realtime_pvp_redis':{'host':'10.200.55.32','port':6391,'db':'1'},  #一组redis 用来实时pvp
+        'realtime_pvp_redis':{'host':'10.200.55.32','port':6391,'db':'1'},  #一组redis 用来存储游戏数据
         'top_redis':{'host':'10.200.55.32','port':6391,'db':'15'},  #一个redis 用来做排行榜
         'mongodb':{'host':'10.200.55.32','port':27017,'db':'qz_stg_db','username':'qzstguser','password':'lB7vTBor99yYh7E3F7'}, #一个mongodb 用来存储游戏数据
-        'log_mongodb':{'host':'10.200.55.32','port':27017,'db':'logqz_stg_db','username':'logqzstguser','password':'jXHMF01qqFb587aq8S'},
-        'secondary_log_mongodb':{'host':'10.200.55.32','port':27017,'db':'logqz_stg_db','username':'logqzstguser','password':'jXHMF01qqFb587aq8S'},
+	'log_mongodb':{'host':'10.200.55.32','port':27017,'db':'logqz_stg_db','username':'logqzstguser','password':'jXHMF01qqFb587aq8S'},
+
     },
 }
 
 #AES KEY
 AES_KEY = "e^qhim=ve^dw+gsz1^&5e(x#@uamq*-&"
-APP_NAME = '三国Q传开发服务器'
+APP_NAME = '三国Q传测试服务器'
 
 #appid和平台id
 OC_APP_ID = ''#逆转前线
-OC_PLATFORM_ID = '9'#IOS平台
+OC_PLATFORM_ID = '56'#IOS平台
 
 GAME_UID_KEY = 'oneclickgameuidkey'
 GAME_UID_MIN = 100212343 
@@ -123,8 +125,9 @@ FIRST_CHARGE = False
 APP_KEY_360 = 'ef4c20607cff240d51d0b712109b4270'
 APP_SECRET_KEY_360 = '98946959c9c124d7c74da1816ebc922e'
 
-APP_ID_91 = '112053'
-APP_KEY_91 = 'a1c38cb0fd0acdd4d954b5b7995ffcd20ea988d9c06e8a61'
+#updated on 2014/10/22 testing environment
+APP_ID_91 = '100010'
+APP_KEY_91 = 'C28454605B9312157C2F76F27A9BCA2349434E546A6E9C75'
 
 #港台和国服标识
 APP_SEVER_ID = 'cn'
@@ -140,7 +143,6 @@ ANDROID_CLIENT_TYPE = ['oc_android','xiaomi','gp','360','wandoujia','17173','91'
 MYCARD_FACID = "GFD01197"
 MYCARD_KEY1 = "mycardwanco"
 MYCARD_KEY2 = "CE2b1zQL6"
-
 
 # 实时pvp分服配置
 REAL_PVP_ALL_SERVERS = ["10.200.55.32:9040", "10.200.55.32:9045", "10.200.55.32:9042", "10.200.55.32:9043", "10.200.55.32:9044"]

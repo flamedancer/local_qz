@@ -23,12 +23,12 @@ rc 每一次API调用都要返回一个状态编码code。
 3  登录认证已过期
 4  该api此时不可用 
 5  权限不足
-6  缺少必要的参数或参数格式错误
+6  严重逻辑错误，可停止游戏, 例如缺少必要的参数或参数格式错误，
 7  服务器异常，请重试
 8  服务器异常，现在不要重试
 9  服务器维护中
 10 帐号被冻结
-11 逻辑异常 
+11 逻辑异常, 友好的提示，玩家可以继续正常游戏
 12 充值验证失败
 13 客户端版本已更新，重新下载
 14 server 关闭 给礼品码
@@ -171,7 +171,7 @@ url(r'^verify_ali_charge_result/$','verify_ali_charge_result',name = 'verify_ali
 2)method == 'main.get_config'   特定method 所提供的数据   
 返回格式：data : {
                   'common':{'stamina_recover_time':'','max_gacha_point':''}
-                              #stamina_recover_time,max_gacha_point,revive_coin,recover_stamina_coin,dungeon_clear_coin,card_extend_coin,card_extend_num，等
+                              #stamina_recover_time,max_gacha_point,revive_coin,dungeon_clear_coin,card_extend_coin,card_extend_num，等
                   'card_level':{}, # 'exp_type':{'a':{'1':0,'2':11},'b':{}}}
                   'dungeon':{} #战场配置
                   'friend_gift_conf':{#好友送礼可选礼物列表
@@ -1590,8 +1590,167 @@ method = soul.tranform_equip_soul_to_equip
 
 
 
+##########################    logics.pk_store   ##########################################################################
+
+-------------------------- 1  获取玩家 pk 商店信息的接口，------------------------
+method: pk_store.get_store_info
+
+前端需要加传的参数:  无
+
+后端的返回的数据: 商店显示用
+
+示例
+data = {
+    "last_vip_lv": 0,                       # 升级前的用户vip等级
+    "manual_refresh_times": 30,             # 用户当前可手动刷新的次数
+    "max_vip_lv": 15,                       # 游戏最大vip等级
+    "next_auto_refresh_time": 1412863200,   # 下一次自动刷新pk商店的时间戳
+    "refresh_need_honor": 10,               # 手动刷新一次所需花费的功勋
+    "total_refresh_times": 30,              # 用户当前的vip等级每天总共可手动刷新的次数
+    "user_vip_lv": 0                        # 用户当前的vip等级，vip升级后进入pk商店时此字段应该比last_vip_lv大
+    "goods": {                              # 商店中的商品，分类型，
+        "card": {
+            "1_card": {
+                "can_buy": true,     # 能否兑换，这里得到的应该都是true
+                "need_honor": 3000,  # 兑换所需功勋
+                "num": 1             # 一次的兑换数量
+            }
+        }, 
+        "equip": {
+            "13002_equip": {
+                "can_buy": true, 
+                "need_honor": 2000, 
+                "num": 1
+            }, 
+        }, 
+        "mat": {
+            "1_mat": {
+                "can_buy": true, 
+                "need_honor": 500, 
+                "num": 5
+            }, 
+        }, 
+        "props": {
+            "1_props": {
+                "can_buy": true, 
+                "need_honor": 400, 
+                "num": 4
+            }
+        }, 
+        "soul_card": {
+            "1_card": {
+                "can_buy": true, 
+                "need_honor": 500, 
+                "num": 5
+            }
+        }, 
+        "soul_equip": {
+            "13002_equip": {
+                "can_buy": true, 
+                "need_honor": 500, 
+                "num": 5
+            }, 
+            "34003_equip": {
+                "can_buy": true, 
+                "need_honor": 500, 
+                "num": 5
+        }
+    }, 
+}
 
 
+--------------------------  2 手动刷新 pk 商店的接口------------------------
+ 
+method: pk_store.refresh_store_by_self
+
+前端需要加传的参数:  无
+
+后端的返回的数据: 同上
+
+
+
+--------------------------  3 兑换 Pk 商店物品的接口------------------------
+ 
+method: pk_store.buy_store_goods
+
+前端需要加传的参数:  
+    goods_type: 物品类型 包含soul_card, soul_equip, card, equip, props, mat
+    goods_id:   所兑换的物品 id
+    
+
+后端的返回的数据: 同上
+                还多了一个所兑换物品
+{
+    "equip": [   # 所兑换物品的信息
+        {
+            "cur_experience": 0, 
+            "cur_lv": 1, 
+            "eid": "13002_equip", 
+            "quality": "green+0", 
+            "star": 3, 
+            "ueid": "201410131113460094384", 
+            "upd_time": 1413170026, 
+            "used_by": ""
+        }
+    ], 
+    # 以下同上
+    "goods": {
+        "card": {
+            "1_card": {
+                "can_buy": false, 
+                "need_honor": 3000, 
+                "num": 1
+            }
+        }, 
+        "equip": {
+            "12001_equip": {
+                "can_buy": true, 
+                "need_honor": 2000, 
+                "num": 1
+            }, 
+        }, 
+        "mat": {
+            "1_mat": {
+                "can_buy": true, 
+                "need_honor": 500, 
+                "num": 5
+            },
+        }, 
+        "props": {
+            "1_props": {
+                "can_buy": true, 
+                "need_honor": 400, 
+                "num": 4
+            }
+        }, 
+        "soul_card": {
+            "1_card": {
+                "can_buy": false, 
+                "need_honor": 500, 
+                "num": 5
+            }
+        }, 
+        "soul_equip": {
+            "12001_equip": {
+                "can_buy": true, 
+                "need_honor": 500, 
+                "num": 5
+            }, 
+            "13002_equip": {
+                "can_buy": true, 
+                "need_honor": 500, 
+                "num": 5
+            }, 
+        }
+    }, 
+    "last_vip_lv": 1, 
+    "manual_refresh_times": 34, 
+    "max_vip_lv": 15, 
+    "next_auto_refresh_time": 1413208800, 
+    "refresh_need_honor": 10, 
+    "total_refresh_times": 35, 
+    "user_vip_lv": 1
+}
 
 
 

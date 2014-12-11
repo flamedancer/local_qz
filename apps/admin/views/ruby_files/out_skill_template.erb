@@ -42,11 +42,10 @@
 
 
 ########主动技能配置###############
-  'active_skill_conf':[
+  'active_skill_conf':{
      #1单体 2aoe
-    "",
 <%= OutHelper.indent_string(strSkill, "    ") %>
-     ],
+     },
      
      
 #  主将技能类型
@@ -65,11 +64,10 @@
 # 12.所有异常状态无效
 
 
-########被动技能配置###############
-  'passive_skill_conf':[
-          "",#1.主将技能类型 2.加成值 3.对应属性
+########主将被动技能配置###############
+  'passive_skill_conf':{
+          #1.主将主动技能类型 2.加成值 3.对应属性
                                          #cardIdx
 <%= OutHelper.indent_string(strLeaderSkill, "    ") %>
-    ],
+    },
 }
-

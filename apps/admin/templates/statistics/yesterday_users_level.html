@@ -1,0 +1,36 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息
+  </h2> 
+
+  <hr clear=all>
+  <h3>昨天登录用户的等级分布</h3> 
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>等级 (昨日登录时) </th> 
+      <th>用户数</th>
+    </tr>
+  {% for level, count in level_users.items|sort  %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{level}}</td> 
+      <td>{{count}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+
+  <p style="color:gray"> *若有多次登录，只算登录时等级的最大值.</p>
+
+</body>
+</html>

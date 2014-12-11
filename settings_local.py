@@ -4,13 +4,13 @@ DEBUG = True #False
 ALLOWED_HOSTS = ['127.0.0.1']
 TEMPLATE_DEBUG = DEBUG
 LOCAL_DEBUG = False
-ENVIRONMENT_TYPE = 'prd'
+ENVIRONMENT_TYPE = 'local'
 
 WALKER_POP_URL = ''
 WALKER_KING_URL = ''
 WALKER_APP_ID = ''
 
-BASE_ROOT = '/Users/gc/chen/local_maxstrike'
+BASE_ROOT = '/Users/gc/chen/mysite/local_qz'
 BASE_URL = 'http://maxstrikecn.negaplay.com'
 #BASE_ROOT = '/data/sites/MaxStriketw'
 #BASE_URL = 'http://maxstrikecn.nega777.com'
@@ -57,13 +57,13 @@ ROOT_URLCONF = 'apps.urls'
 
 TEMPLATE_DIRS = (
     BASE_ROOT + '/apps/templates',
+
 )
 
 
 INSTALLED_APPS = (
     'apps.admin',
     'apps.common',
-    'apps.ocadmin',
 )
 
 AUTH_AGE = 12

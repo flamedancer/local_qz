@@ -28,92 +28,111 @@ import urllib2
 
 _pub_rsa_key = open(settings.BASE_ROOT+'/apps/config/public.pem', "r").read()
 
+
 def platform_auth(func):
-    """ 接口加上这个修饰将进行平台验证"""
-    def new_func(request,*args,**argw):
-        # 用户在首次登陆时或再次登陆访问时（大多数情况下是访问/路径时）
-        # 需要与开放平台进行验证，主要验证access_token以及openid
-        access_token = request.REQUEST.get('access_token','')
-        openid = request.REQUEST.get('openid','')
-        platform = request.REQUEST.get('platform','')
+    """ 修饰器，进行基于平台的账号校验
+
+    根据参数中指定的平台，去相应的开放平台进行身份验证
+    主要验证access_token以及openid
+    """
+
+    def new_func(request, *args, **argw):
+        access_token = request.REQUEST.get('access_token', '')
+        openid = request.REQUEST.get('openid', '')
+        platform = request.REQUEST.get('platform', '')
         uuid = request.REQUEST.get("uuid", "")
         mktid = request.REQUEST.get("mktid", "")
         version = request.REQUEST.get("version", "1.0")
         client_type = request.REQUEST.get("client_type", "")
-        #ios5以前用mac地址，ios6以后的用idfa
+        # ios5以前用mac地址，ios6以后的用idfa
         macaddr = request.REQUEST.get("macaddr", "")
         idfa = request.REQUEST.get("idfa", "")
         ios_ver = request.REQUEST.get("ios_ver", "")
 
         if platform == 'oc':
-            result,pid,msg = auth_token_for_oc(request,access_token,openid,uuid,\
-                                               mktid,version,client_type,macaddr,idfa,ios_ver)
+            result,pid,msg = auth_token_for_oc(request, access_token, openid, uuid,
+                                               mktid, version, client_type,macaddr,
+                                               idfa, ios_ver)
             if not result:
-                data = {'rc':3,'data':{'msg':msg,'server_now':int(time.time())}}
+                #print '##### failed to auth_token_for_oc, result, pid, msg=', result, pid, msg
+                data = {
+                    'rc': 3,
+                    'data': {
+                        'msg': msg,
+                        'server_now': int(time.time())
+                    }
+                }
                 return HttpResponse(
                     json.dumps(data, indent=1),
                     content_type='application/x-javascript',
                 )
         else:
+            result = False
+
+            # 除360外， 必须需要 access_token, openid, platform
+            # 2014/10/22: 现在 360, 只给 access_token ?
             if platform != '360' and (not access_token or not openid or not platform):
-                data = {'rc':6,'data':{'msg':get_msg('login','platform_overdue'),'server_now':int(time.time())}}
+                #print '#### platform_auth, rc: 6'
+                data = {
+                    'rc': 6,    #缺参数
+                    'data': {
+                        'msg': get_msg('login', 'platform_overdue'),
+                        'server_now': int(time.time())
+                    }
+                }
                 return HttpResponse(
                     json.dumps(data, indent=1),
                     content_type='application/x-javascript',
                 )
-            try:
-                if platform == 'qq':
-                    result,pid = auth_token_for_qq(request,access_token,openid,uuid,\
-                                                   mktid,version,client_type,macaddr,idfa,ios_ver)
-                elif platform == 'fb':
-                    result,pid = auth_token_for_fb(request,access_token,openid,uuid,\
-                                                   mktid,version,client_type,macaddr,idfa,ios_ver)
-                elif platform == 'sina':
-                    result,pid = auth_token_for_sina(request,access_token,openid,uuid,\
-                                                     mktid,version,client_type,macaddr,idfa,ios_ver)
-                elif platform == '360':
-                    result,pid = auth_token_for_360(request,access_token,openid,uuid,\
-                                                    mktid,version,client_type,macaddr,idfa,ios_ver)
-                elif platform == '91':
-                    result,pid = auth_token_for_91(request,access_token,openid,uuid,\
-                                                   mktid,version,client_type,macaddr,idfa,ios_ver)
-                elif platform == 'mi':
-                    result,pid = auth_token_for_mi(request,access_token,openid,uuid,\
-                                                    mktid,version,client_type,macaddr,idfa,ios_ver)
-                elif platform == 'pp':
-                    result,pid = auth_token_for_pp(request,access_token,openid,uuid,\
-                                                    mktid,version,client_type,macaddr,idfa,ios_ver)
-                else:
-                    result = False
-                    pid = ''
-            except:
-                result = False
-                pid = ''
+            
+            auth_function = globals().get("auth_token_for_" + platform)
+
+            if auth_function:
+                result,pid = auth_function(request, access_token, openid, uuid,
+                                           mktid, version, client_type,
+                                           macaddr, idfa, ios_ver)
+
         if not result:
-            data = {'rc':3,'data':{'msg':get_msg('login','platform_overdue'),'server_now':int(time.time())}}
+            #print '##### failed to auth_function, result, pid=', result, pid
+            data = {
+                'rc': 3,
+                'data': {
+                    'msg': get_msg('login', 'platform_overdue'),
+                    'server_now': int(time.time())
+                }
+            }
             return HttpResponse(
                 json.dumps(data, indent=1),
                 content_type='application/x-javascript',
             )
-        #验证成功
+        # 验证成功
         else:
             #检查用户是否处于冻结状态
             frozen_msg = get_frozen_msg(request.rk_user)
             if frozen_msg:
-                data = {'rc':10,'data':{'msg':frozen_msg,'server_now':int(time.time())}}
+                data = {
+                    'rc': 10,
+                    'data': {
+                        'msg': frozen_msg,
+                        'server_now': int(time.time())
+                    }
+                }
                 return HttpResponse(
                     json.dumps(data, indent=1),
                     content_type='application/x-javascript',
                 )
+
             if platform != '360':
                 Session.set(platform, pid)
+
             #更新版本号
 #            if request.rk_user.current_version<float(version):
 #                request.rk_user.baseinfo["current_version"] = float(version)
 #                request.rk_user.put()
-        result = func(request,*args,**argw)
+        result = func(request, *args, **argw)
         return result
     return new_func
+
 
 def platform_bind(func):
     """ 接口加上这个修饰将进行session验证"""
@@ -149,102 +168,149 @@ def platform_bind(func):
         return result
     return new_func
 
+
 def session_auth(func):
-    """ 接口加上这个修饰将进行session验证"""
-    def new_func(request,*args,**argw):
-        #此装饰器用于对api的请求，验证session
-        para_pid = request.REQUEST.get('pid',None)
-        para_platform = request.REQUEST.get('platform',None)
+    """ 修饰器，session超时验证
+    
+    为防止玩家长时间没有进行平台验证，而此时玩家的账号口令
+    可能已过期而导致的安全隐患。对每个玩家设置session，若
+    session太过旧，需重新进行平台验证
+    """
+
+    def new_func(request, *args, **argw):
+        para_pid = request.REQUEST.get('pid', None)
+        para_platform = request.REQUEST.get('platform', None)
 
         session_overdue = False
         if para_platform is None or para_pid is None:
             session_overdue = True
-        platform,pid = Session.get(para_platform+':'+para_pid)
-        if not platform or not pid or platform != para_platform or para_pid != pid:
-            session_overdue = True
+        else:
+            platform, pid = Session.get("{}:{}".format(para_platform, para_pid))
+            if not platform or not pid or platform != para_platform or para_pid != pid:
+                session_overdue = True
 
         #session过期
         if session_overdue:
-            data = {'rc':8,'data':{'msg':get_msg('login','server_exception'),'server_now':int(time.time())}}
+            data = {
+                'rc': 8,
+                'data': {
+                    'msg': get_msg('login', 'server_exception'),
+                    'server_now': int(time.time())
+                }
+            }
             return HttpResponse(
                 json.dumps(data, indent=1),
                 content_type='application/x-javascript',
             )
-        result = func(request,*args,**argw)
+        result = func(request, *args, **argw)
         return result
     return new_func
 
+
 def signature_auth(func):
-    """ 接口加上这个修饰将进行session验证"""
-    def new_func(request,*args,**argw):
-        #此装饰器用于对api的请求，验证客户端签名
+    """ 修饰器，进行request参数校验
+
+    主要校验request的时间戳是否过旧
+    参数的验证码是否正确
+    """
+
+    def new_func(request, *args, **argw):
         try:
             timestamp = request.REQUEST.get('timestamp')
             if not timestamp:
-                data = {'rc':6,'data':{'msg':get_msg('login','refresh'),'server_now':int(time.time())}}
+                data = {
+                    'rc':6,
+                    'data': {
+                        'msg': get_msg('login', 'refresh'),
+                        'server_now': int(time.time()),
+                    }
+                }
                 return HttpResponse(
                     json.dumps(data, indent=1),
                     content_type='application/x-javascript',
                 )
-            all_post_datas = request.POST
-            all_post_datas_copy = {}
-            for _key in all_post_datas:
-                if _key == 'signature':
-                    all_post_datas_copy[_key] = all_post_datas[_key].replace(' ','+')
-                else:
-                    all_post_datas_copy[_key] = all_post_datas[_key]
+            # all_post_data  是 QueryDict 类型，详见：https://docs.djangoproject.com/en/1.4/ref/request-response/#django.http.QueryDict
+            all_post_data = request.POST.copy()
+            if 'signature' in all_post_data:
+                all_post_data['signature'] = all_post_data['signature'].replace(' ', '+')
 
-            debug_print('all_post_datas>>>>>>>>>>>>>>'+str(all_post_datas_copy))
-            arg = all_post_datas_copy.pop('arg')
-            all_string = ''
-            for _key in sorted(all_post_datas_copy.keys()):
-                all_string += '%s=%s&' % (_key,all_post_datas_copy[_key])
-            #时间戳超过一定时间后，论证不通过
-            if abs(time.time() - int(timestamp)) > settings.AUTH_AGE:
-                data = {'rc':1,'data':{'msg':get_msg('login','refresh'),'server_now':int(time.time())}}
-                print 'timestamp auth failed!',request.REQUEST.get('pid','none')
+            debug_print('all_post_datas>>>>>>>>>>>>>>' + str(all_post_data))
+            
+            # 检查时间  时间戳超过一定时间后，视为过期请求
+            if (time.time() - int(timestamp)) > settings.AUTH_AGE:
+                data = {
+                    'rc':1,
+                    'data': {
+                        'msg': get_msg('login', 'refresh'),
+                        'server_now': int(time.time()),
+                    }
+                }
+                print 'timestamp auth failed!', request.REQUEST.get('pid', 'none')
                 return HttpResponse(
                     json.dumps(data, indent=1),
                     content_type='application/x-javascript',
                 )
+
+            # 检查验证码
+            arg = all_post_data.pop('arg')[0]
+            all_string = ''
+            all_args = []
+            for key, value in sorted(all_post_data.items()):
+                all_args.append('%s=%s&' % (key, value))
+            all_string = ''.join(all_args)
+
             local_arg = md5.md5(all_string.encode('utf-8') + settings.SIG_SECRET_KEY).hexdigest()[:10]
-            #签名认证不通过
+            # 签名认证不通过
             if local_arg != arg:
-                path = request.META.get('PATH_INFO')
                 signature_fail = True
-                if 'method' in request.REQUEST and request.REQUEST['method'] in ['main.set_signature']:
-                    signature_fail = False
-                elif path == '/tutorial/' and request.REQUEST.get('step') == '1':
+                if 'method' in request.REQUEST and request.REQUEST['method'] in ['main.set_name']:
                     signature_fail = False
                 if signature_fail:
-                    print 'signature auth failed!',request.REQUEST.get('pid','none')
-                    data = {'rc':1,'data':{'msg':get_msg('login','refresh'),'server_now':int(time.time())}}
-                    #data = {'rc':100,'msg':u'系统检测到您在非法操作，请停止这种行为，以免账户冻结'}
+                    print 'signature auth failed!', request.REQUEST.get('pid', 'none')
+                    data = {
+                        'rc':1,
+                        'data': {
+                            'msg': get_msg('login', 'refresh'),
+                            'server_now': int(time.time())
+                        }
+                    }
                     return HttpResponse(
                         json.dumps(data, indent=1),
                         content_type='application/x-javascript',
                     )
-            #认证通过
-            result = func(request,*args,**argw)
+            # 认证通过
+            result = func(request, *args, **argw)
             return result
         except:
             print_err()
-            #清空storage
+            # 清空storage
             app.pier.clear()
-            #send mail
+            # send mail
             send_exception_mail(request)
 
-            data = {'rc':8,'data':{'msg':get_msg('login','server_exception'),'server_now':int(time.time())}}
+            data = {
+                'rc': 8,
+                'data': {
+                    'msg': get_msg('login', 'server_exception'),
+                    'server_now': int(time.time())
+                }
+            }
             return HttpResponse(
                 json.dumps(data, indent=1),
                 content_type='application/x-javascript',
             )
     return new_func
 
+
 def __get_uid(platform, openid, pid, subarea):
-    '''
-    取得uid
-    '''
+    """取得uid
+
+    根据平台、openid等信息取得对应的uid
+
+    Returns:
+        玩家uid, 若没有符合条件的uid则返回空字符串
+    """
+
     if not pid:
         if platform == 'oc':
             pid = openid
@@ -253,64 +319,100 @@ def __get_uid(platform, openid, pid, subarea):
     ac = AccountMapping.get(pid)
     return ac.get_subarea_uid(subarea) if ac else ''
 
+
 def maintenance_auth(func):
-    """ 接口加上这个修饰将进行游戏维护验证"""
-    def new_func(request,*args,**argw):
+    """ 修饰器，维护期校验
+
+    若游戏处于维护期，则只有指定的uid才可以登入
+    """
+
+    def new_func(request, *args, **argw):
         try:
             if game_config.system_config['maintenance']:
-                pid = request.REQUEST.get('pid','')
-                platform = request.REQUEST.get('platform','')
-                openid = request.REQUEST.get('openid','')
+                pid = request.REQUEST.get('pid', '')
+                platform = request.REQUEST.get('platform', '')
+                openid = request.REQUEST.get('openid', '')
                 subarea = request.REQUEST.get('subarea', '1')
                 allow = False
                 if platform and (pid or openid):
                     uid = __get_uid(platform, openid, pid, subarea)
-                    if uid and uid in game_config.system_config.get('allow_uids',[]):
+                    if uid and uid in game_config.system_config.get('allow_uids', []):
                         allow = True
                 if not allow:
-                    data = {'rc':9,'data':{'msg':get_msg('login','maintenance'),'server_now':int(time.time())}}
+                    data = {
+                        'rc': 9,
+                        'data': {
+                            'msg': get_msg('login', 'maintenance'),
+                            'server_now': int(time.time()),
+                        }
+                    }
                     return HttpResponse(
                         json.dumps(data, indent=1),
                         content_type='application/x-javascript',
                     )
-            result = func(request,*args,**argw)
+            result = func(request, *args, **argw)
             return result
         except:
             print_err()
             app.pier.clear()
             #send mail
             send_exception_mail(request)
-            data = {'rc':8,'data':{'msg':get_msg('login','server_exception'),'server_now':int(time.time())}}
+            data = {
+                'rc': 8,
+                'data': {
+                    'msg': get_msg('login', 'server_exception'),
+                    'server_now': int(time.time())
+                }
+            }
             return HttpResponse(
                 json.dumps(data, indent=1),
                 content_type='application/x-javascript',
             )
     return new_func
 
-def needuser(func):
-    """ 接口加上这个修饰将安装用户，需要先验证"""
+
+def set_user(func):
+    """ 修饰器，取得并设置此次请求的发起者(userbase实例)
+
+    通过参数中pid、subarea等获得UserBase实例代表
+    此次请求的发起者，并加入到request实例中。
+    若没有符合条件的UserBase，则代表是新手玩家，需新建userbase实例
+    """
+
     def new_func(request,*args,**argw):
         pid = request.REQUEST.get("pid")
         platform = request.REQUEST.get("platform")
         subarea = request.REQUEST.get("subarea", "1")
 
         if pid and platform:
-            #调用UserBase的install方法安装用户
             request.rk_user = UserBase._install(pid, platform, subarea=subarea)
             frozen_msg = get_frozen_msg(request.rk_user)
             if frozen_msg:
-                data = {'rc':10,'data':{'msg':frozen_msg,'server_now':int(time.time())}}
+                data = {
+                    'rc': 10,
+                    'data': {
+                        'msg': frozen_msg,
+                        'server_now': int(time.time())
+                    }
+                }
                 return HttpResponse(
                     json.dumps(data, indent=1),
                     content_type='application/x-javascript',
                 )
         else:
-            data = {'rc':6,'data':{'msg':get_msg('login','platform_overdue'),'server_now':int(time.time())}}
+            #print '#### set_user, rc: 6'
+            data = {
+                'rc': 6,
+                'data': {
+                    'msg': get_msg('login', 'platform_overdue'),
+                    'server_now': int(time.time())
+                }
+            }
             return HttpResponse(
                 json.dumps(data, indent=1),
                 content_type='application/x-javascript',
             )
-        return func(request,*args,**argw)
+        return func(request, *args, **argw)
     return new_func
 
 def _bind_new_platform(request, platform_name, platform_openId, old_account, result):
@@ -341,7 +443,7 @@ def _bind_new_platform(request, platform_name, platform_openId, old_account, res
     request.rk_user.baseinfo['platform'] = platform_name
     request.rk_user.baseinfo['bind_time'] = int(time.time())
     request.rk_user.put()
-    update_function = getattr(request.rk_user, "update_user_from_" + platform_name)
+    update_function = request.rk_user.update_platform_openid(platform_name, platform_openId)
     if update_function:
         update_function(result)
     return fg, pid, msg
@@ -459,34 +561,82 @@ def auth_bind_for_sina(request,access_token,openid,bind_access_token,bind_openid
         msg = get_msg('login','invalid_bind')
     return fg,pid,msg
 
+
+#def auth_token_for_360____old(request,access_token,openid,uuid,mktid,version,client_type,macaddr,idfa,ios_ver):
+#   #old before 2014/10/22
+#    fg = False
+#    pid = ''
+#    subarea = request.REQUEST.get("subarea", "1")
+#    #360平台验证
+#    if not 'authorizationCode' in request.REQUEST:
+#        return fg, pid
+#    else:
+#        authorizationCode = str(request.REQUEST['authorizationCode'])
+#
+#    platform = str(request.REQUEST['platform'])
+#    if authorizationCode:
+#        client_secret = settings.APP_SECRET_KEY_360
+#        client_id = settings.APP_KEY_360
+#        url_360 = 'https://openapi.360.cn'
+#        code_url = '%s/oauth2/access_token?grant_type=authorization_code&code=%s&client_id=%s&client_secret=%s&redirect_uri=oob' % (url_360, authorizationCode, client_id, client_secret)
+#        url_request = urllib2.urlopen(code_url, timeout=12)
+#        code, res = url_request.code, url_request.read()
+#
+#        if code == 200:
+#            res_dict = json.loads(res)
+#            access_token = str(res_dict['access_token'])
+#            refresh_token = str(res_dict['refresh_token'])
+#            expires_in = float(res_dict['expires_in'])
+#            access_token_url = '%s/user/me.json?access_token=%s&fields=id,name,avatar,sex,area' % (url_360, access_token)
+#            token_res = urllib2.urlopen(str(access_token_url), timeout=12).read()
+#            fg = True
+#            res_dict = json.loads(token_res)
+#            openid = str(res_dict['id'])
+#            pid = md5.md5('360' + openid).hexdigest()
+#            request.rk_user = UserBase._install(pid, platform,uuid,mktid,version,client_type,macaddr,idfa,ios_ver, subarea=subarea)
+#            #检查用户是否账户被冻结
+#            if not request.rk_user.frozen:
+#                #更新用户的openid和access_token
+#                request.rk_user.account.update_info(openid,access_token)
+#                request.rk_user.update_user_from_360(res_dict)
+#                expires_time = time.time() + expires_in
+#                Session.set(platform, pid, access_token, refresh_token, expires_time)
+#    return fg,pid
+
+
 def auth_token_for_360(request,access_token,openid,uuid,mktid,version,client_type,macaddr,idfa,ios_ver):
+    #print '##### in auth_token_for_360'
     fg = False
     pid = ''
     subarea = request.REQUEST.get("subarea", "1")
+
     #360平台验证
-    if not 'authorizationCode' in request.REQUEST:
+    if not 'access_token' in request.REQUEST:
         return fg, pid
     else:
-        authorizationCode = str(request.REQUEST['authorizationCode'])
+        access_token = str(request.REQUEST['access_token'])
 
     platform = str(request.REQUEST['platform'])
-    if authorizationCode:
-        client_secret = settings.APP_SECRET_KEY_360
-        client_id = settings.APP_KEY_360
-        url_360 = 'https://openapi.360.cn'
-        code_url = '%s/oauth2/access_token?grant_type=authorization_code&code=%s&client_id=%s&client_secret=%s&redirect_uri=oob' % (url_360, authorizationCode, client_id, client_secret)
+    if access_token:
+        url_360 = 'https://openapi.360.cn/user/me.json'
+        code_url = '%s?access_token=%s&fields=id,name,avatar,sex,area' % (url_360, access_token)
         url_request = urllib2.urlopen(code_url, timeout=12)
         code, res = url_request.code, url_request.read()
 
+        #print '#### 360, code, res=', code, res
+        #可能360不需要refresh_token ?
+        #refresh_token = str(request.REQUEST['refresh_token'])
+        refresh_token = ''
+        #print '#### refresh_token=', refresh_token
+        #expires_in = float(request.REQUEST['expires_in'])  # "['123.45']" ?
+        #print '#### expires_in=', request.REQUEST['expires_in']
+        expires_in = 24*3600
+
         if code == 200:
             res_dict = json.loads(res)
-            access_token = str(res_dict['access_token'])
-            refresh_token = str(res_dict['refresh_token'])
-            expires_in = float(res_dict['expires_in'])
-            access_token_url = '%s/user/me.json?access_token=%s&fields=id,name,avatar,sex,area' % (url_360, access_token)
-            token_res = urllib2.urlopen(str(access_token_url), timeout=12).read()
+            #print '#### 360, res_dict=', res_dict
+
             fg = True
-            res_dict = json.loads(token_res)
             openid = str(res_dict['id'])
             pid = md5.md5('360' + openid).hexdigest()
             request.rk_user = UserBase._install(pid, platform,uuid,mktid,version,client_type,macaddr,idfa,ios_ver, subarea=subarea)
@@ -496,6 +646,8 @@ def auth_token_for_360(request,access_token,openid,uuid,mktid,version,client_typ
                 request.rk_user.account.update_info(openid,access_token)
                 request.rk_user.update_user_from_360(res_dict)
                 expires_time = time.time() + expires_in
+
+                #print '##### 360 start set session'
                 Session.set(platform, pid, access_token, refresh_token, expires_time)
     return fg,pid
 
@@ -613,6 +765,7 @@ def auth_token_for_fb(request,access_token,openid,uuid,mktid,version,client_type
 def auth_token_for_oc(request,access_token,openid,uuid,mktid,version,client_type,macaddr,idfa,ios_ver):
     """论证无账号用户
     """
+    print "debug_guochen access_token, openid", access_token, openid
     fg = False
     pid = ''
     msg = ''
@@ -643,16 +796,18 @@ def auth_token_for_oc(request,access_token,openid,uuid,mktid,version,client_type
             access_token = get_upwd()
             request.rk_user.account.update_info(pid, access_token)
             account = request.rk_user.account
+            print "debug_guochen_new_token pid, access_token, openid", pid, access_token, openid
         else:
             msg = get_msg('login','cannot_register')
             return fg,pid,msg
 
-    if account and account.access_token == access_token:
+    elif account.access_token == access_token:
         fg = True
         pid = openid
         #验证成功，安装用户
         request.rk_user = UserBase._install(pid, 'oc', subarea=subarea)
     else:
+        print "debug_guochen_erro_token pid, access_token, openid", pid, access_token, openid
         msg = get_msg('login','session_overdue')
     return fg,pid,msg
 
@@ -782,8 +937,11 @@ def get_frozen_msg(rk_user):
         msg = msg % (frozen_days,timestamp_toString(unfroze_time,'%m.%d %H:%M'),rk_user.uid)
     return msg
 
+
 def server_close_auth(func):
     """服务关闭，发送新版的礼品码
+
+    # TODO(GuoChen) 未知的功能，待删除
     """
     def new_func(request,*args,**argw):
         if game_config.system_config.get('server_close'):

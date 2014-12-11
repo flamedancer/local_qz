@@ -18,10 +18,10 @@ class UserActivity(GameModel):
     Attributes:
         uid: 用户ID str
         explore: 探索 dic
-        banquet: 性别 dic
+        banquet: 回体活动（美味大餐） dic
     """
     pk = 'uid'
-    fields = ['uid','explore','banquet']
+    fields = ['uid', 'explore', 'banquet_info']
     def __init__(self):
         """初始化用户活动信息
 
@@ -30,20 +30,15 @@ class UserActivity(GameModel):
         """
         self.uid = None
         self.explore = {}
-        self.banquet = {}
+        self.banquet_info = {}
 
     @classmethod
     def get_instance(cls,uid):
         #初始化用户活动
         obj = super(UserActivity,cls).get(uid)
         if obj is None:
-            obj = cls._install(uid)
-        return obj
-
-    @classmethod
-    def _install(cls,uid):
-        obj = cls.create(uid)
-        obj.put()
+            obj = cls.create(uid)
+            obj.put()
         return obj
 
     @classmethod
@@ -55,7 +50,9 @@ class UserActivity(GameModel):
         uactivity.explore = {}
         uactivity.explore = uactivity.reset_explore_times()
         #美味大餐
-        uactivity.banquet = {}
+        uactivity.banquet_info = {}
+
+        uactivity.put()
         return uactivity
 
     def reset_explore_times(self):

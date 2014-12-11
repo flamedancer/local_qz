@@ -4,8 +4,6 @@
 file_name:user_property.py
 """
 import time
-import datetime
-import copy
 
 from apps.models.level_user import LevelUser
 from apps.models.virtual.user_level import UserLevel as UserLevelMod
@@ -18,6 +16,7 @@ from apps.oclib.model import TopModel
 from apps.models.user_souls import UserSouls
 from apps.models import GameModel
 
+
 lv_top_model = TopModel.create(settings.LV_TOP)
 
 
@@ -26,7 +25,7 @@ class UserProperty(GameModel):
     用户游戏内部基本信息
     """
     pk = 'uid'
-    fields = ['uid','property_info','charge_award_info', 'consume_award_info', 'month_item_info']
+    fields = ['uid', 'property_info', 'charge_award_info', 'consume_award_info', 'month_item_info']
     def __init__(self):
         """初始化用户游戏内部基本信息
 
@@ -46,7 +45,7 @@ class UserProperty(GameModel):
         obj = super(UserProperty,cls).get(uid)
 
         if obj is None:
-            obj = cls._install(uid)
+            obj = cls.create(uid)
 
         return obj
 
@@ -58,7 +57,7 @@ class UserProperty(GameModel):
 
     @property
     def double_charge(self):
-        return self.property_info.get('double_charge',False)
+        return self.property_info.get('double_charge', False)
     
     @classmethod
     def create(cls,uid):
@@ -84,16 +83,12 @@ class UserProperty(GameModel):
                             }
 
         up.property_info = {
-                            'country':0,#国家,1为魏，2为蜀，3为吴
                             'exp':0,#经验值
                             'lv':1,
                             'gold':0,
                             'coin':0,
                             'stamina':0,
                             'stamina_upd_time': int(time.time()),
-                            'max_card_num':0,
-                            'leader_card':{},
-                            'gacha_pt':0,
                             'first_charge':True,
                             'first_charge_date':None,
                             'charged_fg':None,
@@ -102,20 +97,13 @@ class UserProperty(GameModel):
                             'newbie_steps':0,     # 已完成的新手步骤
 
                             'bind_award':True,
-                            'tapjoy':{
-                                'points':0,
-                                'coins':0,
-                            },
 
-                            'friend_extend_num':0,
                             'special_first_charge':True,#是否第一次购买特殊元宝礼包
                             'vip_charge_info':[],     #Vip等级所购买的vip礼包 只可以买一次
                             "charge_sumcoin":0,
                             "charge_sum_money":0,
                             "update_award":[], #版本更新奖励
                             "double_charge_date":[],        #双倍充值日期
-                            "system_award_time":None, #2013.5.22晚服务器故障补偿
-                            "pvp_newbie":True,#是否已经过了pvp新手
 
                             'charged_user':False,#是否付费用户，包含大礼包
 
@@ -127,51 +115,27 @@ class UserProperty(GameModel):
                                 'recover_copy':{
                                     'normal':0,
                                     'special':0,
-                                    'daily':0
+                                    'daily': {},
                                 },               #刷新副本次数                                
                             },         #使用元宝购买回复的次数
-
-                            'bind_award': True,
-
+                            'wipe_out_times': 0,    # 当天已扫荡次数
                             'card_exp_point': 1000, # 拥有的武将经验点数
+                            'fight_soul': 0 #战魂
                         }
+        # 初始化每个试炼战场回复次数都为0
+        daily_floods = up.game_config.daily_dungeon_config.keys()
+        for daily_flood in daily_floods:
+            up.property_info['recover_times']['recover_copy']['daily'][daily_flood] = 0
+
+        userLevelMod = UserLevelMod.get(str(up.property_info['lv']), game_config=up.game_config)
+        up.property_info['stamina'] = userLevelMod.stamina
+
+        user_info_init = up.game_config.user_init_config["init_user_info"]
+        up.property_info.update(user_info_init)
+        up.put()
 
         return up
 
-    @classmethod
-    def _install(cls,uid):
-        obj = cls.create(uid)
-        obj.property_info['exp'] = 1500
-        obj.property_info['lv'] = 4
-        userLevelMod = UserLevelMod.get(str(obj.property_info['lv']), game_config=obj.game_config)
-        obj.property_info['stamina'] = userLevelMod.stamina
-        obj.property_info['gold'] = obj.game_config.user_init_config['init_gold']
-        obj.property_info['coin'] = obj.game_config.user_init_config['init_coin']
-        obj.property_info['max_card_num'] = obj.game_config.user_init_config['init_max_card_num']
-        obj.property_info['card_exp_point'] = obj.game_config.user_init_config['init_card_exp_point']
-        obj.put()
-        return obj
-
-    def set_leader_card(self,ucid,leader_card):
-        """冗余数据，记录用户leader卡
-        """
-        card_cp = copy.deepcopy(leader_card)
-        card_cp['ucid'] = ucid
-        card_cp.pop('upd_time')
-        self.property_info['leader_card'] = card_cp
-        self.put()
-        
-    def set_leader_role_card(self,ucid):
-        self.property_info['leader_role_card'] = ucid
-        self.put()
-        
-    @property
-    def leader_role_card(self):
-        '''
-        获取leader card
-        miaoyichao
-        '''
-        return self.property_info.get('leader_role_card','')
 
     @property
     def lv(self):
@@ -180,7 +144,6 @@ class UserProperty(GameModel):
         miaoyichao
         """
         return self.property_info['lv']
-
 
     @property
     def next_lv(self):
@@ -232,7 +195,7 @@ class UserProperty(GameModel):
         """
         用户的首次充值日期
         """
-        return self.property_info.get('first_charge_date','')
+        return self.property_info.get('first_charge_date', '')
 
     @property
     def charged_fg(self):
@@ -248,24 +211,21 @@ class UserProperty(GameModel):
         用户充值过与否的标识，包括6元大礼包
         miaoyichao
         """
-        return self.property_info.get('charged_user',False)
+        return self.property_info.get('charged_user', False)
 
     @property
     def vip_cur_level(self):
         '''
-        * 获取vip当前等级
-        * miaoyichao
+        获取当前vip等级
         '''
         current_vip_level = 0
         charge_sum_coin = self.charge_sumcoin
         try:
-            #从vip配置信息中循环找出当前用户充值所匹配的vip等级
-            for level,value in self.game_config.user_vip_conf.items():
+            # 从vip配置信息中循环找出当前用户充值所匹配的vip等级
+            for level,value in self.game_config.user_vip_config.items():
                 # 获取vip等级
                 if value['coin'] <= charge_sum_coin:
-                    '''
-                    * 该层判断是为了防止字典的无序所产生的错误
-                    '''
+                    # 该层判断是为了防止字典的无序所产生的错误
                     if current_vip_level > int(level):
                         pass
                     else:
@@ -280,11 +240,10 @@ class UserProperty(GameModel):
     @property
     def vip_next_level(self):
         '''
-        * miaoyichao
-        * 计算vip的下一等级
+        计算vip的下一等级
         '''
         vip_cur_level = self.vip_cur_level
-        next_lv = self.game_config.user_vip_conf.get(str(vip_cur_level+1),0)
+        next_lv = self.game_config.user_vip_config.get(str(vip_cur_level+1),0)
         if next_lv:
             return vip_cur_level + 1
         else:
@@ -293,15 +252,14 @@ class UserProperty(GameModel):
     @property
     def next_lv_need_coin(self):
         '''
-        * miaoyichao
-        * 计算下一级所需要的金钱
+        计算下一级所需要的金钱
         '''
         vip_cur_level = self.vip_cur_level
         vip_next_level = self.vip_next_level
         if vip_cur_level == vip_next_level:
             needcoin = 0
         else:
-            vip_conf = self.game_config.user_vip_conf
+            vip_conf = self.game_config.user_vip_config
             cur_coin = vip_conf[str(vip_cur_level)]['coin']
             nxt_coin = vip_conf[str(vip_next_level)]['coin']
             needcoin = nxt_coin - cur_coin
@@ -311,7 +269,6 @@ class UserProperty(GameModel):
     def next_lv_need_exp(self):
         """
         到下一级别需要的经验值
-        miaoyichao
         """
         need_exp = self.next_lv_exp - self.exp
         if need_exp < 0:
@@ -322,7 +279,6 @@ class UserProperty(GameModel):
     def lv_region(self):
         """
         用户级别所属的区间
-        miaoyichao
         """
         return (self.property_info['lv'] / 6) + 1
 
@@ -330,26 +286,14 @@ class UserProperty(GameModel):
     def login_time(self):
         """
         用户登录时间
-        miaoyichao
         """
         from apps.models.user_login import UserLogin
         return UserLogin.get_instance(self.uid).login_info['login_time']
 
     @property
-    def country(self):
-        """
-        用户的国家
-        miaoyichao
-        """
-        if not 'country' in self.property_info:
-            self.property_info['country'] = 1
-        return self.property_info.get('country',0)
-
-    @property
     def gold(self):
         """
         用户的gold
-        miaoyichao
         """
         return self.property_info['gold']
 
@@ -357,17 +301,8 @@ class UserProperty(GameModel):
     def coin(self):
         """
         用户的coin
-        miaoyichao
         """
         return self.property_info['coin']
-
-    @property
-    def leader_card(self):
-        """
-        leader卡数据
-        miaoyichao
-        """
-        return self.property_info['leader_card']
 
     @property
     def newbie(self):
@@ -387,8 +322,7 @@ class UserProperty(GameModel):
     @property
     def first_charge(self):
         '''
-        首冲标志
-        miaoyichao
+        首充标志
         '''
         return self.property_info.get('first_charge',False)
 
@@ -400,7 +334,6 @@ class UserProperty(GameModel):
     def vip_this_lv_charge_info(self):
         '''
         vip当前充值标志
-        miaoyichao
         '''
         vip_lv = self.vip_cur_level
         return self.property_info['vip_charge_info'].get(str(vip_lv),False)
@@ -410,10 +343,9 @@ class UserProperty(GameModel):
         '''
         vip的充值礼包购买信息
         这里使用每一次去读配置的原因就是为了可扩展性 
-        miaoyichao
         '''
         vip_charge_info = {}
-        user_vip_conf = self.game_config.user_vip_conf
+        user_vip_conf = self.game_config.user_vip_config
         #遍历所有的 vip 等级信息
         for vip_lv in user_vip_conf:
             if vip_lv in self.property_info['vip_charge_info']:
@@ -423,10 +355,6 @@ class UserProperty(GameModel):
         return vip_charge_info
 
     @property
-    def get_card(self):
-        return self.property_info.get('get_card',True)
-
-    @property
     def stamina(self):
         '''
         返回当前用户的体力值
@@ -434,8 +362,11 @@ class UserProperty(GameModel):
         return self.property_info['stamina']
 
     @property
-    def tapjoy(self):
-        return self.property_info['tapjoy']
+    def get_fight_soul(self):
+        '''
+        返回战魂
+        '''
+        return self.property_info['fight_soul']
 
     @property
     def update_award(self):
@@ -463,10 +394,6 @@ class UserProperty(GameModel):
         """
         return self.property_info["double_charge_date"]
 
-    @property
-    def system_award_time(self):
-        return self.property_info["system_award_time"]
-
     def refresh_lv(self,version):
         """
         刷新等级
@@ -485,15 +412,13 @@ class UserProperty(GameModel):
             self.property_info['lv'] = new_lv
             userLevelMod = UserLevelMod.get(new_lv)
             self.property_info['stamina'] = userLevelMod.stamina
-            from apps.models.user_pvp import UserPvp
-            user_pvp_obj = UserPvp.get(self.uid)
-            user_pvp_obj.recover_pvp_stamina()
+
             #将用户写入新级别对应的用户列表中
             subarea = self.user_base.subarea
             LevelUser.get_instance(subarea, self.lv_region).add_user(self.uid)
         self.put()
 
-    def add_exp(self, exp, where='', version=1.3):
+    def add_exp(self, exp, where=''):
         '''
         添加用户的经验
         不管是加还是扣经验都会触发等级变化
@@ -511,6 +436,7 @@ class UserProperty(GameModel):
             new_lv += 1
             userLevelMod = UserLevelMod.get(new_lv)
             if not userLevelMod.exp or self.property_info['exp'] < userLevelMod.exp:
+                new_lv -= 1
                 break
 
         if new_lv > old_lv:
@@ -533,10 +459,8 @@ class UserProperty(GameModel):
             if not rank_lv or new_lv>rank_lv:
                 lv_top_model.set(self.uid,new_lv)
             #更新体力，cost
-            from apps.models.user_pvp import UserPvp
             self.property_info['stamina'] += userLevelMod.lv_stamina
-            user_pvp_obj = UserPvp.get(self.uid)
-            user_pvp_obj.recover_pvp_stamina()
+
             #将用户写入新级别对应的用户列表中
             subarea = self.user_base.subarea 
             LevelUser.get_instance(subarea, self.lv_region).add_user(self.uid)
@@ -573,9 +497,15 @@ class UserProperty(GameModel):
         self.property_info['recover_times']['recover_pvp_stamina'] = 0
         self.property_info['recover_times']['recover_mystery_store'] = 0
         self.property_info['recover_times']['recover_copy'] = {}
-        for i in ['normal','special','daily']:
-            #清除各种战场的回复次数
-            self.property_info['recover_times']['recover_copy'][i] = 0
+        self.property_info['recover_times']['recover_copy'] = {
+            'normal':0,
+            'special':0,
+            'daily': {},
+        }
+        # 初始化每个试炼战场回复次数都为0
+        daily_floods = self.game_config.daily_dungeon_config.keys()
+        for daily_flood in daily_floods:
+            self.property_info['recover_times']['recover_copy']['daily'][daily_flood] = 0
         self.put()
 
     
@@ -593,13 +523,14 @@ class UserProperty(GameModel):
         if restore_stamina_num <= 0:
             #不合符更新要求的 直接返回
             return
-        #计算体力值
-        stamina_temp = min(self.property_info['stamina'] + restore_stamina_num, self.max_stamina)
+        #计算体力值 若已经超过体力上限，不进行回复
+        if self.property_info['stamina'] < self.max_stamina:
+            stamina_temp = min(self.property_info['stamina'] + restore_stamina_num, self.max_stamina)
+            self.property_info['stamina'] = stamina_temp
 
         # 更新时间
-        self.property_info['stamina_upd_time'] = int(self.property_info['stamina_upd_time'] + \
+        self.property_info['stamina_upd_time'] = int(self.property_info['stamina_upd_time'] +
         stamina_recover_time_config * restore_stamina_num * 60)
-        self.property_info['stamina'] = stamina_temp
         self.put()
         return
 
@@ -633,7 +564,7 @@ class UserProperty(GameModel):
         '''
         return self.property_info['coin'] >= abs(coin)
 
-    def minus_coin(self,coin,where=None):
+    def minus_coin(self, coin, where):
         '''
         扣除元宝
         args:
@@ -652,16 +583,38 @@ class UserProperty(GameModel):
             # from apps.models.user_gift import UserGift
             # user_gift_obj = UserGift.get(self.uid)
             # user_gift_obj.get_consume_award(coin)
-            if where:
-                #写日志
-                log_data = {'where':where, 'user_lv':self.lv, 'sum':coin, 'before': before, 'after': after, }
-                data_log_mod.set_log('CoinConsume', self, **log_data)
+
+            #写日志
+            log_data = {'where': where, 'num': coin, 'before': before, 'after': after}
+            data_log_mod.set_log('CoinConsume', self, **log_data)
             return True
         else:
             #元宝不够的话
             return False
 
-    def minus_gold(self,gold,where=None):
+    def is_fight_soul_enough(self, fight_soul):
+        '''
+        判断战魂是否足够
+        '''
+        return self.property_info['fight_soul'] >= abs(fight_soul)
+
+    def minus_fight_soul(self, fight_soul, where=None):
+        """
+        扣除战魂点
+        """
+        fight_soul = abs(fight_soul)
+        if self.is_fight_soul_enough(fight_soul):
+            self.property_info['fight_soul'] -= fight_soul
+            self.put()
+            #写日志
+            if where:
+                log_data = {'where':where, 'num': fight_soul, "after": self.get_fight_soul}
+                data_log_mod.set_log('FightSoulConsume', self, **log_data)
+            return True
+        else:
+            return False
+
+    def minus_gold(self,gold,where=""):
         """
         减少gold数量
         input gold
@@ -676,16 +629,12 @@ class UserProperty(GameModel):
             self.put()
             after  = self.property_info['gold']
             #写日志
-            if where:
-                log_data = {'where':where, 'user_lv':self.lv,'sum':gold, 'before': before, 'after': after, }
-                data_log_mod.set_log('GoldConsume', self, **log_data)
+
+            log_data = {'where':where, 'num':gold, 'before': before, 'after': after}
+            data_log_mod.set_log('GoldConsume', self, **log_data)
             return True
         else:
             return False
-
-    @property
-    def max_card_num(self):
-        return self.property_info['max_card_num']
 
     @property
     def max_stamina(self):
@@ -701,7 +650,7 @@ class UserProperty(GameModel):
         level = UserLevelMod.get(lv)
         vip_lv = self.vip_cur_level
         #miaoyichao start
-        vip_add_friend_num = self.game_config.user_vip_conf[str(vip_lv)].get('friend_upper',0)
+        vip_add_friend_num = self.game_config.user_vip_config[str(vip_lv)].get('friend_upper',0)
         max_num = level.friend_num + self.property_info.get('friend_extend_num',0)+vip_add_friend_num
         #miaoyichao end
         #max_num = level.friend_num + self.property_info.get('friend_extend_num',0)
@@ -711,15 +660,6 @@ class UserProperty(GameModel):
     def friend_extend_num(self):
         friend_extend_num = self.property_info.get('friend_extend_num',0)
         return friend_extend_num
-
-    @property
-    def cost(self):
-        '''
-        统御力删除  该属性不再需要
-        '''
-        lv = self.property_info['lv']
-        level = UserLevelMod.get(lv)
-        return level.cost
 
     @property
     def invite_code(self):
@@ -805,7 +745,7 @@ class UserProperty(GameModel):
         """
         return self.property_info['card_exp_point'] >= card_exp_point
 
-    def minus_card_exp_point(self, card_exp_point):
+    def minus_card_exp_point(self, card_exp_point, where=""):
         """
         减少card_exp_point 武将经验点
         """
@@ -813,16 +753,23 @@ class UserProperty(GameModel):
         if self.is_card_exp_point_enough(card_exp_point):
             self.property_info['card_exp_point'] -= card_exp_point
             self.put()
+            #写日志
+            log_data = {'where': where, 'num': -card_exp_point, 'after': self.property_info['card_exp_point']}
+            data_log_mod.set_log('CardExpPoint', self, **log_data)
             return True
         else:
             return False
 
-    def add_card_exp_point(self, card_exp_point):
+    def add_card_exp_point(self, card_exp_point, where=""):
         """
         添加武将经验点
         """
         card_exp_point = abs(card_exp_point)
         self.property_info['card_exp_point'] += card_exp_point
+
+        #写日志
+        log_data = {'where': where, 'num': card_exp_point, 'after': self.property_info['card_exp_point']}
+        data_log_mod.set_log('CardExpPoint', self, **log_data)
         self.put()
 
     def update_self_common(self,common):
@@ -837,7 +784,7 @@ class UserProperty(GameModel):
             self.put()
             return True
 
-    def add_stamina(self,stamina):
+    def add_stamina(self, stamina):
         """
         增加用户的stamina 没有上限的
         """
@@ -845,32 +792,21 @@ class UserProperty(GameModel):
         self.put()
         return
 
-    def add_gacha_pt(self,gacha_pt):
-        """
-        增加用户gacha点
-        该功能不再需要
-        """
-        self.property_info['gacha_pt'] += gacha_pt
-        if self.property_info['gacha_pt'] > self.game_config.system_config['max_gacha_point']:
-            self.property_info['gacha_pt'] = self.game_config.system_config['max_gacha_point']
-        self.put()
-        return
-
-    def add_gold(self,gold,where=None):
+    def add_gold(self, gold, where=""):
         """
         增加用户的金币
         """
         before = self.property_info['gold'] 
         self.property_info['gold'] += gold
         self.put()
-        after  = self.property_info['gold']
-        if where:
-            #写日志
-            log_data = {'where':where, 'user_lv':self.lv, 'sum':gold, 'before': before, 'after': after, }
-            data_log_mod.set_log('GoldProduct', self, **log_data)
+        after = self.property_info['gold']
+
+        #写日志
+        log_data = {'where': where, 'num': gold, 'before': before, 'after': after, }
+        data_log_mod.set_log('GoldProduct', self, **log_data)
         return
 
-    def add_coin(self,coin,where=None):
+    def add_coin(self, coin, where=""):
         """
         增加用户的代币
         input coin
@@ -880,12 +816,12 @@ class UserProperty(GameModel):
         self.property_info['coin'] += coin
         self.put()
         after  = self.property_info['coin']
-        if where:
-            log_data = {'where':where, 'user_lv':self.lv, 'sum':coin, 'before': before, 'after': after, }
-            data_log_mod.set_log('CoinProduct', self, **log_data)
+
+        log_data = {'where': where, 'num': coin, 'before': before, 'after': after}
+        data_log_mod.set_log('CoinProduct', self, **log_data)
         return
 
-    def test_give_award(self,award,where=None):
+    def test_give_award(self, award, where=None):
         '''
         发奖励 返回格式化后的信息
         '''
@@ -1002,10 +938,24 @@ class UserProperty(GameModel):
                 self.add_stamina(int(award[k]))
                 #格式化返回的参数
                 data[k] = int(award[k])
+            elif k == 'normal_soul':
+                data[k] = {}
+                user_souls_obj = self.user_souls
+                for soul_id in award[k]:
+                    user_souls_obj.add_normal_soul(soul_id, award[k][soul_id], where)
+                    data[k][soul_id] = award[k][soul_id]
+            elif k == 'exp':
+                # 经验
+                self.add_exp(award[k], where=where)
+                data[k] = award[k]
+            elif k == 'exp_point':
+                # 卡经验
+                self.add_card_exp_point(award[k], where=where)
+                data[k] = award[k]
+
             else:
                 pass
         return data
-
 
     def give_award(self,award,where=None):
         """
@@ -1053,10 +1003,6 @@ class UserProperty(GameModel):
                 for material_id in award[key]:
                     user_pack_obj.add_material(material_id, award[key][material_id],'award_%s' % where)
                     tmp[key][material_id] = award[key][material_id]
-            elif key == 'pvp_stamina':
-                user_pvp_obj = self.user_base.user_pvp
-                user_pvp_obj.add_pvp_stamina(int(award[key]))
-                tmp[key] = award[key]
             elif key == 'stamina':
                 self.add_stamina(int(award[key]))
                 tmp[key] = award[key]
@@ -1073,18 +1019,19 @@ class UserProperty(GameModel):
             elif key == 'renown':
                 user_pvp_obj = self.user_base.user_pvp
                 user_pvp_obj.add_renown(int(award[key]))
+            elif key == 'honor':
+                user_real_pvp = self.user_real_pvp
+                user_real_pvp.add_honor(award[key])
+                tmp[key] = award[key]
         return tmp
 
     def dungeon_clear(self):
         """首次通关战场时，给予奖励
         """
         coin = self.game_config.system_config['dungeon_clear_coin']
-        self.give_award({
-            'coin':coin
-            }
-        )
+        self.add_coin(coin, "dungeon_clear")
+        self.put()
         return coin
-        #print "dungeon_clear:uid:%s:coin:%s" % (str(self.uid), str(coin))
 
 #    def is_newbie_in_time(self, hours=0, minutes=0):
 #        """
@@ -1110,35 +1057,16 @@ class UserProperty(GameModel):
         self.property_info['stamina_upd_time'] = int(time.time())
         self.put()
 
-    def add_recover_times(self,where,dtype=None):
-        '''
-        * 回复体力次数+1
-        * miaoyichao
-        * 2014-04-02
-        '''
-        if 'recover_times' in self.property_info:
-            if where in self.property_info['recover_times']:
-                if not dtype:
-                    self.property_info['recover_times'][where] +=1
-                else:
-                    self.property_info['recover_times'][where] = {}
-                    self.property_info['recover_times'][where][dtype] = 1
+    def add_recover_times(self, where, dtype='', floor_id=''):
+        """ 更新已回复次数"""
+        if where in self.property_info['recover_times']:
+            if dtype == 'normal':
+                self.property_info['recover_times'][where][dtype] += 1
+            elif dtype == 'daily':
+                self.property_info['recover_times'][where][dtype].setdefault(floor_id, 0)
+                self.property_info['recover_times'][where][dtype][floor_id] += 1
             else:
-                if dtype:
-                    self.property_info['recover_times'][where] = {}
-                    self.property_info['recover_times'][where][dtype] = 1
-                else:
-                    self.property_info['recover_times'][where] = 1
-        else:
-            #该用户在初始化的时候没有初始化到该字段   主要用于测试
-            self.property_info['recover_times'] = {}
-            self.property_info['recover_times']['today_str']=utils.get_today_str(),
-            self.property_info['recover_times']['recover_stamina']=0,            #回复体力次数
-            self.property_info['recover_times']['recover_pvp_stamina']=0,        #回复PVP次数
-            self.property_info['recover_times']['recover_mystery_store']=0,      #刷新神秘商店的次数
-            self.property_info['recover_times']['recover_copy']={},      #刷新副本
-            for i in ['normal','special','daily']:
-                self.property_info['recover_times']['recover_copy'][i] = 0
+                self.property_info['recover_times'][where] += 1
         self.put()
 
     def get_recover_times(self):
@@ -1150,7 +1078,7 @@ class UserProperty(GameModel):
         all_dungeon = ['normal','daily','special']
         #获取vip等级
         vip_lv = self.vip_cur_level
-        vip_conf = self.game_config.user_vip_conf
+        vip_conf = self.game_config.user_vip_config
         user_config = vip_conf.get(str(vip_lv),{})
         today_str = utils.get_today_str()
         recover_list = ['recover_stamina','recover_pvp_stamina','recover_mystery_store']
@@ -1166,14 +1094,6 @@ class UserProperty(GameModel):
             data = self.property_info['recover_times']
         return data
 
-    def extend_card_num(self,num):
-        """
-        扩展用户的军营容量
-        miaoyichao
-        """
-        self.property_info['max_card_num'] += num
-        self.put()
-
     def extend_friend_num(self,num):
         """
         扩展用户的好友上限
@@ -1182,20 +1102,6 @@ class UserProperty(GameModel):
         self.property_info['friend_extend_num'] += num
         self.put()
 
-    def set_country(self,country):
-        """用户选择国家
-        country:
-                '1':'1_card',
-                '2':'5_card',
-                '3':'9_card',
-                '4':'13_card',
-        """
-        country = int(country)
-        if not self.country and country in [1,2,3,4]:
-            self.property_info['country'] = country
-            self.put()
-
-
     def set_newbie(self):
         '''
         设置新手未非新手的标志
@@ -1203,46 +1109,35 @@ class UserProperty(GameModel):
         self.property_info['newbie'] = False
         self.put()
 
-    def set_newbie_steps(self,step):
+    def set_newbie_steps(self, step, step_name):
         '''
         记录新手引导中的步骤信息
         '''
         step = int(step)
-        if 'newbie_steps' not in self.property_info:
-            self.property_info['newbie_steps'] = 0
         newbie_step = int(self.property_info['newbie_steps'])
 
-
-        newbie_steps_num = int(self.game_config.system_config.get('newbie_steps',6))
-        print "deubg guochen newbie_steps_num", newbie_steps_num
-        last_step = (1 << newbie_steps_num)
-        print "deubg guochen set_newbie", "this step", step, "last_step", last_step, "now_step", newbie_step
-
-
-        #只是处理符合要求的新手引导
+        # 只是处理符合要求的新手引导
         if newbie_step < step:
             self.property_info['newbie_steps'] = step
             #获取系统配置中的新手步骤   也就是走多少步可以认为不是新手
             newbie_steps_num = int(self.game_config.system_config.get('newbie_steps',6))
-            
-            # 只要完成最后一步的新手引导完成 就认为不是新手
-            step_flag = (1 << (newbie_steps_num - 1))
-            print "deubg guochen set_newbie222", "this step", step, "last_step", step_flag
+            step_flag = (1 << (newbie_steps_num - 1)) - 1
+            log_data = {"step_name": step_name, "step_id": step, "complete": False}
             # #判断是否需要将新手设置为非新手
             if self.newbie and step_flag <= step:
+                log_data["complete"] = True
                 self.set_newbie()
+            data_log_mod.set_log('NewGuide', self, **log_data)
+
+            # 只要完成最后一步的新手引导完成 就认为不是新手
+            
+            print "deubg guochen set_newbie", self.uid, "this step", step, "last_step", step_flag, "step_name", step_name, "complete",  log_data["complete"]
             self.put()
 
     def max_recover(self):
-        """
-        检查用户体力是否已满
-        miaoyichao
-        """
+        """检查用户体力是否已满"""
         max_stamina = self.game_config.user_level_config[str(self.lv)]['stamina']
-        if self.property_info['stamina'] >= max_stamina:
-            return True
-        else:
-            return False
+        return self.property_info['stamina'] >= max_stamina
 
     def add_charge_sumcoin(self, coin):
         """
@@ -1260,44 +1155,10 @@ class UserProperty(GameModel):
         self.property_info["charge_sum_money"] += price
         self.put()
         
-    @property
-    def pvp_newbie(self):
-        if "pvp_newbie" not in self.property_info:
-            self.property_info["pvp_newbie"] = False
-            self.put()
-            return False
-        else:
-            return self.property_info["pvp_newbie"]
-
     def add_vip_gift_id(self,vip_gift_id):
         self.property_info['vip_charge_info'].append(vip_gift_id)
         self.put()
         
-    def bind_mobile(self, mobile_num):
-        """
-        手机的绑定
-        first_fg,是否第一次绑定
-        bind_fg绑定标志位
-        """
-        if self.property_info.get('mobile_num',''):
-            first_fg = False
-        else:
-            first_fg = True
-        bind_fg = True
-        if self.property_info.get('mobile_num','') != mobile_num:
-            self.property_info['mobile_num'] = mobile_num
-            self.put()
-            return bind_fg,first_fg,mobile_num
-        return bind_fg,first_fg,mobile_num
-    
-    @property        
-    def mobile_num(self):
-        '''
-        获取用户手机号码
-        '''
-        return self.property_info.get('mobile_num','')
-
-    
     def get_bind_weibo_award(self):
         from apps.models.user_gift import UserGift
         if self.user_base.platform != 'oc' and \
@@ -1308,4 +1169,15 @@ class UserProperty(GameModel):
             user_gift_obj = UserGift.get(self.uid)
             user_gift_obj.add_gift(award,content)
             self.put()
+
+    def add_fight_soul(self, fight_soul, where=""):
+        '''
+        添加战魂
+        '''
+        self.property_info["fight_soul"] += fight_soul
+
+        log_data = {'where':where, 'num': fight_soul, "after": self.get_fight_soul}
+        data_log_mod.set_log('FightSoulProduct', self, **log_data)
+
+        self.put()
 

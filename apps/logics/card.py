@@ -16,7 +16,7 @@ from apps.models.user_collection import UserCollection
 from apps.common import utils
 from apps.config.game_config import game_config
 # from apps.models.virtual.card import Card
-from apps.models import data_log_mod
+from apps.common.exceptions import GameLogicError
 
 
 def check_card_in_deck(user_card_obj,card_list):
@@ -109,11 +109,8 @@ def card_update(rk_user, params):
         return 11,{'msg':utils.get_msg('card', 'params_wrong')}
     # base卡加经验
     user_card_obj.add_card_exp(base_ucid, need_exp, 'card_update')
-    #如果强化的卡是leader卡，同时更新用户属性中的leader卡信息
-    if base_ucid == user_card_obj.leader_ucid:
-        rk_user.user_property.set_leader_card(base_ucid, user_card_obj.cards[base_ucid])
     # 扣除经验点
-    rk_user.user_property.minus_card_exp_point(need_exp)
+    rk_user.user_property.minus_card_exp_point(need_exp, "card_update")
     #扣用户金钱
     rk_user.user_property.minus_gold(need_gold, 'card_update')
     data = {'new_card_info':{}}
@@ -122,7 +119,7 @@ def card_update(rk_user, params):
     #判断新手引导
     newbie_step = int(params.get('newbie_step',0))
     if newbie_step:
-        rk_user.user_property.set_newbie_steps(newbie_step)
+        rk_user.user_property.set_newbie_steps(newbie_step, "card_update")
     return 0,data
 
 def advanced_talent(rk_user,params):
@@ -165,9 +162,6 @@ def advanced_talent(rk_user,params):
             #判断是否是同名卡牌
             if cid != user_card_obj.cards[cost_ucid]['cid']:
                 return 11,{'msg':utils.get_msg('card','params_wrong')}
-        #如果有主角卡，则不能消耗
-        if rk_user.user_property.leader_role_card in cost_ucids:
-            return 11,{'msg':utils.get_msg('card','role_card')}
         #带装备武将不允许用于进阶
         if user_card_obj.is_equip_used(cost_ucids):
             return 11,{'msg':utils.get_msg('equip','is_used')}
@@ -215,12 +209,12 @@ def advanced_talent(rk_user,params):
     data['new_card_info'].update(user_card_obj.cards[ucid])
     return 0,data
 
-def sell(rk_user,params):
+
+def card_stove(rk_user,params):
     """
-    卖出武将
-    miaoyichao
+    炼化
     """
-    sell_ucids = params['sell_ucids']
+    sell_ucids = params.get('sell_ucids')
     if not sell_ucids:
         return 11,{'msg':utils.get_msg('card','no_cost_card')}
     sell_ucids = sell_ucids.split(',')
@@ -230,9 +224,6 @@ def sell(rk_user,params):
     for ucid in sell_ucids:
         if ucid and not user_card_obj.has_card(ucid):
             return 11,{'msg':utils.get_msg('card','no_card')}
-    #如果有主角卡，则不能消耗
-    if rk_user.user_property.leader_role_card in sell_ucids:
-        return 11,{'msg':utils.get_msg('card','role_card')}
     #带装备武将不允许卖出
     if user_card_obj.is_equip_used(sell_ucids):
         return 11,{'msg':utils.get_msg('equip','is_used')}
@@ -244,45 +235,25 @@ def sell(rk_user,params):
     if rc:
         return rc,{'msg':msg}
     sell_cards = [user_card_obj.get_card_info(ucid) for ucid in sell_ucids]
+    return 0,{'cards_info':sell_cards,'cards_ucids':sell_ucids}
     #计算得到的铜钱,每个+增加10000铜钱
-    get_gold = 0
-    for sell_card in sell_cards:
-        sell_card_config = game_config.card_config.get(sell_card['cid'])
-        star = sell_card_config['star']
-        #基础售价+总经验值*0.2 基础售价和star有关
-        base_gold = int(game_config.card_update_config.get('sell_base_gold',{}).get(str(star),3000))
-        exp_ratio = game_config.card_update_config.get('exp_gold_rate',0.2)
-        #计算经验增加值和总获得的金币
-        exp = sell_card['exp']
-        exp_gold = int(exp*exp_ratio)
-        get_gold += base_gold+exp_gold
-    #用户加钱
-    rk_user.user_property.add_gold(get_gold,where='sell_card')
-    #用户删卡
-    user_card_obj.del_card_info(sell_ucids,where='sell_card')
-    return 0,{'get_gold':get_gold}
+    # get_gold = 0
+    # for sell_card in sell_cards:
+    #     sell_card_config = game_config.card_config.get(sell_card['cid'])
+    #     star = sell_card_config['star']
+    #     #基础售价+总经验值*0.2 基础售价和star有关
+    #     base_gold = int(game_config.card_update_config.get('sell_base_gold',{}).get(str(star),3000))
+    #     exp_ratio = game_config.card_update_config.get('exp_gold_rate',0.2)
+    #     #计算经验增加值和总获得的金币
+    #     exp = sell_card['exp']
+    #     exp_gold = int(exp*exp_ratio)
+    #     get_gold += base_gold+exp_gold
+    # #用户加钱
+    # rk_user.user_property.add_gold(get_gold,where='sell_card')
+    # #用户删卡
+    # user_card_obj.del_card_info(sell_ucids,where='sell_card')
+    # return 0,{'get_gold':get_gold}
 
-def extend_num(rk_user,params):
-    """
-    * 军营扩容
-    * miaoyichao
-    """
-    max_card_num = game_config.system_config['max_card_num']
-    card_extend_num = game_config.system_config['card_extend_num']
-    if rk_user.user_property.max_card_num >= max_card_num:
-        return 11,{'msg':utils.get_msg('card','cannot_extend')}
-    card_extend_coin = game_config.system_config['card_extend_coin']
-    if not rk_user.user_property.minus_coin(card_extend_coin,'extend_num'):
-        return 11,{'msg':utils.get_msg('user','not_enough_coin')}
-    rk_user.user_property.extend_card_num(card_extend_num)
-    data_log_mod.set_log("ConsumeRecord", rk_user, 
-                        lv=rk_user.user_property.lv,
-                        num=card_extend_coin,
-                        consume_type='extend_card',
-                        before_coin=rk_user.user_property.coin + card_extend_coin,
-                        after_coin=rk_user.user_property.coin
-    )
-    return 0,{}
 
 def get_collection(rk_user,params):
     """取得用户的图鉴信息
@@ -304,24 +275,23 @@ def set_decks(rk_user,params):
         deck_index:当前编队编号0-9
         new_deck:  武将id:是否是主将 1是 0 否
             ucid:0,ucid:1,ucid:0,,ucid:0_ucid:0,ucid:1,ucid:0,,ucid:0
-    miaoyichao
     """
     #获取参数
     new_decks = params['new_deck']
 
     cur_deck_index = int(params["deck_index"])
     #判断编队是否符合要求
-    if cur_deck_index < 0 or cur_deck_index > 9:
-        return 11,{'msg':utils.get_msg('card','invalid_deck')}
+    if cur_deck_index < 0 or cur_deck_index > 4:
+        raise GameLogicError('card','invalid_deck')
 
     new_decks = new_decks.split('_')
     user_card_obj = UserCards.get_instance(rk_user.uid)
 
     decks = user_card_obj.decks
-    if len(decks)==10:
-        new_decks_lst = [[{}] * 5] * 10
+    if len(decks)==5:
+        new_decks_lst = [[{}] * 5] * 5
     else:
-        return 11,{'msg':utils.get_msg('card','invalid_deck')}
+        raise GameLogicError('card','invalid_deck')
     for i, new_deck in enumerate(new_decks):
         new_new_deck = new_deck.split(',')
         #检查队伍长度是否合法
@@ -340,7 +310,7 @@ def set_decks(rk_user,params):
                 ucid = ''
                 is_leader = 0
             if ucid and not user_card_obj.has_card(ucid):
-                return 11,{'msg':utils.get_msg('card','no_card')}
+                raise GameLogicError('card', 'no_card')
             #判断升级和强化素材不能上阵
             if ucid:
                 tmp_dict = {'ucid':ucid}
@@ -354,14 +324,14 @@ def set_decks(rk_user,params):
         ucids = [card['ucid'] for card in no_repeat_deck if card.get('ucid','')]
         leader_cnt = len([card['leader'] for card in no_repeat_deck if card.get('leader',0)])
         if len(ucids) != len(set(ucids)) or leader_cnt != 1:
-            return 11,{'msg':utils.get_msg('card','invalid_deck')}
+            raise GameLogicError('card', 'invalid_deck')
         new_decks_lst[i] = copy.deepcopy(new_deck_copy)
 
     #设置最新队伍
     user_card_obj.set_decks(new_decks_lst)
     #设置当前编队索引
     user_card_obj.set_cur_deck_index(cur_deck_index)
-    return 0,{}
+    return {}
 
 def lock(rk_user,params):
     """

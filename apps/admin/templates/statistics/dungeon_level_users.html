@@ -1,0 +1,62 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息 Statistics Info
+  </h2> 
+
+  <hr clear=all>
+  <p>所在关卡等级的用户数统计
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>关卡等级 (floor_room) </th> 
+      <th>全部用户数</th>
+      <th>活跃(昨日登录)用户数</th>
+      <th>昨日新注册用户数</th>
+    </tr>
+
+  {% for level in dlevel_users_keys %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{level.0}}_{{level.1}}</td> 
+      <td>
+        {{dungeon_level_users|dictValue:level}}
+      </td>
+      <td>
+        {{yesterday_dlevel_users|dictValue:level}}
+      </td>
+      <td>
+        {{yesterday_register_users_stat|dictValue:level}}
+      </td>
+    </tr>
+  {% endfor %}
+
+    <tr>
+      <td colspan=3> &nbsp; </td>
+    </tr>
+    <tr>
+      <td> All </td>
+      <td> {{all_login_users}} </td>
+      <td> {{yesterday_login_users}} </td>
+      <td> {{total_yesterday_register_users}} </td>
+    </tr>
+
+  </table>
+
+
+  <p style="color:gray">* 有少量用户玩得时间很短，只有登录记录， 没有关卡记录，
+  造成统计数量与其它的统计略有差别。
+  </p>
+
+</body>
+</html>

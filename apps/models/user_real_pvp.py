@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 from apps.models import pvp_redis
-
 from apps.models import GameModel
 
 
@@ -46,41 +45,33 @@ class UserRealPvp(GameModel):
         user_real_pvp.uid = uid
         user_real_pvp.pvp_info = {
             'pt': 1000,    # pk积分
-            'honor': 0,     # 荣誉点, 每天系统结算 根据排名增加荣誉
-            'last_refresh_time': 0,   # type is timestamp
+            'honor': 0,     # 功勋点数, 每天系统结算 根据排名增加功勋
+            'next_refresh_time': 0,   # type is timestamp
             'pvp_title': '',    # pk称号
-            # 其他不重要信息
-            'detail_info':{
-                'history_max_rank': 0,
-                'total_win': 0,
-                'total_lose': 0,
-                'total_join': 0,
-                'continue_win': 0,
-                'defence_continue_win': 0,
-                'defence_win': 0,
-            },
+            'total_win': 0,
+            'total_lose': 0,
+            'total_join': 0,
         }
         return user_real_pvp
 
     @property
     def pvp_detail(self):
         self.pvp_info["pvp_title"] = self.pvp_title
+        self.pvp_info["rank"] = self.pvp_rank()
         return self.pvp_info
 
     def get_pvp_need_info(self):
-        tmp = {}
         user_prop_obj = self.user_property
         uc = self.user_cards
         base_info = self.pvp_detail
-        tmp['pt'] = base_info['pt']
-        tmp['pvp_title'] = base_info['pvp_title']
-        tmp['win'] = base_info['detail_info']['total_win']
-        tmp['lose'] = base_info['detail_info']['total_lose']
 
-        tmp['name'] = self.user_base.username
-        tmp['leader_card'] = uc.cards[uc.get_leader(uc.cur_deck_index)]
-        tmp['lv'] = user_prop_obj.lv
-        return tmp
+        base_info['player_uid'] = self.uid
+        base_info['name'] = self.user_base.username
+        base_info['lv'] = user_prop_obj.lv
+        base_info['leader_card'] = uc.cards[uc.get_leader(uc.cur_deck_index)]
+        base_info['deck'] = uc.get_deck_info()
+        
+        return base_info
 
     @property
     def pt(self):
@@ -99,13 +90,24 @@ class UserRealPvp(GameModel):
     def honor(self):
         return self.pvp_info['honor']
 
-    def add_honor(self, num):
+    def add_honor(self, num, where=''):
         # 返回实际的honor变化值
         old_honor = self.pvp_info['honor']
         new_honor = old_honor + num
         self.pvp_info['honor'] = new_honor if new_honor > 0 else 0
         self.put()
         return self.pvp_info['honor'] - old_honor
+
+    def is_honor_enough(self,honor):
+        return self.pvp_info['honor'] >= abs(honor)
+        
+    def minus_honor(self, num):
+        if self.pvp_info['honor'] >= num:
+            new_honor = self.pvp_info['honor'] - num
+            self.pvp_info['honor'] = new_honor
+            self.put()
+            return True
+        return False
 
     @property
     def pvp_title(self):

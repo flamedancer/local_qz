@@ -1,0 +1,126 @@
+{% load tags %}
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title> 登录公告修改助手 / Login Bulletin Editing Assistant</title>
+
+
+    <script src="../../js/calendar.js"></script>
+</head>
+
+<body>
+  <h3> 修改登录公告 </h3>
+  版本{{id}}
+
+    <form action="/admin/tool/bulletin/" method="post">
+      <input type=hidden name="id" value="{{id}}">
+
+      <table border=1>
+        <tr>
+          <th>#</th>
+          <th>图片</th>
+          <th>标题 / 简介 / 更多详情</th>
+        </tr>
+
+
+    <tr>
+      <td>
+        {{ title_index }}
+        <input type=hidden name="title_index" value="{{title_index}}">
+      </td>
+
+      <td>
+      {% for pic in all_pic %}
+        <input type=radio name="img" value="{{pic}}"
+          {% if bulletin.img == pic %}
+            checked
+          {% endif %}
+        >
+        {{pic}}<br>
+        <img src="/static/html/bulletin_ui/{{ pic }}" title="/static/html/bulletin_ui/{{ pic }}" width=80 align=top><br>
+        <br>
+      {% endfor %}
+      </td>
+
+      <td>
+
+        标题:
+        <input type=text name=title value="{{ bulletin.title }}" size=60>
+        <br>
+        标题颜色:
+        <input type=text name=title_color value="{{ bulletin.title_color }}" size=16> (red, #F00, #FF0000, rgb(147,54,47) 等)
+
+        <p>简介HTML:
+        <br>
+        <textarea name=detail cols=80 rows=15>{{ bulletin.detail }}</textarea>
+
+        <p>
+        <br>
+
+        <p>更多详情HTML(可不填，也可增加吸引人的大图等):
+        <br>更多详情标题:
+        <input type=text name=more_title value="{{ bulletin.more_title }}" size=60>
+        <br>
+        更多详情标题颜色:
+        <input type=text name=more_title_color value="{{ bulletin.more_title_color }}" size=16> (red, #F00, #FF0000, rgb(147,54,47) 等)
+
+        <br>
+        更多详情正文:<br>
+        <textarea name=more_body cols=80 rows=15>{{ bulletin.more_body }}</textarea>
+
+      </td>
+
+    </tr>
+
+    </table>
+
+    <br> 新的排序名次(最上面是 0):
+    <input type=text name=new_title_index value="{{ title_index }}" size=3>
+    ( 目前最大为: {{title_max_index}} )
+
+    <br>
+    <input type=submit name=save_title value="保存, 并生成预览网页">
+    </form>
+
+
+
+    <br>
+    <p>
+    <div style="color: gray">
+
+    <p>改少数字体颜色, 可以用, &lt;font color=red&gt; 某某 &lt;/font&gt;,
+    但font关键字己过时, 尽量用 style:
+    &lt;span style="color:red; font-size: 1.2em" &gt; 某某 &lt;/span&gt; 
+
+    <p>常用的颜色: red 红, green 绿, blue 蓝, orange 橙, purple 紫,
+    yellow 黄, cyan 青/蓝绿, violet 紫红, teal 灰绿/鸭绿  
+
+    <p> &lt;br&gt; : 手动分行
+    <br>&lt;p&gt; : 分段落
+    <br>&amp;nbsp; : 强制空格(英文/半角), 
+    <br>&lt;img src=&quot;image_ui/notice.png&quot; border=1 style=&quot;width: 50%&quot; &gt; : 插入图片
+   
+   <p> 有数字排序的列表 (可以多层次嵌套)<br>
+    &lt;ol&gt; <br> &lt;li&gt; ...  &lt;/li&gt; <br>&lt;/ol&gt;
+
+   <p> 无数字的列表 (可以多层次嵌套)<br>
+    &lt;ul&gt; <br> &lt;li&gt; ...  &lt;/li&gt; <br>&lt;/ul&gt;
+
+
+    <p>改字体大小时, 单位用 em (字母m的宽度), 比 px (屏幕上的点),
+      可能会让 ipad, iphone 显示得更一致:
+    &lt;span style="font-size: 1.3em"&gt; 大号 &lt;/span&gt;
+
+    <p>尽量用CSS样式文件 <a href=/static/html/bulletin_ui/ipad.css>ipad.css</a> / <a href=/static/html/bulletin_ui/iphone.css>iphone.css</a> 中己定义的样式类的名字，可以省去再分别调整/设置 ipad, iphone上的字体大小.
+
+    <p>DIV 对公告排版很重要, 正文中的 &lt;div&gt; 与 &lt;/div&gt; 必须一一配对。
+    </div>
+
+    <p><br></p> <!-- need some space, for above calendar pop up -->
+    <p><br></p>
+    <p><br></p>
+
+
+</body>
+</html>

@@ -12,9 +12,10 @@ import textwrap
 from bson.errors import InvalidDocument
 from ocmongo import Mongo
 from ocredis import Redis
+from async_conf import MONGO_CONF, REDIS_CONF
 
 CURDIR = os.path.dirname(os.path.abspath(__file__))
-LOGDIR = os.path.join(CURDIR,"..","logs")
+LOGDIR = os.path.join(CURDIR,"../..","logs")
 R2M = "r2m_set"
 
 description = '''\
@@ -24,29 +25,6 @@ description = '''\
     将redis的数据写入到mongo
 '''
 
-MONGO_CONF = {
-    'host': '127.0.0.1',
-    'port': 27017,
-    'db': 'test',
-    'username': '',
-    'password': '',
-}
-
-REDIS_CONF = {
-     '0':{
-            'rmaster': {
-                'host': '127.0.0.1',
-                'port': 6379,
-                'db': 0
-            },
-            'rslave': {
-                'host': '127.0.0.1',
-                'port': 6379,
-                'db': 0
-            }
-      }
-
-}
 mongo = Mongo(**MONGO_CONF)
 
 EXCEPT_KEYS = []
@@ -102,17 +80,19 @@ def process_async_write(rmaster,rslave,log):
         add_to_set(rmaster,EXCEPT_KEYS.pop())
     while key:
         data = retrieve_data(rslave,key)
+        log.info('data:%s'%data)
         _class_name, pk = key.split(":")
         for dkey, dvalue in data.iteritems():
-            print dkey, dvalue
-            print _class_name, pk
+            log.info('data:%s'%data)
+            log.info('dvalue:%s'%dvalue)
+            log.info('pk:%s'%pk)
             if str(dvalue) == str(pk):
                 try:
                     mongo[_class_name].update(dkey, data)
                     write_key_cnt += 1
-                except InvalidDocument,TypeError:
-                    log.error("%s TypeError or InvalidDocument" % key)
-                    log.error(sys.exc_info())
+                # except InvalidDocument,TypeError:
+                #     log.error("%s TypeError or InvalidDocument" % key)
+                #     log.error(sys.exc_info())
                 except:
                     log.error("%s could not be write to mongo" % key)
                     log.error(sys.exc_info())
@@ -148,11 +128,13 @@ def main():
         if REDIS_CONF and target in REDIS_CONF:
             rmaster = Redis(**REDIS_CONF[target]['rmaster'])
             rslave = Redis(**REDIS_CONF[target]['rslave'])
-            try:
-                process_async_write(rmaster,rslave,log)
-            except:
-                log.error(traceback.format_exc())
-                log.error(sys.exc_info())
+            while 1:
+                try:
+                    process_async_write(rmaster,rslave,log)
+                except:
+                    log.error(traceback.format_exc())
+                    log.error(sys.exc_info())
+                time.sleep(5*60)
         else:
             log.error("conf:%s not exist or async_write_conf.py null" % target)
 

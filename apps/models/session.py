@@ -58,7 +58,3 @@ class Session(TmpModel):
             return data
         else:
             return {}
-
-
-
-

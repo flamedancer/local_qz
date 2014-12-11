@@ -1,7 +1,20 @@
 #-*- coding: utf-8 -*-
-import apps.settings_local as settings
-from django.core.management import setup_environ
-setup_environ(settings)
+
+import django
+
+if django.get_version() <= '1.3.1':
+    import apps.settings as settings
+    from django.core.management import setup_environ
+    setup_environ(settings)
+elif django.get_version() >= '1.7.0':   
+    import os
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "apps.settings")
+    django.setup()
+elif django.get_version() >= '1.6.0':   #ubuntu 14.04 used 1.6.?
+    import os
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "apps.settings")
+    from django.conf import settings
+
 
 import os
 import os.path

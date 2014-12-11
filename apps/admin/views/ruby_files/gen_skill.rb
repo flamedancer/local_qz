@@ -7,6 +7,7 @@ $BaseDir=File.expand_path(".", File.dirname(__FILE__))
 
 strOutFile = File.expand_path("config_skill_out.txt", $BaseDir)
 argv_input_file = ARGV[0] || $BaseDir + "/config_skill.rb"
+puts argv_input_file
 argv_output_file= ARGV[1] || strOutFile
 
 class SafeExpress
@@ -188,7 +189,7 @@ class SkillConfig
     def check_config_type(_category,_name)
       _name = _name.to_s
       hashValue = getHash(_category)
-      raise "#{_name} not exist in #{_category}" unless hashValue.has_key?(_name)
+      raise "check_type:#{_name} not exist in #{_category}" unless hashValue.has_key?(_name)
     end
     def getHash(_category)
       ret = case _category.to_s
@@ -206,7 +207,7 @@ class SkillConfig
     end
   end  
 end
-defaultOption = {:enemy => false, :type => :attack, :aoe=> :single, :factor => 1.0}
+defaultOption = {:type => :attack, :aoe=> :single, :factor => 1.0}
 
 BeadConfig.addBead(:gold, 4, :jin)
 BeadConfig.addBead(:wood, 3, :mu)
@@ -327,12 +328,12 @@ end
 
 
 class SkillData   
-  attr_reader :card, :enemy, :type, :aoe, :factor, :comment
+  attr_reader :skill, :type, :aoe, :factor, :comment
   attr_reader :buffs
-  def initialize(_card, _option = {})
+  def initialize(_skill, _option = {})
     @clear_neg_buf = false
-    defaultOption = {:enemy => false, :type => :attack, :aoe=> :single, :factor => 1.0}
-    @card = _card
+    defaultOption = {:type => :attack, :aoe=> :single, :factor => 1.0}
+    @skill = _skill
     _option = defaultOption.merge(_option)
     @enemy = (_option[:enemy] == true)
     @type = _option[:type]
@@ -358,10 +359,6 @@ class SkillData
     bRet
   end
   
-  def enemy?
-    @enemy
-  end
-  
   def addBuff(_buff)
     @buffs.push _buff
   end
@@ -383,8 +380,7 @@ class SkillData
     
     ret = ""
     unless @comment.empty?
-      str = "主将技能:"
-      str = "敌将技能:" if enemy?
+      str = "技能:"
       ret = "#{str}#{@comment}"
     end
     
@@ -396,7 +392,7 @@ class SkillData
 end
 
 class Skill
-  attr_reader :card, :skilldata, :enemy_skilldata
+  attr_reader :skill, :skilldata, :enemy_skilldata
   
   @@strDummy = ""
   class << @@strDummy
@@ -405,40 +401,24 @@ class Skill
     end
   end
   
-  def initialize(_card)
-    @card = _card.to_s    
+  def initialize(_skill)
+    @skill = _skill.to_s    
     @skilldata = @@strDummy
-    @enemy_skilldata = @@strDummy
   end
   def addSkillData(_skillData)    
-       if _skillData.enemy?
-         # puts "enemy==" + _skillData.to_s
-         @enemy_skilldata = _skillData
-       else
-         @skilldata = _skillData
-       end
+       @skilldata = _skillData
   end
   
   def comment    
     strComment = @skilldata.to_comment
-    enemyComment = @enemy_skilldata.to_comment
     str  = ""
-    unless strComment.empty?
-      str << "," << strComment
-    end
-    unless enemyComment.empty?
-      str << "," << enemyComment
-    end    
-    "\#card_#{@card}#{str}"
+    "\# #{@skill}_skill #{strComment}"
   end
     
   def to_s
     strSkill = @skilldata.to_s
-    strEnemySkill = @enemy_skilldata.to_s
-    if strSkill.empty? and strEnemySkill.empty?
-      return "\"\", #{comment}"       
-    end
-    "\"#{@skilldata}|#{@enemy_skilldata}\",    #{comment}"    
+    skill_id_str = "#{@skill}_skill"
+    "\"#{skill_id_str}\": \"#{@skilldata}\",    #{comment}"    
   end
 end
 
@@ -474,10 +454,10 @@ SkillConfig.addLeaderSkillType(:incre_anger_groove_countdown, 22)   #怒气槽�
 SkillConfig.addLeaderSkillType(:decre_anger_up_limit,  23) #怒气值上限减少x
 
 class LeaderSkillItem
-  attr_reader :card, :type, :effect, :prob, :attrs, :comment
-  def initialize(_card, _option)
+  attr_reader :skill, :type, :effect, :prob, :attrs, :comment
+  def initialize(_skill, _option)
     defaultOption = {:type => :incre_attack_with_attr, :prob => 10.0}
-    @card = _card    
+    @skill = _skill
     _option = defaultOption.merge(_option)
     
     @type = _option[:type]
@@ -530,9 +510,9 @@ class LeaderSkillItem
 end
 
 class LeaderSkill
-  attr_reader :card
-  def initialize(_card)
-    @card = _card    
+  attr_reader :skill
+  def initialize(_skill)
+    @skill = _skill
     @arrSkills = []
   end
   
@@ -542,8 +522,9 @@ class LeaderSkill
   end
           
   def to_s
-    str = "\""
-    strComment = "#card#{@card},"
+    skill_id_str = "#{@skill}_leader" 
+    strComment = "# #{skill_id_str},"
+    str = "\"#{skill_id_str}\": \""
     @arrSkills.each do |_item|
       str << _item.to_s << ":"
       strComment << _item.comment << "," if _item.has_comment?
@@ -570,23 +551,23 @@ class SkillManager
     @cur_leader_skill = nil
     @const_setting = {}
   end
-  def add_skill(_card, _skilldata)  
-    _card = _card.to_s
-    skill = @skills.fetch(_card, nil)
+  def add_skill(_skill, _skilldata)  
+    _skill = _skill.to_s
+    skill = @skills.fetch(_skill, nil)
     # puts "-----#{_card}, #{skill}"
     if skill.nil?
-      skill = Skill.new(_card)
-      @skills[_card] = skill      
+      skill = Skill.new(_skill)
+      @skills[_skill] = skill      
     end
     skill.addSkillData(_skilldata)
   end
   
-  def add_leader_skill(_card, _leader_skill_item)
-    _card = _card.to_s
-    leaderSkill = @leaderSkills.fetch(_card, nil)
+  def add_leader_skill(_skill, _leader_skill_item)
+    _skill = _skill.to_s
+    leaderSkill = @leaderSkills.fetch(_skill, nil)
     if leaderSkill.nil?
-      leaderSkill = LeaderSkill.new(_card)
-      @leaderSkills[_card] = leaderSkill
+      leaderSkill = LeaderSkill.new(_skill)
+      @leaderSkills[_skill] = leaderSkill
     end        
     leaderSkill.addSkillItem(_leader_skill_item)
   end
@@ -601,8 +582,8 @@ class SkillManager
   def output_data(_erb_template, _filename)
     
     str = ""    
-    str, maxKey = out_skills(@skills, 0)
-    strLeaderSkill, = out_skills(@leaderSkills, maxKey)
+    str, maxKey = out_skills(@skills)
+    strLeaderSkill, = out_skills(@leaderSkills)
     
     strSkill = str
     strLeaderSkill = strLeaderSkill
@@ -616,7 +597,7 @@ class SkillManager
       _file.write(strOut)   
       # _file.write(strSkill)  
     end
-    puts "out #{maxKey} cards to file #{_filename}"
+    puts "out #{maxKey} skills to file #{_filename}"
   end
   def setCurrentSkillData(_skill)
     @cur_skill = _skill
@@ -632,22 +613,20 @@ class SkillManager
   end
   
 private
-   def out_skills(_hashSkills, _maxKey)
+   def out_skills(_hashSkills)
      str = ""
      arrKey = _hashSkills.keys.map do |_key|    
        _key.to_i
      end
      arrKey.sort!
-     maxKey = arrKey[-1]
-     maxKey = maxKey.to_i   
-     maxKey = _maxKey if maxKey < _maxKey      
+     skill_num = arrKey.count
             
-     (1..maxKey).each do |_card|      
-       skillInstance = _hashSkills.fetch(_card.to_s,"\"\", \#card_#{_card}")
+     arrKey.each do |_skill|      
+       skillInstance = _hashSkills.fetch(_skill.to_s,"\"\", \#skill#{_skill}")
        str << skillInstance.to_s
        str << "\n"
      end
-     [str, maxKey]
+     [str, skill_num]
    end
    
 end
@@ -655,9 +634,9 @@ end
 $skillMgr = SkillManager.new
 
 def skill(_option)
-  card = _option[:card]
-  skillData = SkillData.new(card, _option)
-  $skillMgr.add_skill(card, skillData)
+  skill_id = _option[:skill]
+  skillData = SkillData.new(skill_id, _option)
+  $skillMgr.add_skill(skill_id, skillData)
   
   
   $skillMgr.setCurrentSkillData(skillData)  
@@ -706,10 +685,10 @@ def buff_config(_option)
 end
 
 def leader_skill(_option)
-  card = _option[:card]
-  _option.delete(:card)
-  leaderSkillData = LeaderSkillItem.new(card, _option)
-  $skillMgr.add_leader_skill(card, leaderSkillData)  
+  skill_id = _option[:skill]
+  _option.delete(:skill)
+  leaderSkillData = LeaderSkillItem.new(skill_id, _option)
+  $skillMgr.add_leader_skill(skill_id, leaderSkillData)  
   $skillMgr.setCurrentLeaderSkillData(leaderSkillData)  
   if block_given? 
     yield
@@ -719,16 +698,15 @@ end
 
 def append_skill(_option)
   raise "invalid call append_skill  out the range leader_skill " if $skillMgr.cur_leader_skill.nil?
-  card = $skillMgr.cur_leader_skill.card
-  leaderSkillData = LeaderSkillItem.new(card, _option)
-  $skillMgr.add_leader_skill(card, leaderSkillData)    
+  skill_id = $skillMgr.cur_leader_skill.skill
+  leaderSkillData = LeaderSkillItem.new(skill_id, _option)
+  $skillMgr.add_leader_skill(skill_id, leaderSkillData)    
 end
 
 def skill(_option)  
-  
-  card = _option[:card]
-  skillData = SkillData.new(card, _option)
-  $skillMgr.add_skill(card, skillData)  
+  skill_id = _option[:skill]
+  skillData = SkillData.new(skill_id, _option)
+  $skillMgr.add_skill(skill_id, skillData)  
   
   $skillMgr.setCurrentSkillData(skillData)  
   if skillData.addClearNegBuf?

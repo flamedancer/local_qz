@@ -1,0 +1,45 @@
+{% load tags %}
+{% load humanize %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息
+  </h2> 
+
+  <hr clear=all>
+  <h3>按月统计</h3>
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th> 年-月 </th> 
+      <th> 登录的唯一用户数</th>
+      <th> 充值的唯一用户数</th>
+      <th> 总充值次数</th>
+      <th> 总充值价值
+      </th>
+    </tr>
+  {% for month, users in monthly_login_users.items|sort reversed %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{month}}</td> 
+      <td>{{users|intcomma}}</td>
+      <td>{{monthly_charge_unique_users|dictValue:month}}</td>
+      <td>{{monthly_charge_count|dictValue:month}}</td>
+      <td>￥{{monthly_charge_value|dictValue:month|intcomma}}
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
+
+
+</body>
+</html>

@@ -4,14 +4,14 @@
 <head>
     <title>菜单</title>
 </head>
+
 <body>
 {% for ind in index_list %}
     <a href="{{ ind.path }}" target="mainFrame">{{ ind.name }}</a><br/>
-
 {% endfor %}
 
 {% if message%}
-    <a href="/admin/moderator/agree_inreview/" target="mainFrame">注册帐号提醒</a><br/>
+<a href="/admin/moderator/agree_inreview/" target="mainFrame" style="color:red">新注册帐号提醒</a><br/>
 {% endif %}
 
 </body>

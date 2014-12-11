@@ -17,13 +17,14 @@ from geventwebsocket import WebSocketServer
 
 base_dir = os.path.dirname(os.path.abspath(__file__)).rstrip("/apps/realtime_pvp")
 sys.path.insert(0, base_dir)
-import apps.settings_stg as settings
+import apps.settings as settings
 from django.core.management import setup_environ
 setup_environ(settings)
 
 from apps.logics import real_pvp
 from apps.models.user_real_pvp import UserRealPvp
 import readying_player_redis
+from apps.models import data_log_mod
 
 
 port = "9040" if len(sys.argv) != 2 else sys.argv[1]
@@ -51,6 +52,7 @@ use_reconnect = False
 
 to_print = False
 #to_print = True
+
 
 def debug_print(*msgs):
     if to_print:
@@ -86,12 +88,8 @@ class Player(object):
         self.last_recv_fg = True    # 判断是否活跃通信的标示，用于主动断开长时间没有通信的玩家
 
         self.websocket = websocket
-
-
         # 
-        self.first_attacker = False
-
-
+        # self.first_attacker = False
 
     def send(self, response):
         """send msg to self
@@ -197,13 +195,12 @@ class Player(object):
 
             self.fight_statue = self.opponent.fight_statue = 0
 
-            self.first_attacker = True
+            # self.first_attacker = True
 
             debug_print('oppoent_core_id', self.opponent.core_id)
             debug_print('self_uid', self.uid)
             # self.broad_pvp_info(msg_dict)
             self.inf_readying_pvp(msg_dict)
-
 
     def inf_readying_pvp(self, msg_dict):
         response = inf_readying_pvp(msg_dict)
@@ -220,11 +217,11 @@ class Player(object):
         self.fight_statue = 1
         # 当两边都准备好了 才发开始战斗消息
         if self.opponent.fight_statue == 1:
-            attack_core_id = self.core_id if self.first_attacker else self.opponent.core_id
+            # attack_core_id = self.core_id if self.first_attacker else self.opponent.core_id
+            attack_core_id = self.core_id if random.randint(0, 1) else self.opponent.core_id
             # 给两方广播 开始战斗消息  包括谁是攻击方信息
             response = inf_start_fight(msg_dict, attack_core_id=attack_core_id)
             self.broad(response)
-
 
     def req_pvp(self, msg_dict):
         response = req_pvp(msg_dict)
@@ -238,7 +235,6 @@ class Player(object):
             self.broad_fight_image(msg_dict)
         else:
             self.try_start_fight(msg_dict)
-
 
     # def broad_pvp_info(self, msg_dict):
     #     # 给两方分别发 各自的对手信息
@@ -254,7 +250,6 @@ class Player(object):
 
     def ans_opponent(self, msg_dict):
         debug_print("get_ans : ans_opponent")
-
 
     def ans_start_fight(self, msg_dict):
         debug_print("get_ans : ans_start_fight")
@@ -333,7 +328,6 @@ class Player(object):
         if self.fight_statue == -1:
             self.try_start_fight(msg_dict)
 
-
     def reconnect(self):
         self.opponent = losing_connection_info.pop(self.uid)
         self.opponent.opponent = self
@@ -345,7 +339,6 @@ class Player(object):
     def broad_fight_image(self, msg_dict):
         response = inf_fight_image(msg_dict)
         self.broad(response)
-
 
     def ans_fight_image(self, msg_dict):
         # 收到未断线玩家的战场镜像后，把镜像发给短线方
@@ -469,6 +462,7 @@ def response_error(msg_data, error_msg):
     msg_data['errormsg'] = error_msg
     return dumps(msg_data)
 
+
 def response_success(msg_data, success_data):
     msg_data = copy.deepcopy(msg_data)
     msg_data.update(success_data)
@@ -486,11 +480,13 @@ def check_statu(msg_data):
         print '!!!!! json missing datafield:', msg_data['datafield']
         return "has no that datafield", msg_data['datafield']
 
+
 def inf_readying_pvp(msg_data):
     success_data = dict(
         msgtype = 'inf_readying_pvp',
     )
     return response_success(msg_data, success_data)
+
 
 def inf_opponent(msg_data, opponent_player_id, opponent_core_id):
     opp_info = get_user_pvp_info(opponent_player_id)
@@ -511,6 +507,7 @@ def req_pvp(msg_data):
     )
     return response_success(msg_data, success_data)
 
+
 def inf_start_fight(msg_data, attack_core_id):
     success_data = dict(
         msgtype = 'inf_start_fight',
@@ -523,11 +520,13 @@ def inf_start_fight(msg_data, attack_core_id):
     )
     return response_success(msg_data, success_data)
 
+
 # def inf_start_fight(msg_data):
 #     success_data = dict(
 #         msgtype = 'inf_start_fight',
 #     )
 #     return response_success(msg_data, success_data)
+
 
 def req_fight_command(msg_data):
     success_data = dict(
@@ -535,11 +534,13 @@ def req_fight_command(msg_data):
     )
     return response_success(msg_data, success_data)
 
+
 def inf_fight_command(msg_data):
     success_data = dict(
         msgtype = 'inf_fight_command',
     )
     return response_success(msg_data, success_data)
+
 
 # def inf_fight_command(msg_data, self_core_id):
 #     # 不接受自己广播的息信
@@ -550,11 +551,13 @@ def inf_fight_command(msg_data):
 #     )
 #     return response_success(msg_data, success_data)
 
+
 def req_end_round(msg_data):
     success_data = dict(
         msgtype = 'rsp_end_round',
     )
     return response_success(msg_data, success_data)
+
 
 def inf_switch_attack(msg_data, attack_core_id):
     success_data = dict(
@@ -566,6 +569,7 @@ def inf_switch_attack(msg_data, attack_core_id):
         msg_ref = int(time.time()),
     )
     return response_success(msg_data, success_data)
+
 
 # def inf_switch_attack(msg_data, self_core_id):
 #     if msg_data['coreid'] == self_core_id:
@@ -583,6 +587,7 @@ def inf_switch_attack(msg_data, attack_core_id):
 #        msgtype = 'rsp_end_fight',
 #    )
 #    return response_success(msg_data, success_data)
+
 
 def rsp_end_fight(msg_data):
     success_data = dict(
@@ -604,6 +609,16 @@ def inf_result_fight(msg_data, self, opponent):
         win_uid, lose_uid = (self_uid, opponent_uid) if win_core_id == self_core_id else (opponent_uid, self_uid)
     result_info = real_pvp.result_fight(win_uid, lose_uid)
 
+    self_user_pvp_object = UserRealPvp.get(win_uid)
+    opponent_user_pvp_object = UserRealPvp.get(lose_uid)
+
+    data_log_mod.set_log('PvpRecord', UserRealPvp.get(self.uid),
+                        **{
+                            "winner": self_user_pvp_object.pvp_detail,
+                            "loser": opponent_user_pvp_object.pvp_detail,
+                            "end_reason": msg_data["end_fight"]["pvp_end_reason"],
+                        })
+
     success_data = dict(
         msgtype = 'inf_result_fight',
     )
@@ -617,11 +632,13 @@ def req_cancel_pvp(msg_data):
     )
     return response_success(msg_data, success_data)
 
+
 def inf_opponent_cancel(msg_data):
     success_data = dict(
         msgtype = 'opponent_cancel',
     )
     return response_success(msg_data, success_data)
+
 
 def req_heart_beat(msg_data, self_core_id):
     success_data = dict(
@@ -641,12 +658,12 @@ def inf_fight_image(msg_data, self_core_id):
     )
     return response_success(msg_data, success_data)
 
+
 def inf_reconnect_fight(msg_data):
     success_data = dict(
         msgtype = 'inf_reconnect_fight',
     )
     return response_success(msg_data, success_data)
-
 
 
 def check_dead_user():
@@ -662,7 +679,6 @@ def check_dead_user():
             else:
                 user.last_recv_fg = False
         time.sleep(15)
-
 
 
 if __name__ == "__main__":
@@ -683,5 +699,4 @@ if __name__ == "__main__":
         THIS_READYING_REDIS.clear()
         # for player in all_players:
         #     disconnect_player(player, "server-close")
-
 

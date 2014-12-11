@@ -63,7 +63,6 @@ TEMPLATE_DIRS = (
 INSTALLED_APPS = (
     'apps.admin',
     'apps.common',
-    'apps.ocadmin',
 )
 
 AUTH_AGE = 12

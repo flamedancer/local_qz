@@ -13,13 +13,52 @@
     <form id="loginForm" name="loginForm" action="/admin/registration/" method="POST">
         <table>
             <tr>
-                <td>请输入帐号：</td>
-                <td><input type="text" id="username" name="username" /></td>
+                <td>账号/登录名：</td>
+                <td><input type="text" name="username" /></td>
+            </tr>
+
+            <tr>
+                <td>联系 Email:</td>
+                <td>
+                  <input type="text" id='email' name="email" />
+
+                  <script type='text/javascript'>
+
+function send_verify_email_code() {
+    var email = document.getElementById('email').value;
+    if ( email == '' || email == '@') {
+      alert('Email不能为空, 或不正确');
+      return;
+    }
+
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET", "/admin/registration/send_verify_email_code/?reason=registration&email=" + email.replace('@', '%40'),   true);
+    xmlhttp.send();
+    alert('确认码已发至' + email + ', 请去查收');
+    return False;
+}
+                  </script>
+                  <button onclick="javascript:send_verify_email_code();">发送Email确认码</button>
+
+                </td>
             </tr>
             <tr>
-                <td>请输入密码：</td>
-                <td><input type="password" id="password" name="password"></td>
+                <td>Email的确认码:
+
+                </td>
+                <td><input type="text" name="email_verify_code" side=32></td>
             </tr>
+
+            <tr>
+                <td>请输入密码：</td>
+                <td><input type="password" name="password" size=10></td>
+            </tr>
+
+            <tr>
+                <td>再次输入密码：</td>
+                <td><input type="password" name="password2" size=10></td>
+            </tr>
+
             <tr>
                 <td colspan="2">
                     <input id="submit" name="submit" type="submit" value="点击注册" />

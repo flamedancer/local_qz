@@ -1,0 +1,117 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息 Statistics Info
+  </h2> 
+
+  <hr clear=all>
+  <p>昨日复活所消耗的晶体数统计 (Revive-used Crystals/Coins)
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>クエスト
+        <span style="color:gray">
+          <br> 关卡等级 
+          <br> DungeonType: Floor_Room
+        </span>
+      </th> 
+
+      <th>アクティブユーザー数 
+        <span style="color:gray">
+        <br> 活跃(昨日登录)用户停留在本等级的用户数 
+        <br> Yesterday-login users stayed at this level
+        </span>
+      </th>
+
+      <th> 昨日コンティニューのため消費したクリスタル数 
+        <span style="color:gray">
+          <br>昨日复活所用晶体数 <br>Yesterday Revive Coins 
+        </span> </th>
+
+      <th> 
+          昨日クリスタルでコンティニューしたユーザー人数
+        <span style="color:gray">
+          <br>昨日复活的唯一用户数 
+          <br>Yesterday Revived Unique Users 
+        </span> 
+      </th>
+
+      <th> 
+        全記録でコンティニューのため消費したクリスタル数
+        <span style="color:gray">
+          <br> 有史以来全部用户复活所用晶体数 
+          <br> All Revive Coins in database 
+        </span>
+      </th>
+
+      <th> 
+        全記録でクリスタルでコンティニューしたユーザー人数
+          <span style="color:gray">
+            <br>有史以来全部复活的唯一用户数 
+            <br>All Revived Unique Users in database</th>
+        </span>
+      </th>
+    </tr>
+
+  {% for where in all_dungeon_levels_sorted %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{where}}</td> 
+      <td>
+        {% if where|slice:":6" == "normal" %}
+          {{yesterday_login_users_level|dictValue:where}}
+
+        {% else %}
+          {{yesterday_special_weekly_times|dictValue:where}} /
+          {{yesterday_special_weekly_users|dictValue:where}}
+
+        <span style="color:gray">^</span>
+        {% endif %}
+      </td>
+      <td>
+        {{revive_coins_consume|dictValue:where}}
+      </td>
+      <td>
+        {{revive_users|dictValue:where}}
+      </td>
+      <td>
+        {{all_revive_coins_consume|dictValue:where}}
+      </td>
+      <td>
+        {{all_revive_users|dictValue:where}}
+      </td>
+    </tr>
+  {% endfor %}
+
+    <tr>
+      <td colspan=3> &nbsp; </td>
+    </tr>
+    <tr>
+      <td> Total </td>
+      <td> {{yesterday_login_users_total}} </td>
+      <td> {{revive_coins_total}} </td>
+      <td> {{revive_users_total}} </td>
+      <td> {{all_revive_coins_total}} </td>
+      <td> {{all_revive_users_total}} </td>
+    </tr>
+
+  </table>
+
+
+  <p><br></p>
+
+  <p style="color:gray">
+  ^: Play TIMES / UNIQUE USERS at certain weekly/special dungeon yesterday.
+  </p>
+</body>
+</html>

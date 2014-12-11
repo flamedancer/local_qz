@@ -198,8 +198,8 @@ class System_config(XlsToDict):
                             'gacha_notice_in_review', 'free_gacha_notice_in_review', 'free_gacha_notice', 
                            ]
         self.int_cnames  = ['oc_freeze_time', 'oc_freeze_num', 'tapjoy_max_coins', 'tapjoy_points_per_coin', 'stamina_recover_time', 'max_friend_request',
-                            'max_gacha_point', 'login_record_length', 'deck_length', 'friend_help_user_num', 'friend_gacha_pt', 'other_help_user_num', 
-                            'other_gacha_pt', 'revive_coin', 'recover_stamina_coin', 'dungeon_clear_coin', 'card_extend_num', 'max_card_num', 'card_extend_coin',
+                            'login_record_length', 'deck_length', 'friend_help_user_num', 'friend_gacha_pt', 'other_help_user_num', 
+                            'other_gacha_pt', 'revive_coin', 'dungeon_clear_coin', 'card_extend_num',
                             'free_stamina_cnt', 'tranform_divider', 'newbie_days', 'recover_copy_coin', 'bind_phone_cnt', 
                            ]
         self.dict_cnames = ['res_url_online', 'popularize', 'bind_mobile_conf', 'timing_notice_conf', 'push_info', 'you', 

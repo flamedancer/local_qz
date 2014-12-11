@@ -2,16 +2,16 @@
 # encoding: utf-8
 
 from apps.oclib.model import HashModel
-import copy
+from apps.common import utils
 import datetime
-from apps.common.utils import create_gen_id
+
 
 class UserMail(HashModel):
     """
     用户游戏内部基本信息
     """
     pk = 'uid'
-    opk = 'ouid'
+    opk = 'ouid'    #对方的uid, opposite uid
     fields = ['uid','ouid', 'mail_info']
 
     @classmethod
@@ -30,14 +30,14 @@ class UserMail(HashModel):
         }
         return obj
 
-    def set_mail(self, mailtype, content, award=None, can_get=True, awards_description='', create_time=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')):
+    def set_mail(self, mailtype, title, content, award=None, can_get=True, awards_description='', create_time=""):
         self.mail_info['type'] = mailtype
+        self.mail_info['title'] = title
         self.mail_info['content'] = content
         self.mail_info['awards'] = award
         self.mail_info['can_get'] = can_get
-        self.mail_info['awards_description'] = self.set_awards_description(award)
-        self.mail_info['mid'] = create_gen_id()
-        self.mail_info['create_time'] = create_time
+        self.mail_info['create_time'] = create_time or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.mail_info['mid'] = utils.create_gen_id()
         self.hput()
 
     def set_pvprank_record(self, date, rank):
@@ -47,28 +47,18 @@ class UserMail(HashModel):
         self.hput()
 
     @classmethod
-    def hgetall(cls,pk):
+    def hgetall(cls, pk):
         all_data = super(UserMail,cls).hgetall(pk)
         if all_data is None:
             all_data = {}
         return all_data
 
-    def set_awards_description(self, award):
-        awards = copy.deepcopy(award)
-        if not awards:
-            awards = {
-                'gold': 1,#
-            }
-        awards_description = u'恭喜您， 你将获得以下奖励：\n'
-        blen = len(awards_description)
-        for a in awards:
-            if a == 'renown':
-                awards_description += u'声望 * ' + str(awards[a]) + '\n'
-            elif a == 'gold':
-                awards_description += u'铜钱 * ' + str(awards[a]) + '\n'
-            elif a == 'honor':
-                awards_description += u'功勋 * ' + str(awards[a]) + '\n'
-            
-        if len(awards_description) == blen:
-            return ''
-        return awards_description                    
+    @classmethod
+    def new_mail_num(cls, pk):
+        """ 未读邮件数量"""
+        num = 0
+        all_mail_data = UserMail.hgetall(pk)
+        for all_mail in all_mail_data.values():
+            info = all_mail['mail_info']
+            num = (num + 1) if info['can_get'] else num
+        return num

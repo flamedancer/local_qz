@@ -37,8 +37,12 @@
             <span>至
                 <input name="end_date" type="text" id="end_date" size="10" maxlength="10" onclick="new Calendar().show(this);" readonly="readonly" />
             </span>
+
+            <br>
             <label for="uid">用户ID:</label> 
             <input type="text" size="10" id="uid" name="uid"/>
+
+            <br>
             {% if view_type == "consume" or view_type == "consume_contrast" %}
             消费类型:
             <select name="consume_type">
@@ -56,6 +60,8 @@
                 <option value="{{item.0}}">{{item.1.num}}个元宝</option>
                 {% endfor %}
             </select>
+
+            <br>
             平台:
             <select name="platform">
                 <option value="all">所有</option>
@@ -63,6 +69,8 @@
                 <option value="qq">腾讯</option>
                 <option value="sina">新浪</option>
             </select>
+
+            <br>
             支付方式:
             <select name="charge_way">
                 <option value="all">所有</option>
@@ -75,11 +83,16 @@
                 <option value="mycard">mycard</option>
             </select>
             {% endif %}
+
             {% if view_type == "consume_contrast" %}
+            <br>
                 <span>对比起始日期
                     <input name="second_start" type="text" id="start_date" size="10" maxlength="10" onclick="new Calendar().show(this);" readonly="readonly" />
                 </span>
             {% endif %}
+
+            <br>
+            <br>
             <input type="submit" value="确定"/>
         </div>
     </form>

@@ -1,0 +1,52 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息 Statistics Info
+  </h2> 
+
+  <hr clear=all>
+  <h3>装备统计 (Equipment Statistics)</h3>
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>设备号 <br> Equipment ID</th> 
+      <th>拥有装备的唯一用户数  <br>Have-Equip Unique Users <br>(in-store or card-attached)</th>
+      <th>所有用户仓库中<br>（未配备到武将的)总数量 <br>Total of All Users' Store <br>(NOT Attached to Cards)</th>
+      <th>所有用户的 <br>已配备武将的总数量 <br> Total of All Users' <br>Card-Attached</th>
+
+      <th>昨日产生的数量 <br> Yesterday Generated</th>
+      <th>过去一周产生的数量 <br> Last Week Generated</th>
+
+    </tr>
+
+  {% for eq_id in equip_id_sorted %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{eq_id}}</td> 
+      <td>{{unique_users|dictValue:eq_id}}</td>
+      <td>{{equips_store|dictValue:eq_id}}</td>
+      <td>{{equips_attached|dictValue:eq_id}}</td>
+      <td>{{yesterday_gen_equips|dictValue:eq_id}}</td>
+      <td>{{last_week_gen_equips|dictValue:eq_id}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+
+
+  <p><br></p>
+  <hr clear=all>
+  <p style="color:gray">* Some of above data are from slave/backup database,
+  might have 5-10 minutes delay from production/online database.</p>
+
+</body>
+</html>

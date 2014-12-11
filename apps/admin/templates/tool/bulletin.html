@@ -1,0 +1,135 @@
+{% load tags %}
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title> 登录公告修改助手</title>
+    <base href='/static/html/'>
+</head>
+<body>
+  {% if action_result %}
+  <script type=text/javascript>
+    alert("{{action_result}}")
+  </script>
+  {% endif %}
+
+  <h3> 登录公告修改助手</h3>
+  <form action="/admin/tool/bulletin/?id={{id}}" method="post">
+    线上正式版登录公告 ( {{id}}版本 ): 
+    <input type=hidden name=id value="{{id}}">
+  <input type=submit name=update_online_bulletin value="更新线上网页">
+  <br>
+  &nbsp; &nbsp; <a href=/static/html/0_notice_v{{id}}.html>0_notice_v{{id}}.html</a> (ipad, {{notice_mtime|dictValue:0_notice_file_head}}),
+    <br>
+    &nbsp; &nbsp; <a href=/static/html/1_notice_v{{id}}.html>1_notice_v{{id}}.html</a> (iphone, {{notice_mtime|dictValue:1_notice_file_head}}).
+  </form>
+
+    自动更新预览版公告:<br>
+    &nbsp; &nbsp; <a href=/static/html/0_notice_preview.html>0_notice_preview.html</a> (ipad, {{notice_mtime.0_notice_preview}} ),
+    <br>
+    &nbsp; &nbsp; <a href=/static/html/1_notice_preview.html>1_notice_preview.html</a> (iphone, {{notice_mtime.1_notice_preview}} ).
+    </p>
+
+      <table border=1>
+        <tr>
+          <th>#</th>
+          <th>重要性图片</th>
+          <th>标题</th>
+          <th>简介/更多详情</th>
+          <th>动作</th>
+        </tr>
+
+
+    <form action="/admin/tool/bulletin/" method="post">
+    <input type=hidden name='id' value="{{id}}">
+
+    <tr>
+      <td>
+        &nbsp;
+      </td>
+
+      <td>
+      <select name="img">
+        {% for pic in all_pic %}
+          <option value="{{pic}}">{{pic}}</option>
+        {% endfor %}
+      </select>
+      </td>
+
+      <td>
+        <input type=text name=title value="">
+      </td>
+
+      <td>
+        <textarea name=detail cols=40 rows=5></textarea>
+      </td>
+
+      <td>
+        <input type=submit name=add_title value="添加">
+      </td>
+    </tr>
+    </form>
+
+    {% for b in bulletins %}
+    <tr>
+      <td>
+        {{ forloop.counter0 }}
+      </td>
+
+      <td>
+        <img src="/static/html/bulletin_ui/{{ b.img }}" alt="{{b.img}}">
+      </td>
+
+      <td>
+        {{ b.title }}
+      </td>
+
+      <td>
+        <b>简介:</b>
+        <div style="background-color: #EEE">{{ b.detail|safe }}</div>
+
+        <p>
+        <br>
+        <p>
+        <b>更多详情:</b>
+
+        <br><font color="{{b.more_title_color}}"> {{ b.more_title }} </font>
+
+        <div style="background-color: #EEE; text-align: left">{{ b.more_body|safe }}</div>
+
+      </td>
+
+
+      <td>
+        <form action="/admin/tool/bulletin/" method="post" onsubmit="return confirm('Are you sure to delete?')">
+        <input type=hidden name='title' value="{{b.title}}">
+        <input type=hidden name='id' value="{{id}}">
+        <input type=submit name='delete_title' value='删除'>
+        </form>
+
+        <form action="/admin/tool/bulletin/" method="post">
+        <input type=hidden name='title_index' value="{{forloop.counter0}}">
+        <input type=hidden name='id' value="{{id}}">
+        <br>
+        <input type=submit name='edit_title' value='修改'>
+        </form>
+
+      </td>
+    </tr>
+    {% endfor %}
+
+    </table>
+
+
+    <p><br>
+    <p style="color:gray">* If same title, "Add Title" will remove old one, so consider as UPDATE.
+    <p style="color:gray">* "Add Title" will auto-delete more than 27 titles.
+    </p>
+<!--
+    <form action="/admin/tool/bulletin/" method="post">
+      <input type=submit name='generate_html' value='Generate Html' >
+    </form>
+-->
+
+</body>
+</html>

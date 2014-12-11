@@ -1,0 +1,47 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息 Statistics Info
+  </h2> 
+
+  <hr clear=all>
+  <h3>在手里的水晶数统计 (In-Hand Coins Statistics)
+    </h3>
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>手里的水晶数量 <br> Coins in Hand</th> 
+
+      <th>所有用户数量 <br> All Users</th>
+      <th>充过钱的用户数量 <br> Charged Users</th>
+      <th>从未充过钱的用户数量 <br>Never-Charged Users</th>
+      <th>昨日登录的用户数量 <br>Yesterday-Login Users</th>
+
+    </tr>
+
+  {% for i, users in coins_stat.items|sort  %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{coins_steps|dictValue:i}}</td> 
+      <td>
+        {{users}}
+      </td>
+      <td>{{coins_charged_stat|dictValue:i}}</td> 
+      <td>{{coins_never_charged_stat|dictValue:i }}</td> 
+      <td>{{coins_yestlogin_stat|dictValue:i }}</td> 
+    </tr>
+  {% endfor %}
+
+  </table>
+</body>
+</html>

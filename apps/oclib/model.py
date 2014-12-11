@@ -37,6 +37,9 @@ class BaseModel(object):
 
     @classmethod
     def load(cls, data):
+        if not data:
+            data = {}
+
         obj = cls()
         [setattr(obj, k, data.get(k)) for k in data]
         return obj
@@ -80,6 +83,23 @@ class UserModel(BaseModel):
             app.pier.add(self)
         else:
             self.do_put()
+
+    @classmethod
+    def mongo_find(cls, query, **kargs):
+        '''
+        UserModel doesn't have .find(), due to it relates to both redis & mongo.
+        Now for statistics (count how many user logged in everyday etc.) 
+        purpose, we just interested in MongoStorage.find()
+        '''
+        return app.mongo_store.find(cls, query, **kargs)
+#       return app.bk_mongo.find(cls, query, **kargs)
+
+    @classmethod
+    def aggregate(cls, statement):
+        #due to backup mongo, old, no aggregate as of 2014/8/8
+        #return app.bk_mongo.aggregate(cls,statement)
+        return app.mongo_store.aggregate(cls,statement)
+
 
 class TmpModel(BaseModel):
     """
@@ -154,6 +174,15 @@ class MongoModel(BaseModel):
     @classmethod
     def find(cls, query,**kwargs):
         return app.mongo_store.find(cls,query,**kwargs)
+
+#   @classmethod
+#   def find_and_sort(cls, query, sort_by=''):
+#       '''sort_by = [ ('field1', 1), ('field2', -1) ]
+#       or sort_by = ('field1', 1) ??
+#       or sort_by = 'field1' ??
+#       '''
+#       collection = cls.__name__.lower()
+#       return app.mongo_store.mongo[collection].find(cls,query).sort(sort_by)
     
     def insert(self):
         return app.mongo_store.insert(self)
@@ -179,9 +208,26 @@ class LogModel(object):
     def put(self):
         return app.log_mongo.insert(self)
 
+#   @classmethod
+#   def find(cls, query):
+#       return app.log_mongo.find(cls,query)
+    
     @classmethod
-    def find(cls, query):
-        return app.log_mongo.find(cls,query)
+    def find(cls, query, reverse_query=[]):
+        # reverse_query [[key1,-1],[key2,1]] 优先按照 key1 倒序 再 kye2 正序
+        if not reverse_query:
+            return app.log_mongo.find(cls,query)
+        else:
+            return app.log_mongo.orderby(cls,query,reverse_query)
+
+
+    @classmethod
+    def mongo_find(cls, query, **kargs):
+        '''
+        A more detailed model method then above .find.
+        '''
+        return app.log_mongo.find(cls, query, **kargs)
+
 
     @classmethod
     def aggregate(cls, statement):

@@ -1,0 +1,13 @@
+
+{% extends "admin/base.html" %}
+{% load tags %}
+
+{% block main %}
+
+
+    已同步到: <br> &nbsp; &nbsp; {{ subarea_id_name_list|join:', ' }} 
+
+   <p>继续编辑: <a href=/admin/game_setting/?config_name={{config_name}}&subarea={{subarea}}>{{subarea}}分区: {{config_description}}</a>
+
+
+{% endblock main %}

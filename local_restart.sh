@@ -1,7 +1,7 @@
 #!/bin/bash
 DIR=`pwd`
 PSID=`ps aux|grep $DIR|grep uwsgi |grep -v grep|wc -l`
-which python
+echo {DIR}
 python $DIR/import_test.py
 python -c "import sys; sys.path"
 if [ $PSID -gt 0 ]; then

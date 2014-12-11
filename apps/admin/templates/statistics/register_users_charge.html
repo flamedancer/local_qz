@@ -1,0 +1,40 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息
+  </h2> 
+
+  <hr clear=all>
+  <h3>注册用户的当天就充值的统计</h3>
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>日期</th> 
+      <th> 新注册用户数</th>
+      <th> 新注册用户注册 <br>当天的充值总次数</th>
+      <th> 新注册用户注册 <br>当天的充值总金额</th>
+    </tr>
+  {% for aDate, num in register_users.items|sort reversed %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{aDate}}</td> 
+      <td>{{num}}</td>
+      <td>{{daily_charge_count|dictValue:aDate}}</td>
+      <td>¥{{daily_charge_sum|dictValue:aDate}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+
+
+</body>
+</html>

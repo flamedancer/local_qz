@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# import copy
 
-# from apps.oclib.model import UserModel
 from apps.config.game_config import game_config
 from apps.oclib.model import UserModel
-# from apps.models import data_log_mod
 
 
 class GameModel(UserModel):

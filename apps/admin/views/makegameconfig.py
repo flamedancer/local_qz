@@ -27,16 +27,12 @@ game_config_name_list = [
 ('skill_config',u'武将技配置'),
 ('leader_skill_config',u'主将技配置'),
 ('monster_config',u'敌将配置'),
-('monster_group_config',u'敌将分组配置'),
 ('normal_dungeon_config',u'普通战场配置'),
-('box_config',u'宝箱配置'),
 ('normal_dungeon_effect_config',u'普通战场效果配置'),
 ('special_dungeon_config',u'限时活动战场配置'),
 ('weekly_dungeon_config',u'每周活动战场配置'),
-('pvp_config',u'pvp竞技场配置'),
 #('msg_config',u'提示语配置'),
 #('language_config',u'语言包配置'),
-#('compgacha_config',u'集卡换将配置'),
 ('equip_config',u'装备配置'),
 ('city_config',u'城镇配置'),
 ('item_config',u'药品配置'),
@@ -49,14 +45,13 @@ game_config_name_list = [
 ('equip_desc_config',u'装备描述配置'),
 ('skill_desc_config',u'技能描述配置'),
 ('dungeon_desc_config',u'战场描述配置'),
-('fate_conf',u'缘分配置'),
-('user_vip_conf',u'VIP参数配置'),
-('equip_exp_conf',u'装备等级'),
+('fate_config',u'缘分配置'),
+('user_vip_config',u'VIP参数配置'),
+('equip_exp_config',u'装备等级'),
 ]
 
 config_list = [
 'normal_dungeon_config',
-'box_config',
 'card_config',
 'special_dungeon_config',
 'monster_config',
@@ -72,18 +67,16 @@ config_list = [
 'equip_desc_config',
 'skill_desc_config',
 'dungeon_desc_config',
-'monster_group_config',
-'pvp_config',
 'gacha_config',
 'card_level_config',
 'weekly_dungeon_config',
 'skill_config',
 'leader_skill_config',
 'gift_config',
-'fate_conf',
-'user_vip_conf',
+'fate_config',
+'user_vip_config',
 'props_config',
-'equip_exp_conf',
+'equip_exp_config',
 ]
 
 def makegameconfig(request):
@@ -160,9 +153,6 @@ def make_config(request, config_name):
         #     'equip_desc_config': lambda: equip_desc_config(sheet),
         #     'skill_desc_config': lambda: skill_desc_config(sheet),
         #     'dungeon_desc_config': lambda: dungeon_desc_config(sheet),
-        #     'box_config': lambda: box_config(sheet),
-        #     'monster_group_config':lambda: monster_group_config(sheet),
-        #     'pvp_config':lambda: pvp_config(sheet),
         #     'gacha_config':lambda: gacha_config(sheet),
         #     'card_level_config':lambda: card_level_config(sheet),
         #     'weekly_dungeon_config':lambda: weekly_dungeon_config(sheet),
@@ -171,7 +161,6 @@ def make_config(request, config_name):
         #     'fate_conf': lambda: fate_config(sheet),
         #     'props_config':lambda: props_config(sheet),
         #     'props_desc_config':lambda: props_desc_config(sheet),
-        #     'user_vip_conf': lambda: user_vip_config(sheet),
         #     'equip_exp_conf': lambda: equip_exp_config(sheet),
         # }[config_name]()
         return str(data_string)
@@ -287,26 +276,6 @@ def dungeon_desc_config(sheet):
     dun_config_string = "{\n" + print_dict(dungeon_desc_config, indented) + "\n}"
     return dun_config_string
 
-def box_config(sheet):
-    indented = ''
-    box_config = make_dict(sheet)
-    key_sum = {}
-    no_sort_keys=[]
-    for i in box_config:
-        tmp = 0
-        length = len(i.split('_'))
-        try:
-            for position,j in enumerate(i.split('_')):
-                tmp += int(j) * 100**(length-position)
-            key_sum[tmp] = i
-        except:
-            no_sort_keys.append(i)
-        
-    sort_keys = [ key_sum[i] for i in sorted(key_sum.keys())]
-    sort_keys = sort_keys + sorted(no_sort_keys)
-    box_config_string = "{\n" + print_dict(box_config, indented,sort_keys) + "\n}"
-    return box_config_string
-
 def special_dungeon_config(sheet):
     indented = ''
     special_dungeon_config = make_dict(sheet)
@@ -334,31 +303,6 @@ def card_config(sheet):
     sort_keys = [ '%s_card' % tag for tag in sorted([int(i.split('_')[0]) for i in card_config])]
     card_config_string = "{\n" + print_dict(card_config, indented,sort_keys) + "\n}"
     return card_config_string
-
-def monster_group_config(sheet):
-    indented = ''
-    monster_group_config = make_dict(sheet)
-    key_sum = {}
-    no_sort_keys = []
-    for i in monster_group_config:
-        tmp = 0
-        length = len(i.split('_'))
-        try:
-            for position,j in enumerate(i.split('_')):
-                tmp += int(j) * 100**(length-position)
-            key_sum[tmp] = i
-        except:
-            no_sort_keys.append(i)
-    sort_keys = [ key_sum[i] for i in sorted(key_sum.keys())]
-    sort_keys = sort_keys + sorted(no_sort_keys)
-    monster_config_string = "{\n" + print_dict(monster_group_config, indented,sort_keys) + "\n}"
-    return monster_config_string
-
-def pvp_config(sheet):
-    indented = ''
-    pvp_config = make_dict(sheet)
-    pvp_config_string = "{\n" + print_dict(pvp_config, indented) + "\n}"
-    return pvp_config_string
 
 def has_cell2(cell2):
     if cell2 == '':

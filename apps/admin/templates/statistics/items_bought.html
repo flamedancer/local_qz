@@ -1,0 +1,69 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息 Statistics Info
+  </h2> 
+
+  <hr clear=all>
+  <p>过去一周内的药品购买统计 Item/Drug Purchased in Past Week
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>
+        <span style="color:gray">
+          <br> 药品ID
+          <br> Item/Drug ID
+        </span>
+      </th> 
+
+      <th>
+        <span style="color:gray">
+          <br> 药品名称
+          <br> Item/Drug Name
+        </span>
+      </th> 
+
+      <th>ユーザー数 
+        <span style="color:gray">
+        <br> 唯一用户数 
+        <br> Unique Users
+        </span>
+      </th>
+
+      <th> 
+        <span style="color:gray">
+          <br>药品数量 <br>Item/Drug Total Quantity
+        </span> </th>
+
+
+    </tr>
+
+  {% for item_id in all_item_ids %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{item_id}}</td> 
+      <td>{{all_item_names|dictValue:item_id}}</td> 
+      <td>
+        {{buy_item_users|dictValue:item_id}}
+      </td>
+      <td>
+        {{items_bought|dictValue:item_id}}
+      </td>
+    </tr>
+  {% endfor %}
+
+  </table>
+
+
+</body>
+</html>

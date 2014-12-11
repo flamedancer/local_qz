@@ -1,5 +1,8 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
         "http://www.w3.org/TR/html4/loose.dtd">
+
+{% load tags %}
+
 <html>
 <head>
     <title>查询</title>
@@ -109,14 +112,52 @@
     </select>
     <input type="submit" value="开始查找" />
     </form>
+
+
     <hr/>
-    <form action="../tool/update_static/" method="post" enctype="multipart/form-data">
+    <h3>登录公告编辑助手</h3>
+    各版本（在“分区的登录公告”中配置): <br>  &nbsp; &nbsp;
+    {% for id in notice_versions %}
+        <a href=/admin/tool/bulletin/?id={{id}}>{{id}}版本</a>, &nbsp;
+    {% endfor %}
+
+    <hr/>
+    <form action="../tool/upload_static/" method="post" enctype="multipart/form-data">
         <h3>上传静态文件</h3>
-        目录：/static/
-        <input type="file" name='html' value="上传文件" /><br />
+
+        <dl><dt>远端服务器上的目录:<dt>
+          <dd>
+        <input type="radio" name='remote_dir' value="/static" /> 静态文件最上层: <a href=/admin/tool/view_static/?dir=%2Fstatic>/static</a> <br>
+        <input type="radio" name='remote_dir' value="/static/html" /> 登录公告到: <a href=/admin/tool/view_static/?dir=%2Fstatic%2Fhtml>/static/html</a> <br>
+        <input type="radio" name='remote_dir' value="/static/html/image_ui" />
+        公告图片到: <a href=/admin/tool/view_static/?dir=%2Fstatic%2Fhtml%2Fimage_ui>/static/html/image_ui</a> <br>
+      </dd></dl>
+
+      
+        <input type="checkbox" name='force_overwrite' value="true" /> 强制替换/覆盖已存在的文件
+        <br>
+
+       选择本地文件: <input type="file" name='local_file'><br>
+        <input type="submit" value="上传" /><br />
+
+       <p style="color:gray">*注1: 上传 0字节的文件，会删除服务器上同名文件. 
+       <br> *注2: 上传的文件名, 尽量用英文, 数字, 下划线, 减号, 避免用中文, 空格.</p>
+    </form>
+
+    <hr/>
+
+    <!--
+    <hr/>
+    <form action="../tool/update_bulletin/" method="post" enctype="multipart/form-data">
+        <h3>上传公告文件</h3>
+        目录：/static/html
+        <input type="file" name='html' value="上传公告" /><br />
         <input type="submit" value="开始上传文件" /><br />
     </form>
     <hr/>
-    {%endif%}
+    -->
+
+    {% endif %}
+
 </body>
 </html>

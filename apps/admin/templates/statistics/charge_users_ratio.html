@@ -1,0 +1,39 @@
+{% load tags %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息
+  </h2> 
+
+  <hr clear=all>
+  <h3>每天充值用户数 vs. 登录用户数</h3>
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>日期</th> 
+      <th> 充值用户数 </th>
+      <th> 登录用户数</th>
+      <th> 充值用户数 / 登录用户数</th>
+    </tr>
+  {% for aDate, num in charge_users.items|sort reversed %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{aDate}}</td> 
+      <td>{{num}}</td>
+      <td>{{login_users|dictValue:aDate}}</td>
+      <td>{{charge_ratio|dictValue:aDate|floatformat:3}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+
+</body>
+</html>

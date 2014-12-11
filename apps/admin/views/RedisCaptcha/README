@@ -1,0 +1,6 @@
+Most code are from PyCaptcha on internet. 
+Except RedisCaptchaDict.py, and Base.py, are modified by 
+Changsen Xu at ShangHai OneClick, Inc., around 2014/11/14.
+
+For safety purpose, one image can only be checked once, where success, or fail.
+See original PyCapatcha documents online.

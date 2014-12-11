@@ -1,54 +1,70 @@
 #-*- coding: utf-8 -*-
 
-from apps.models.user_mail import UserMail
 import datetime
 
-def show_mails(rk_user,params):
+from apps.common import tools, utils
+from apps.models.user_mail import UserMail
+from apps.config.game_config import game_config
+
+def show_mails(rk_user, params):
     """
     获取邮件列表
     'type': 'system': 系统邮件
     'type': 'pvp'   : pvp邮件 
-    return 
-    data = {
-        '1': {
-            'type': 'system',
-            'content': u'停机维护提醒\n发件人：小冰冰\n2014-25-04',
-            'can_get': True,
-            'awards_description': u'恭喜您， 你将获得一下道具：\n元宝 * 3',
-            'mid': '201425041211',
-        },
-        '2':{
-            'type': 'pvp',
-            'content': u'pvp奖励\n2014-25-04',
-            'can_get': False,
-            'mid': '201425041212',
-        },
-    }
+    Returns:
+        {'show_mails': 
+            {1: {'awards': [
+                    {'equipSoul': {'equip_type': u'1', 'good_id': u'53003_equip', 'num': 1}},                
+                    {'mat': {'good_id': u'3_mat', 'num': 2}},
+                    {'gold': {'good_id': u'gold', 'num': 10}},
+                    {'props': {'good_id': u'1_props', 'num': 1}},
+                    {'equip': {'color': u'green', 'good_id': u'13001_equip', 'num': 3}},
+                    {'cardSoul': {'good_id': u'5_card', 'num': 1}},
+                    {'fight_soul': {'good_id': u'fight_soul', 'num': 100}},
+                    {'card': {'good_id': u'5_card', 'num': 1}},
+                    {'honor': {'good_id': u'honor', 'num': 100}},
+                    {'equipSoul': {'good_id': u'12002_equip', 'num': 1}}
+                ],
+                'can_get': True,
+                'content': u'5345',
+                'create_time': u'2014-11-04 11:32:56',
+                'mid': u'201411041132562390414',
+                'type': u'system'},
+            2:  ......
     """
-    rk_user.user_pvp
     data = {}
     all_info = UserMail.hgetall(rk_user.uid)
-    clear_date = (datetime.datetime.now() - datetime.timedelta(days=2)).strftime('%Y%m%d')
-    mid_list = [(m, all_info[m]['mail_info'].get('create_time', ''), ) for m in all_info]
-    mid_list = sorted(mid_list , key=lambda mid_list : mid_list[1],reverse=True)
-    for i, v in enumerate(mid_list):
-        v = v[0]
-        can_get = all_info[v]['mail_info'].get('can_get', False)
-        mid = all_info[v]['mail_info']['mid']
-        if can_get is False and clear_date > mid:
+    expire_days = game_config.mail_config.get('expire_days', 2)
+    clear_date = (datetime.datetime.now() - datetime.timedelta(days=expire_days)).strftime('%Y-%m-%d %H:%M:%S')
+    # 根据创建时间排序
+    key_create_time_list = [(m, 
+        all_info[m]['mail_info'].get('create_time', ''), 
+        all_info[m]['mail_info'].get('open_time', '9999-99-99 99:99:99')) for m in all_info]
+
+    key_create_time_list = sorted(key_create_time_list , key=lambda key_time: key_time[1], reverse=True)
+    for index, key_create_time in enumerate(key_create_time_list):
+        key, create_time, open_time = key_create_time
+        mail_info = all_info[key]['mail_info']
+        can_get = mail_info.get('can_get', False)
+
+        if can_get is False and clear_date > open_time:
         #if can_get is False:
-            umobj = UserMail.hget(rk_user.uid, v)
+            umobj = UserMail.hget(rk_user.uid, key)
             umobj.delete()
             continue
 
-        data[str(i + 1)] = {}
-        data[str(i + 1)]['type'] = all_info[v]['mail_info'].get('type', 'system')
-        data[str(i + 1)]['content'] = all_info[v]['mail_info'].get('content', '')
-        data[str(i + 1)]['can_get'] = all_info[v]['mail_info'].get('can_get', False)
-        data[str(i + 1)]['awards_description'] = all_info[v]['mail_info'].get('awards_description', '')
-        data[str(i + 1)]['mid'] = all_info[v]['mail_info']['mid']
+        this_data = {
+            'type': mail_info['type'],
+            'title': mail_info['title'],
+            'content': mail_info['content'],
+            'can_get': mail_info['can_get'],
+            'awards': [tools.pack_good(good, num) for good, num in mail_info['awards'].items()],
+            'create_time': mail_info['create_time'],
+            'mid': mail_info['mid'],
+        }
+        data[index + 1] = this_data
+    return {'show_mails': data}
 
-    return 0, {'show_mails': data}
 
 def receive(rk_user, params):
     '''
@@ -56,19 +72,24 @@ def receive(rk_user, params):
     '''
     mails_id = str(params['mails_id'])
     all_info = UserMail.hgetall(rk_user.uid)
+    return_info = {}
     for m in all_info:
         mid = all_info[m]['mail_info']['mid']
         if mid == mails_id:
-            can_get = all_info[m]['mail_info'].get('can_get', False)  
-            if can_get is False:          
+            can_get = all_info[m]['mail_info'].get('can_get', False)
+            if can_get is False:
                 break
             awards = all_info[m]['mail_info']['awards']
-            rk_user.user_property.give_award(awards, where='mails')
+            return_info = tools.add_things(rk_user, [{"_id": goods, "num": awards[goods]} for goods in awards if goods], "receive_mail")
+
             umobj = UserMail.hget(rk_user.uid, m)
             umobj.mail_info['can_get'] = False
+            umobj.mail_info['open_time'] = utils.datetime_toString(datetime.datetime.now())
             umobj.hput()
+            break
 
-    return 0, {'receive': {}}
+    return 0, {'receive': return_info}
+
 
 def _get_pvprank_record(uid):
     pvprank_record_list = []
@@ -83,3 +104,43 @@ def _get_pvprank_record(uid):
     if pvprank_record_list:
         pvprank_record_list = [ (i[0][:13], i[1]) for i in sorted(pvprank_record_list, key=lambda d:d[0],reverse=False)]
     return pvprank_record_list
+
+
+def send_op_mail(rk_user):
+    '''
+    发运营邮件
+    判断运营是否有新配邮件,这里邮件特指mail_config['mail_list']里的邮件,需要一些实时性，非一些登陆奖励类邮件
+    '''
+    mail_conf = game_config.mail_config.get('mail_list')
+    if not mail_conf:
+        return
+    for mail_info in mail_conf:
+        mid = mail_info['mail_id']
+        if not rk_user.baseinfo.get('received_mails'):
+            rk_user.baseinfo['received_mails'] = []
+            rk_user.put()
+        received_mails = rk_user.baseinfo['received_mails']
+        # 没收过这封邮件,并且邮件在时间段内，发邮件
+        if mid not in received_mails:
+            if _is_between_times(mail_info):
+                sid = 'system_%s' % (utils.create_gen_id())
+                mailtype = 'system_qa'
+                title = mail_info['title']
+                content = mail_info['content']
+                award = mail_info['award']
+                user_mail_obj = UserMail.hget(rk_user.uid, sid)
+                user_mail_obj.set_mail(mailtype=mailtype, title=title, content=content, award=award)
+
+                received_mails.append(mid)
+                # 去掉时间太久的不必要的邮件
+                if len(received_mails) > 30:
+                    received_mails.pop(0)
+                rk_user.put()
+
+
+def _is_between_times(mail):
+    if len(mail['start_time']) == len(mail['end_time']) == 19:
+        now = utils.datetime_toString(datetime.datetime.now())
+        if mail['start_time'] <= now <= mail['end_time']:
+            return True
+    return False

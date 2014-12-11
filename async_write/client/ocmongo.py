@@ -95,6 +95,12 @@ class Mongo(object):
 
         return self.collection.find(query, **kwargs)
 
+    def find_one(self,query,**kwargs):
+        '''
+        find_one 的效率 杠杠的 ，所以添加
+        '''
+        return self.collection.find_one(query, **kwargs)
+        
     def delete(self, pk, pk_value):
         """根据文件的pk删除文件
 
@@ -125,6 +131,7 @@ class Mongo(object):
         '''更新数据，如果找不到就新增
         '''
         query = {pk: data[pk]}
+        
         return self.collection.update(query, data, upsert=True)
 
     def drop_indexes(self):

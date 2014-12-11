@@ -199,8 +199,8 @@ class System_config(XlsToDict):
                             'gacha_notice_in_review', 'free_gacha_notice_in_review', 'free_gacha_notice', 
                            ]
         self.int_cnames  = ['oc_freeze_time', 'oc_freeze_num', 'tapjoy_max_coins', 'tapjoy_points_per_coin', 'stamina_recover_time', 'max_friend_request',
-                            'max_gacha_point', 'login_record_length', 'deck_length', 'friend_help_user_num', 'friend_gacha_pt', 'other_help_user_num', 
-                            'other_gacha_pt', 'revive_coin', 'recover_stamina_coin', 'dungeon_clear_coin', 'card_extend_num', 'max_card_num', 'card_extend_coin',
+                            'login_record_length', 'deck_length', 'friend_help_user_num', 'friend_gacha_pt', 'other_help_user_num', 
+                            'other_gacha_pt', 'revive_coin', 'dungeon_clear_coin', 'card_extend_num',
                             'free_stamina_cnt', 'tranform_divider', 'newbie_days', 'recover_copy_coin', 'bind_phone_cnt', 
                            ]
         self.dict_cnames = ['res_url_online', 'popularize', 'bind_mobile_conf', 'timing_notice_conf', 'push_info', 'you', 
@@ -221,7 +221,7 @@ def submit_game_settings_by_excel(request):
     str_subareas_confname = config_list.get_configname_by_subarea('subareas_conf', '1')
     subareas_conf = Config.get(str_subareas_confname)
     if not subareas_conf:
-        subareas_conf = Config.create(sconfig_name)
+        subareas_conf = Config.create(str_subareas_confname)
     subareas_conf_dict = eval(subareas_conf.data)
     return_subareas_conf = []
     for key in sorted(subareas_conf_dict.keys()):
@@ -242,7 +242,8 @@ def submit_game_settings_by_excel(request):
     data['saved'] = False
     data['submit_game_settings_by_excel'] = True
     data['subarea_default'] = subarea_default
-    moderator = get_moderator_by_request(request)
+
+    #moderator = get_moderator_by_request(request)
     return render_to_response('admin/game_setting.html', data, context_instance = RequestContext(request))
 
 def _verify_game_config(config_name, value):
@@ -297,7 +298,7 @@ def make_config(request, config_name):
         filename = request.FILES.get('xls', None)
         excel = xlrd.open_workbook(file_contents = filename.read());
         sheet = excel.sheet_by_name(config_name)
-        data_string = globals()[config_name](sheet)
+        data_string = globals().get(config_name, defuault_excel_explain)(sheet)
         # data_string += {
         #     'special_dungeon_config': lambda: special_dungeon_config(sheet),
         #     'dungeon_config': lambda: dungeon_config(sheet),
@@ -314,9 +315,6 @@ def make_config(request, config_name):
         #     'equip_desc_config': lambda: equip_desc_config(sheet),
         #     'skill_desc_config': lambda: skill_desc_config(sheet),
         #     'dungeon_desc_config': lambda: dungeon_desc_config(sheet),
-        #     'box_config': lambda: box_config(sheet),
-        #     'monster_group_config':lambda: monster_group_config(sheet),
-        #     'pvp_config':lambda: pvp_config(sheet),
         #     'gacha_config':lambda: gacha_config(sheet),
         #     'card_level_config':lambda: card_level_config(sheet),
         #     'weekly_dungeon_config':lambda: weekly_dungeon_config(sheet),
@@ -418,6 +416,13 @@ def print_dict(values, indented,sort_keys = None):
             dict_string += indented + keys_extend + ":" + str(walk_values) + ",\n"
 
     return dict_string
+
+
+def defuault_excel_explain(sheet):
+    indented = '\t'
+    config = make_dict(sheet)
+    config_string = "{\n" + print_dict(config, indented) + "\n}"
+    return config_string
 
 
 def fate_config(sheet):
@@ -575,26 +580,6 @@ def dungeon_desc_config(sheet):
     dun_config_string = "{\n" + print_dict(dungeon_desc_config, indented) + "\n}"
     return dun_config_string
 
-def box_config(sheet):
-    indented = ''
-    box_config = make_dict(sheet)
-    key_sum = {}
-    no_sort_keys=[]
-    for i in box_config:
-        tmp = 0
-        length = len(i.split('_'))
-        try:
-            for position,j in enumerate(i.split('_')):
-                tmp += int(j) * 100**(length-position)
-            key_sum[tmp] = i
-        except:
-            no_sort_keys.append(i)
-
-    sort_keys = [ key_sum[i] for i in sorted(key_sum.keys())]
-    sort_keys = sort_keys + sorted(no_sort_keys)
-    box_config_string = "{\n" + print_dict(box_config, indented,sort_keys) + "\n}"
-    return box_config_string
-
 def special_dungeon_config(sheet):
     indented = ''
     special_dungeon_config = make_dict(sheet)
@@ -622,31 +607,6 @@ def card_config(sheet):
     sort_keys = [ '%s_card' % tag for tag in sorted([int(i.split('_')[0]) for i in card_config])]
     card_config_string = "{\n" + print_dict(card_config, indented,sort_keys) + "\n}"
     return card_config_string
-
-def monster_group_config(sheet):
-    indented = ''
-    monster_group_config = make_dict(sheet)
-    key_sum = {}
-    no_sort_keys = []
-    for i in monster_group_config:
-        tmp = 0
-        length = len(i.split('_'))
-        try:
-            for position,j in enumerate(i.split('_')):
-                tmp += int(j) * 100**(length-position)
-            key_sum[tmp] = i
-        except:
-            no_sort_keys.append(i)
-    sort_keys = [ key_sum[i] for i in sorted(key_sum.keys())]
-    sort_keys = sort_keys + sorted(no_sort_keys)
-    monster_config_string = "{\n" + print_dict(monster_group_config, indented,sort_keys) + "\n}"
-    return monster_config_string
-
-def pvp_config(sheet):
-    indented = ''
-    pvp_config = make_dict(sheet)
-    pvp_config_string = "{\n" + print_dict(pvp_config, indented) + "\n}"
-    return pvp_config_string
 
 def monster_config(sheet):
     indented = ''
@@ -693,5 +653,16 @@ def pk_config(sheet):
     config_string = "{\n" + print_dict(config, indented) + "\n}"
     return config_string
 
+def equip_upgrade_config(sheet):
+    indented = '\t'
+    config = make_dict(sheet)
+    config_string = "{\n" + print_dict(config, indented) + "\n}"
+    return config_string
+
+def suit_type_config(sheet):
+    indented = '\t'
+    config = make_dict(sheet)
+    config_string = "{\n" + print_dict(config, indented) + "\n}"
+    return config_string
 
 

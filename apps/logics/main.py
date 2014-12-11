@@ -5,110 +5,113 @@
 import copy
 import datetime
 import random
-import traceback
 
-from apps.models.user_cards import UserCards
-from apps.models.user_equips import UserEquips
-from apps.models.user_lend import UserLend
-from apps.models.user_login import UserLogin
 from apps.models.user_dungeon import UserDungeon
 from apps.common import utils
+from apps.common import tools
 from apps.config.game_config import game_config
 from apps.models.user_gift import UserGift
 from apps.logics.card import get_card_soul_drop_info 
 from apps.logics.equip import get_equip_drop_info
 from apps.models.gift_code import GiftCode
-from apps.models import data_log_mod
-from apps.models.random_name import Random_Names
+
 from django.conf import settings
 from apps.logics import vip
+from apps.common.random_name_male import male_name_parts
+from apps.common.random_name_female import female_name_parts
+from apps.common.exceptions import GameLogicError
+from apps.models.names import Names
 
 
 def index(rk_user,params):
     data = {}
-    #登录奖励
-    UserLogin.get_instance(rk_user.uid).login(params)
-
-    #借卡信息
-    UserLend.get_instance(rk_user.uid).read_info(params)
+    # 登录奖励
+    data['login_bonus'] = rk_user.user_login.login(params)
 
     #邀请奖励信息
     #data['invited_award'] = rk_user.user_property.read_invite_award(params)
 
-    #用户卡片信息
-    card_obj = UserCards.get_instance(rk_user.uid)
-    data['user_cards'] = card_obj.cards
-    data['user_decks'] = card_obj.decks
-    data['deck_index'] = card_obj.cur_deck_index
-    #获取用户的装备信息
+    # 用户卡片信息
+    user_card_obj = rk_user.user_cards
+    data['user_cards'] = user_card_obj.cards
+    data['user_decks'] = user_card_obj.decks
+    data['deck_index'] = user_card_obj.cur_deck_index
+    # 获取用户的装备信息
     user_equips_obj = rk_user.user_equips
     data['user_equips'] = user_equips_obj.equips
-    #获取战场信息
-    #data['weekly_info'] = UserDungeon.get_instance(rk_user.uid).get_weekly_info()
-    data['daily_info'] = UserDungeon.get_instance(rk_user.uid).get_daily_info()
-    data['user_dungeon_info'] = UserDungeon.get_instance(rk_user.uid).get_dungeon_info()
+    # s获取战场信息
+    #data['weekly_info'] = rk_user.user_dungeon.get_weekly_info()
+    user_dungeon_obj = rk_user.user_dungeon
+    data['daily_info'] = user_dungeon_obj.get_daily_info()
+    data['user_dungeon_info'] = user_dungeon_obj.get_dungeon_info()
     return 0,data
+
 
 def get_config(rk_user, params):
     config_info = {}
-    #一些系统配置
+
+    subarea_notice_config = game_config.get_game_config('subarea_notice_config', '1')
+
+    this_subarea_notice = ''
+    this_subarea_timed_notice_conf = {}
+    for nc in subarea_notice_config:
+        if game_config.subarea_num in nc['subarea_list']:
+            this_subarea_notice = nc['notice']
+            this_subarea_timed_notice_conf = nc['timed_notice_conf']
+            break
+
+    # 一些系统配置
     config_info['common'] = {
-        'stamina_recover_time':game_config.system_config['stamina_recover_time'],
-        'max_gacha_point':game_config.system_config['max_gacha_point'],
-        'revive_coin':game_config.system_config['revive_coin'],
-        'recover_stamina_coin':game_config.system_config['recover_stamina_coin'],
-        'dungeon_clear_coin':game_config.system_config['dungeon_clear_coin'],
-        'card_extend_coin':game_config.system_config['card_extend_coin'],
-        'card_extend_num':game_config.system_config['card_extend_num'],
-        'gacha_cost_gold':game_config.gacha_config['cost_gacha_gold'],
-        'gacha_cost_coin':game_config.gacha_config['cost_coin'],
-        'gacha_notice':game_config.gacha_config['notice'],
-        'agreement':game_config.system_config.get('agreement',''),
-        'help_links':game_config.system_config.get('help_links',[]),
-        'aboutus':game_config.system_config['aboutus'],
-        'praise':utils.get_msg('login','praise'),
+        'stamina_recover_time': game_config.system_config['stamina_recover_time'],
+        'revive_coin': game_config.system_config['revive_coin'],
+
+        'dungeon_clear_coin': game_config.system_config['dungeon_clear_coin'],
+
+        'coin_recover_stamina': game_config.system_config['coin_recover_stamina'],
+        'recover_stamina_need': game_config.system_config['recover_stamina_need'],
+        'recover_normal_copy_need': game_config.system_config['recover_normal_copy_need'],
+        'recover_daily_copy_need': game_config.system_config['recover_daily_copy_need'],
+
+        'gacha_cost_coin': game_config.gacha_config['cost_coin'],
+        'gacha_notice': game_config.gacha_config['notice'],
+        'agreement': game_config.system_config.get('agreement',''),
+        'help_links': game_config.system_config.get('help_links',[]),
+        'aboutus': game_config.system_config['aboutus'],
+        'praise': utils.get_msg('login','praise'),
         'weixin_voice_fg':game_config.weibo_config.get('weixin_voice_fg', False),
         'app_url':game_config.system_config['app_url'],
-        'tapjoy_fg':game_config.system_config.get('tapjoy_fg',False),
-        'admob_fg':game_config.system_config.get('admob_fg',False),
         'bbs_url': game_config.system_config.get('bbs_url',''),
-        'bg_change':game_config.system_config.get('bg_change', '1'),
-        'special_bg':game_config.system_config.get('special_bg',''),
-        'card_update_conf':game_config.card_update_config,
-        #商店充值活动
-        "charge_url":game_config.shop_config.get("charge_award",{}).get("charge_url", ''),
-        #微信分享类型1:到个人,2:朋友圈
-        "weixin_share_type":game_config.weibo_config.get('weixin_share_type', 1),
-        'notice':game_config.system_config['notice'],
-        'pvp_recover_inter_time':game_config.pvp_config['pvp_recover_inter_time'],
-        'recover_pvp_stamina_coin':game_config.pvp_config['recove_pvp_stamina_coin'],
-        'multi_gacha_cnt':game_config.gacha_config.get('multi_gacha_cnt',0), #连抽次数
-        'gift_code_fg':game_config.gift_config.get('is_open',False),
-        'invite_fg':game_config.invite_config.get('open_invite',False),
-        'app_comment_url':game_config.system_config.get('app_comment_url',''),
-        'contact_us':game_config.system_config.get('contact_us',''),
-        'free_gacha_notice':game_config.system_config.get('free_gacha_notice',''),
+        # 'special_bg':game_config.system_config.get('special_bg',''),
+        'card_update_conf': game_config.card_update_config,
+        # #商店充值活动
+        # "charge_url": game_config.shop_config.get("charge_award", {}).get("charge_url", ''),
+        # # 微信分享类型1:到个人,2:朋友圈
+        # "weixin_share_type": game_config.weibo_config.get('weixin_share_type', 1),
+        'notice': game_config.system_config['notice'],
+        'notice':this_subarea_notice,
+        'multi_gacha_cnt': game_config.gacha_config.get('multi_gacha_cnt', 0), #连抽次数
+        'gift_code_fg': game_config.gift_config.get('is_open', False),
+        'invite_fg': game_config.invite_config.get('open_invite', False),
+        'app_comment_url': game_config.system_config.get('app_comment_url',''),
+        # 'contact_us': game_config.system_config.get('contact_us',''),
+        # 'free_gacha_notice':game_config.system_config.get('free_gacha_notice',''),
 
-        'weixin_fg':game_config.weibo_config.get('weixin_fg',False),
+        # 'weixin_fg': game_config.weibo_config.get('weixin_fg',False),
 
-        'auto_fight_is_open':game_config.system_config.get('auto_fight_is_open',False),#自动战斗总开关
-        'month_item_is_open':game_config.shop_config.get('month_item_is_open',False),#月卡开关
-        'stamina_conf':game_config.operat_config.get('stamina_conf',{}),#领取体力配置
-        'stamina_award_is_open':game_config.operat_config.get('stamina_award_is_open',False),#领取体力配置开关
+        # 'auto_fight_is_open':game_config.system_config.get('auto_fight_is_open', False),#自动战斗总开关
+        'month_item_is_open': game_config.shop_config.get('month_item_is_open',False),#月卡开关
+        # 'stamina_conf': game_config.operat_config.get('stamina_conf', {}),#领取体力配置
+        # 'stamina_award_is_open':game_config.operat_config.get('stamina_award_is_open',False),#领取体力配置开关
         'open_special_is_open':game_config.dungeon_world_config.get('open_special_is_open',False),#花费元宝开启loopgap战场开关
-        'mycard_is_open':game_config.shop_config.get('mycard_is_open',False),#mycard 开关
-        'mystery_store_is_open':game_config.mystery_store.get('mystery_store_is_open', False),# 神秘商店开关
+        # 'mycard_is_open':game_config.shop_config.get('mycard_is_open', False),#mycard 开关
+        # 'mystery_store_is_open':game_config.mystery_store_config.get('mystery_store_is_open', True),# 神秘商店开关
+        'mystery_store_refresh_coin': game_config.mystery_store_config.get('store_refresh_cost', True),# 神秘商店刷新所需元宝
     }
 
     version = float(params['version'])
-    tut_open_lv = game_config.user_init_config.get('tut_open_lv',{})
 
-    config_info['common']['card_update_open_lv'] = tut_open_lv.get('card_update_open_lv',3)
+    # config_info['gacha_card_up'] = game_config.gacha_config.get('gacha_card_up',[])
 
-    config_info['common']['card_upgrade_open_lv'] = tut_open_lv.get('card_upgrade_open_lv',5)
-    config_info['common']['equip_house_open_lv'] = tut_open_lv.get('equip_house_open_lv',6)
-    config_info['common']['special_dungeon_open_lv'] = tut_open_lv.get('special_dungeon_open_lv',6)
-    config_info['gacha_card_up'] = game_config.gacha_config.get('gacha_card_up',[])
     #安卓配置兼容
     if rk_user.client_type in settings.ANDROID_CLIENT_TYPE:
         if 'notice' in game_config.android_config:
@@ -123,10 +126,10 @@ def get_config(rk_user, params):
             config_info['common']['gift_code_fg'] = game_config.android_config['is_open']
         if 'gacha_card_up' in game_config.android_config:
             config_info['gacha_card_up'] = game_config.android_config['gacha_card_up']
-        if 'free_gacha_notice' in game_config.android_config:
-            config_info['common']['free_gacha_notice'] = game_config.android_config['free_gacha_notice']
-        if 'auto_fight_is_open' in game_config.android_config:
-            config_info['common']['auto_fight_is_open'] = game_config.android_config['auto_fight_is_open']
+        # if 'free_gacha_notice' in game_config.android_config:
+        #     config_info['common']['free_gacha_notice'] = game_config.android_config['free_gacha_notice']
+        # if 'auto_fight_is_open' in game_config.android_config:
+        #     config_info['common']['auto_fight_is_open'] = game_config.android_config['auto_fight_is_open']
     #ios审核特殊处理
     if rk_user.client_type not in settings.ANDROID_CLIENT_TYPE and \
         version>float(game_config.system_config['version']) and \
@@ -135,12 +138,11 @@ def get_config(rk_user, params):
             config_info['common']['gift_code_fg'] = False
             config_info['common']['gacha_notice'] = game_config.system_config.get('gacha_notice_in_review','')
             config_info['common']['notice'] = game_config.system_config.get('notice_in_review','')
-            config_info['common']['free_gacha_notice'] = game_config.system_config.get('free_gacha_notice_in_review','')
-            config_info['common']['auto_fight_is_open'] = False
-            config_info['common']['stamina_award_is_open'] = False
+            # config_info['common']['free_gacha_notice'] = game_config.system_config.get('free_gacha_notice_in_review','')
+            # config_info['common']['auto_fight_is_open'] = False
+            # config_info['common']['stamina_award_is_open'] = False
             config_info['common']['open_special_is_open'] = False
             config_info['common']['month_item_is_open'] = False
-            config_info['common']['card_update_open_lv'] = 5
             config_info['common']['mystery_store_is_open'] = False
             if 'gacha_card_up_in_review' in game_config.gacha_config:
                 config_info['gacha_card_up'] = game_config.gacha_config['gacha_card_up_in_review']
@@ -149,9 +151,10 @@ def get_config(rk_user, params):
         if rk_user.client_type in settings.ANDROID_CLIENT_TYPE and 'timing_notice_conf' in game_config.android_config:
             timing_notice_conf = game_config.android_config.get('timing_notice_conf',{})
         else:
-            timing_notice_conf = game_config.system_config.get('timing_notice_conf',{})
+            #timing_notice_conf = game_config.system_config.get('timing_notice_conf',{})
+            timing_notice_conf = this_subarea_timed_notice_conf
         now_str = utils.datetime_toString(datetime.datetime.now())
-        for notice_type in ['notice','gacha_notice','free_gacha_notice']:
+        for notice_type in ['notice', 'gacha_notice']:
             if notice_type not in timing_notice_conf:
                 continue
             notice_conf = timing_notice_conf[notice_type]
@@ -179,9 +182,6 @@ def get_config(rk_user, params):
     rc,config_info['dungeon'] = get_dungeon_config(rk_user,params)
     config_info['dungeon_world'] = game_config.dungeon_world_config['world']
 
-    config_info['pvp_level'] = game_config.pvp_config['pvp_level_config']
-    config_info['init_leader_card'] = game_config.user_init_config['init_leader_card']
-
     # mycard 商品配置
     config_info['mycard_sale'] = game_config.shop_config.get('mycard_sale', {})
     
@@ -190,21 +190,33 @@ def get_config(rk_user, params):
     sale_conf = shop_config.get('sale', {})
     sale_conf.update(shop_config.get('google_sale',{}))
     config_info['sale_conf'] = sale_conf
-    config_info['props_sale'] = shop_config.get('props_sale',{})
-    config_info['vip_gift_sale'] = vip.vip_gift_sale_list(rk_user.uid)
+
+    config_info['vip_gift_sale'] = vip.vip_gift_sale_list(rk_user)
 
     #指定floor里面的内容信息
     config_info['all_floor_info'] = UserDungeon.get_instance(rk_user.uid).get_all_floor_info()
-    #获取显示关卡的星配置信息
-    config_info['message_tip'] = game_config.pack_config.get('message',{})
-    config_info['common']['sell_base_gold'] = game_config.card_update_config['sell_base_gold']
+
     config_info['common']['exp_gold_rate'] = game_config.card_update_config['exp_gold_rate']
     #战斗参数配置
     config_info['fight_params_conf'] = {
                         'hc_drop_rate':game_config.skill_params_config.get('hc_drop_rate',0.1),
                         'bc_drop_rate':game_config.skill_params_config.get('bc_drop_rate',0.1),
                     }
-    return 0,config_info
+    # 探索展示物品配置
+    config_info['explore_show'] = {}
+    explore_show_can_get = game_config.explore_config.get('show_can_get', {})
+    for explore_type, goods_info in explore_show_can_get.items():
+        config_info['explore_show'][explore_type] = [tools.pack_good(goods_id, num) for goods_id, num in goods_info.items()]
+    # 各功能开放的等级
+    config_info["open_lv"] = game_config.user_init_config['open_lv']
+
+    # 道具商店   在道具商店配置中多添加字段 玩家当前已购买次数
+    user_pack_obj = rk_user.user_pack
+    props_sale = copy.deepcopy(game_config.props_store_config.get('props_sale', {}))
+    for index, sale_conf in props_sale.items():
+        sale_conf['now_buy_cnt'] = user_pack_obj.store_has_bought.get(index, 0)
+    config_info['props_sale'] = props_sale
+    return config_info
 
 def get_equip_config(rk_user, params):
     """获得装备的配置
@@ -226,21 +238,22 @@ def get_equip_config(rk_user, params):
 
     data['equip_conf'] = equip_config
     #获取装备等级经验配置信息
-    data['equip_exp_conf'] = game_config.equip_exp_conf
+    data['equip_exp_conf'] = game_config.equip_exp_config
     #获取装备强化配置信息
     data['equip_update_config'] = game_config.equip_update_config
     #获取套装配置信息
-    data['suit_type_conf'] = game_config.suit_type_conf
-    #获取武器的碎片掉落信息
-    data['equip_drop_info']  = get_equip_drop_info()
-    return 0,data
+    data['suit_type_conf'] = game_config.suit_type_config
+    #获取武器和碎片的掉落来源信息
+    data.update(get_equip_drop_info())
+    data['equip_upgrade_config'] = game_config.equip_upgrade_config  # 装备升品配置
+    return 0, data
 
 def get_yuan_fen(rk_user,params):
     '''
     * miaoyichao
     * 获取缘分系统的配置信息
     '''
-    return 0,{'fate_conf':game_config.fate_conf}
+    return 0,{'fate_conf':game_config.fate_config}
 
 
 def get_item_config(rk_user, params):
@@ -376,8 +389,8 @@ def get_dungeon_config(rk_user,params):
                 if 'steps_info' in local_copy[floor_key]['rooms'][room_key]:
                     local_copy[floor_key]['rooms'][room_key].pop('steps_info')
                 #去除可见掉落的信息
-                if 'drop_info' in local_copy[floor_key]['rooms'][room_key]:
-                    local_copy[floor_key]['rooms'][room_key].pop('drop_info')
+                # if 'drop_info' in local_copy[floor_key]['rooms'][room_key]:
+                #     local_copy[floor_key]['rooms'][room_key].pop('drop_info')
                 #去除不可见掉落信息
                 if 'invisible_drop' in local_copy[floor_key]['rooms'][room_key]:
                     local_copy[floor_key]['rooms'][room_key].pop('invisible_drop')
@@ -398,12 +411,6 @@ def get_dungeon_config(rk_user,params):
 
     return 0,data
 
-def set_country(rk_user,params):
-    """用户选择国家
-    """
-    country = params['country']
-    rk_user.user_property.set_country(country)
-    return 0,{}
 
 def get_shop(rk_user,params):
     """
@@ -420,74 +427,90 @@ def get_shop(rk_user,params):
         result[sale_k] = sale_v.get('state',0)
     return 0,{'shop_info':result}
 
+
 def get_random_names(rk_user,params):
     """
     取得随机名字
-    返回：man_names:['xxx','yyy'] female_names:['xxx','yyy']
-    """
-    rand_num = random.random()
-    data = {}
-    #男名
-    random_list_man = Random_Names.find({'random' : { '$gte' : rand_num }},limit=20)
-    if not random_list_man:
-        random_list_man = Random_Names.find({'random' : { '$lte' : rand_num }},limit=20)
-    data['man_names'] = []
-    if random_list_man:
-        for random_name_obj in random_list_man:
-            data['man_names'].append(random_name_obj.name)
-    else:
-        data['man_names'] = [u'历史大轮回哦',u'千年等一回哦哦']
-    #女名
-    rand_num = random.random()
-    random_list_female = Random_Names.find({'random' : { '$gte' : rand_num }},limit=20)
-    if not random_list_female:
-        random_list_female = Random_Names.find({'random' : { '$lte' : rand_num }},limit=20)
-    data['female_names'] = []
-    if random_list_female:
-        for random_name_obj in random_list_female:
-            data['female_names'].append(random_name_obj.name)
-    else:
-        data['female_names'] = [u'你是风儿',u'我是沙']
-    return 0,data
+    返回：man_names:['xxx','yyy'], female_names:['xxx','yyy']
 
-def __remove_random_name(name):
+    当我们随机选名字，有 300 * 300 * 300 = 2700万, 同名总概率会很低，
+    并且大多用户会改用自己喜欢的名字？
+
+    纯随机选名，是简单的，可行的。 反正最后把用户选择的名字存到数据库时，
+    都是要查是否重名的。
+
+    rk_user.set_name 调用 UserName.set_name, UserName的 pk 是 name, 
+    若重复，报错
     """
-    删除随机名字
-    """
-    try:
-        random_name_obj = Random_Names.get(name)
-        if random_name_obj:
-            random_name_obj.delete()
-    except:
-        utils.debug_print(traceback.format_exc())
-        utils.send_exception_mailEx()
-        
-def set_name(rk_user,params):
+
+    random_list_man = []
+    random_list_female = []
+
+    for i in range(20):
+        while True:
+            male_name = (random.choice(male_name_parts['1']) +
+                    random.choice(male_name_parts['2']) +
+                    random.choice(male_name_parts['3']))
+            if not (utils.is_sense_word(male_name) or 
+                Names.get(male_name)):
+                break
+
+        while True:
+            female_name = (random.choice(female_name_parts['1']) +
+                    random.choice(female_name_parts['2']) +
+                    random.choice(female_name_parts['3']))
+            if not (utils.is_sense_word(female_name) or 
+                Names.get(female_name)):
+                break
+
+        #if Random_Names.find({'name': male_name}):
+        #    #重名的概率更小一次
+        #    male_name = random.choice(male_name_parts['1']) + \
+        #        random.choice(male_name_parts['2']) + \
+        #        random.choice(male_name_parts['3']) 
+
+        #if Random_Names.find({'name': female_name}):
+        #    #重名的概率更小一次
+        #    female_name = random.choice(female_name_parts['1']) + \
+        #        random.choice(female_name_parts['2']) + \
+        #        random.choice(female_name_parts['3']) 
+
+        random_list_man += [ male_name ]
+        random_list_female += [ female_name ]
+
+    data = {}
+    data['man_names'] = random_list_man
+    data['female_names'] = random_list_female
+    return data
+ 
+
+def set_name(rk_user, params):
     '''
     新手引导设置名称和性别
     name   名字
     sex    性别 man  / woman
 
     '''
-    name = params.get('name','')
+    name = params.get('name', '')
     
-    step = int(params.get('step',0))
-    #如果有用户名的话就不做处理
-    if not rk_user.username:
-        if len(name.strip())<=0:
-            return 11,{'msg':utils.get_msg('user', 'name_cannot_null')}
-        if utils.is_sense_word(name):
-            return 11,{'msg':utils.get_msg('user', 'wrong_words')}
-        if not rk_user.set_name(name):
-            __remove_random_name(name)
-            return 11,{'msg':utils.get_msg('user', 'name_exist')}
-        __remove_random_name(name)
+    step = int(params.get('step', 0))
+
+    if len(name.strip()) <= 0:
+        raise GameLogicError('user', 'name_cannot_null')
+    if utils.is_sense_word(name):
+        raise GameLogicError('user', 'wrong_words')
+    if Names.get(name):
+        #rk_user调用 UserName.set_name, UserName的 pk 是 name, 若重复，报错
+        raise GameLogicError('user', 'name_exist')
+    rk_user.set_name(name)
+    Names.set_name(rk_user.uid, name)
     if step:
         #设置新手引导的步骤
-        rk_user.user_property.set_newbie_steps(step)
-        sex = params.get('sex' , 'man')
+        rk_user.user_property.set_newbie_steps(step, "set_name")
+        sex = params.get('sex', 'man')
         rk_user.set_sex(sex)
-    return 0,{}
+    return {}
+
 
 def show_vedio(rk_user,params):
     '''
@@ -497,101 +520,12 @@ def show_vedio(rk_user,params):
     step = params.get('step',0)
     if step:
         #设置新手引导的步骤
-        rk_user.user_property.set_newbie_steps(step)
+        rk_user.user_property.set_newbie_steps(step, "show_vedio")
         return 0,{}
     else:
         #参数错误
         return 11,{'msg':utils.get_msg('card','params_wrong')}
 
-def __get_weibo_weixin_award(ul,user_gift_obj):
-    """
-    微博微信分享发奖励
-    """
-    if 'weibo_weixin_award' not in ul.login_info:
-        ul.login_info['weibo_weixin_award'] = []
-    now = datetime.datetime.now()
-    hour_str = str(now.hour)
-    #在本时间段没领过奖励，则发奖
-    if hour_str not in ul.login_info['weibo_weixin_award']:
-        ul.login_info['weibo_weixin_award'].append(hour_str)
-        award_cnt_once = game_config.weibo_config.get('award_cnt_once',1)
-        weibo_weixin_award = game_config.weibo_config['weibo_weixin_award']
-        random_share_award_msg = utils.get_msg('weibo', 'random_share_award')
-        for i in range(award_cnt_once):
-            award = utils.get_item_by_random_simple(weibo_weixin_award)
-            user_gift_obj.add_gift_by_dict(award,random_share_award_msg)
-        ul.put()
-
-def weibo_back(rk_user,params):
-    """
-    发微博回调
-    """
-    #如果当天发微博在5次以内，则给予奖励
-    ul = UserLogin.get(rk_user.uid)
-    rc = 0
-    send_type = params.get('send_type','0')
-    user_gift_obj = UserGift.get_instance(rk_user.uid)
-    max_send_weibo = game_config.weibo_config.get('max_send_weibo',5)
-    max_send_weixin = game_config.weibo_config.get('max_send_weixin',5)
-    weibo_weixin_award = game_config.weibo_config.get('weibo_weixin_award',[])
-    if send_type == '0':
-        msg = utils.get_msg('weibo','sina_share')
-        if weibo_weixin_award:
-            __get_weibo_weixin_award(ul,user_gift_obj)
-        elif ul.login_info.get('send_weibo',0) < max_send_weibo:
-            ul.send_weibo()
-            award = game_config.weibo_config.get('weibo_award_sina',{})
-            user_gift_obj.add_gift(award,msg)
-
-    elif send_type == '1':
-        msg = utils.get_msg('weibo','qq_share')
-        if weibo_weixin_award:
-            __get_weibo_weixin_award(ul,user_gift_obj)
-        elif ul.login_info.get('send_weibo',0) < max_send_weibo:
-            ul.send_weibo()
-            award = game_config.weibo_config.get('weibo_award_qq',{})
-            user_gift_obj.add_gift(award,msg)
-    elif send_type == '2':
-        msg = utils.get_msg('weibo','fb_share')
-        if weibo_weixin_award:
-            __get_weibo_weixin_award(ul,user_gift_obj)
-        elif ul.login_info.get('send_weibo',0) < max_send_weibo:
-            ul.send_weibo()
-            award = game_config.weibo_config.get('weibo_award_fb',{})
-            user_gift_obj.add_gift(award,msg)
-    else:
-        msg = utils.get_msg('weibo','weixin_share')
-        if weibo_weixin_award:
-            __get_weibo_weixin_award(ul,user_gift_obj)
-        elif ul.login_info.get('send_weixin',0) < max_send_weixin:
-            ul.send_weixin()
-            award = game_config.weibo_config.get('weixin_award',{})
-            user_gift_obj.add_gift(award,msg)
-    if send_type == '3':
-        tmp_type = 'weixin'
-    else:
-        tmp_type = 'weibo'
-
-    data_log_mod.set_log('Feed', rk_user,
-                    lv=rk_user.user_property.lv,
-                    feed_style=tmp_type,
-                    platform=rk_user.platform
-    )
-    return rc,{'msg':msg}
-
-def set_signature(rk_user,params):
-    """
-    设置签名
-    """
-
-    words = params.get('words','')
-    if words:
-        if utils.is_sense_word(words):
-            return 11,{'msg':utils.get_msg('user','wrong_words')}
-        if len(words) > 15:
-            return 11 ,{'msg':utils.get_msg('user','too_long_signature')}
-    rk_user.set_signature(words)
-    return 0,{}
 
 def get_gift(rk_user,params):
     #"""兑换礼品码
@@ -620,6 +554,15 @@ def get_gift(rk_user,params):
 
     gift_code_obj = GiftCode.get(gift_id)
     user_gift_obj = UserGift.get_instance(rk_user.uid)
+
+    gift_platform_list = gift.get('platform_list',[])
+    if gift_platform_list and rk_user.platform not in gift_platform_list:
+        return 11, {'msg':utils.get_msg('gift','platform_not_allowed')}
+
+    gift_subarea_list = gift.get('subarea_list',[])
+    if gift_subarea_list and rk_user.subarea not in gift_subarea_list:
+        return 11, {'msg':utils.get_msg('gift','subarea_not_allowed')}
+
     if gift['type'] in user_gift_obj.gift_code_type:
         return 11,{'msg':utils.get_msg('gift','this_type_already_get')}
     if not gift_code_obj:
@@ -648,11 +591,21 @@ def get_gift(rk_user,params):
     user_gift_obj.put()
     return 0,{}
 
+
+def get_first_charge_award_info(rk_user, params):
+    first_charge_award = game_config.operat_config.get('first_charge_award', {})
+    award_info = []
+    for thing_id, num in first_charge_award.items():
+        award_info.append(tools.pack_good(thing_id, num))
+    return {"award": award_info}
+
+
 def get_charge_award_info(rk_user,params):
     """
     充值礼包信息
     """
     return new_get_charge_award_info(rk_user,params)
+
 
 def new_get_charge_award_info(rk_user,params):
     """
@@ -708,9 +661,29 @@ def new_get_charge_award_info(rk_user,params):
           }
     return 0,data
 
-def get_user_info(rk_user,params):
-    """
-    返回用户信息
-    """
-    return 0,{}
 
+def recover_stamina(rk_user, params):
+    """花费元宝回复体力
+    
+    每次回复的体力值是固定的，但消耗的元宝数
+    是根据当天第几次回体配置的
+    """
+    user_property_obj = rk_user.user_property
+    recover_stamina = game_config.system_config['coin_recover_stamina']
+    has_recover_times = user_property_obj.property_info['recover_times']['recover_stamina']
+    need_coin = game_config.system_config['recover_stamina_need'][has_recover_times + 1]
+    
+
+    # 检查用户体力是否已满
+    if user_property_obj.max_recover():
+        raise GameLogicError('user', 'max_recover')
+    # 检查vip可以回复的次数到了没
+    vip.check_limit_recover(rk_user, 'recover_stamina')
+
+    # 检查用户coin是否足够 并扣钱
+    if not user_property_obj.minus_coin(need_coin, 'recover_stamina'):
+        raise GameLogicError('user', 'not_enough_coin')
+    # 添加回复次数
+    user_property_obj.add_recover_times('recover_stamina')
+    user_property_obj.add_stamina(recover_stamina)
+    return {}

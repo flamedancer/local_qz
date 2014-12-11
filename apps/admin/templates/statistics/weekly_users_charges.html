@@ -1,0 +1,64 @@
+{% load tags %}
+{% load humanize %}
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Statistics</title>
+    <style type="text/css">
+        tr.odd {background-color:#ccc;color: black;}
+        tr.even {background-color:white;}
+    </style>
+</head>
+
+<body>
+  <h2>统计信息 Statistics Info
+  </h2> 
+
+  <hr clear=all>
+  <p>一周统计, 按天:
+
+  <table style="border:1px solid #ccc">
+    <tr>
+      <th>日期</th> 
+      <th> 新注册用户数</th>
+      <th> 登录用户数</th>
+      <th> 充值的唯一用户数</th>
+      <th> 充值总次数</th>
+      <th> 充值总金额</th>
+      <th> 用户留存比</th>
+    </tr>
+  {% for aDate, num in register_users.items|sort reversed %}
+    <tr class="{% cycle 'odd' 'even'%}"> 
+      <td>{{aDate}} 
+        {% if weekday_names|dictValue:aDate == 'Sat' %}
+          <span style="color:green">
+          {{weekday_names|dictValue:aDate}}</td> 
+          </span>
+        {% elif weekday_names|dictValue:aDate == 'Sun' %}
+          <span style="color:red">
+          {{weekday_names|dictValue:aDate}}</td> 
+          </span>
+        {% else %}
+          {{weekday_names|dictValue:aDate}}</td> 
+        {% endif %}
+
+      <td>{{num}}</td>
+      <td>{{login_users|dictValue:aDate}}</td>
+      <td>{{daily_charge_unique_users|dictValue:aDate}}</td>
+      <td>{{daily_charge_count|dictValue:aDate}}</td>
+      <td>¥{{daily_charge_sum|dictValue:aDate|intcomma}} 
+      </td>
+      <td>{{left_rate|dictValue:aDate|floatformat:3}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+
+
+  <p style="color:gray">* 用户留存比 = 今日登录用户(除去今日新注册用户)
+  / 昨日登录用户（含昨日新注册用户)
+  </p>
+
+</body>
+</html>

@@ -29,7 +29,7 @@
    db.sequence.insert(
 	   {
 	      _id: "userid",
-	      seq: 100213343
+	      seq: 100000000
 	   }
 	)
 

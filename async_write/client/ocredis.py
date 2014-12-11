@@ -284,3 +284,13 @@ class Redis(object):
         :rtype: int
         """
         return self.conn.srem(name, *values)
+
+    def zrangebyscore(self, name, min_score, max_score, start=None, num=None,
+                      withscores=False, score_cast_func=float):
+        return self.conn.zrangebyscore(name,min_score,max_score,start,num,withscores,score_cast_func)
+
+    def zrevrangebyscore(self, name, min_score, max_score, start=None, num=None,
+                      withscores=False, score_cast_func=float):
+        return self.conn.zrevrangebyscore(name,min_score,max_score,start,num,withscores,score_cast_func)
+
+

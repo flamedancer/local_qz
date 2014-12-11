@@ -10,6 +10,7 @@
      指定的uid不存在
     </div>
 {% endifequal %}
+
     {% if user_type == "view" %}
     <form action="/admin/user/view/" method="get">
     <h3>查看用户</h3>
@@ -17,11 +18,36 @@
     <form action="/admin/user/edit/" method="get">
     <h3>修改用户</h3>
     {% endif %}
+
+
        <label for="uid">用户ID:</label> <input type="text" id="uid" name="uid" value=""/>
+       <br/>
        <label for="username">用户名:</label> <input type="text" id="uid" name="username" value=""/>
+       <br/>
        <label for="pid">平台ID:</label> <input type="text" id="pid" name="pid" value=""/>
         <br/>
-        <input type="submit" value="确定"/>
+
+    {% if user_type == "view" %}
+        <p>
+        <input type="checkbox" name="check_raw_db_data" value='checked' />
+        只查看数据库中的原始(RAW)数据, 定位bug用, 用户ID必填:
+        
+        <br>
+        <span style='color:gray'>(要看更多内容，参见: admin/views/raw_db_data_list.py)</span>
+
+        
+	<br/> &nbsp; &nbsp;
+        <select name="db_data_name">
+          {% for raw_db_data in raw_db_data_list %}
+          <option value="{{raw_db_data}}">{{raw_db_data}}</option>
+          {% endfor %}
+        </select>
+    {% endif %}
+
+       <p>
+       <input type="submit" value="确定"/>
     </form>
+
+
 </body>
 </html>

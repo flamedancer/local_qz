@@ -294,13 +294,21 @@ class UserDungeon(GameModel):
         dungeon_config_conf = self.game_config.normal_dungeon_config
         #获取系数配置表
         dungeon_world_config = self.game_config.dungeon_world_config
-        box_info_config = dungeon_world_config.get('box_info',{})
+        box_info_config = dungeon_world_config.get('box_info',{}).get(str(floor_id),{})
         floor_info = dungeon_config_conf[floor_id]
         #格式化 floor 里面的信息
         floor_data[floor_id] = {}
-        floor_data[floor_id]['has_gold_box'] = 'gold_box' in box_info_config.get(str(floor_id),{})
-        floor_data[floor_id]['has_silver_box'] = 'silver_box' in box_info_config.get(str(floor_id),{})
-        floor_data[floor_id]['has_bronze_box'] = 'bronze_box' in box_info_config.get(str(floor_id),{})
+
+        for box_type in ["gold", "silver", "bronze"]:
+            box_name = box_type + "_box"
+            judges_name = 'has_{}_box'.format(box_type)
+            if box_name in box_info_config:
+                floor_data[floor_id][judges_name] = True
+                box_star_name = box_name + '_star'
+                floor_data[floor_id][box_star_name] = box_info_config[box_star_name]
+            else:
+                floor_data[floor_id][judges_name] = False
+
         floor_data[floor_id]['floor_all_star'] = self.__get_floor_all_star('normal',floor_id)
         floor_data[floor_id]['cur_star'] = 0
         #格式化 floor 里面的 room 的所有的信息
@@ -360,9 +368,8 @@ class UserDungeon(GameModel):
         #获取vip的等级
         vip_cur_level = copy.deepcopy(UserProperty.get(self.uid).vip_cur_level)
         #获取vip的配置信息
-        vip_config_obj = self.game_config.user_vip_conf
-        #计算vip可以多打几次
-        vip_add_cn = vip_config_obj[str(vip_cur_level)]['can_open_copy_cnt'][dungeon_type]
+        vip_config_obj = self.game_config.user_vip_config
+
         #real_config实际的配置信息
         if dungeon_type == 'special':
             real_config = self.game_config.special_dungeon_config
@@ -405,7 +412,7 @@ class UserDungeon(GameModel):
             self.put()
             has_repeat_times = 0
         #格式化要返回的参数
-        all_times = vip_add_cn + cur_can_in
+        all_times = cur_can_in
         left_times = all_times - has_repeat_times
         data = {}
         data['all_times'] = all_times
@@ -662,8 +669,7 @@ class UserDungeon(GameModel):
                 #获取征战多少次
                 #获取战场类型
                 db_dungeon_type = dungeon_repeat_info_obj.get(dungeon_type,{})
-                if not len(db_dungeon_type):
-                    db_dungeon_type[dungeon_type] = {}
+
                 if dungeon_type == 'normal':
                     #获取floor的id
                     db_floor_id = db_dungeon_type.get(floor_id,{})
@@ -682,9 +688,6 @@ class UserDungeon(GameModel):
                     has_already_conquer = db_dungeon_type[floor_id][room_id]
                 if has_already_conquer:
                     #有征战过该战场
-                    vip_cur_level = copy.deepcopy(UserProperty.get(rk_user.uid).vip_cur_level)
-                    vip_config_obj = self.game_config.user_vip_conf
-                    vip_add_cn = vip_config_obj[str(vip_cur_level)]['can_open_copy_cnt'].get(dungeon_type,0)
                     '''
                     * 根据不同的战场获取不同战场的配置信息中的可以打的次数
                     * miaoyichao
@@ -699,7 +702,7 @@ class UserDungeon(GameModel):
                         cur_can_in = self.game_config.special_dungeon_config[floor_id]['rooms'][room_id].get('can_make_copy_cn',10)
                     else:
                         cur_can_in = 10
-                    max_repeat = vip_add_cn + cur_can_in
+                    max_repeat = cur_can_in
                     if has_already_conquer>=max_repeat:
                         return False
                     else:
@@ -754,6 +757,11 @@ class UserDungeon(GameModel):
         hard_list = ['normal']
         global game_config
         game_config = self.game_config
+        conf_dict = {
+            'normal': game_config.normal_dungeon_config,
+            'daily': game_config.daily_dungeon_config
+        }
+        dungeon_config = conf_dict[dungeon_type]
         if floor_id in self.has_played_info[dungeon_type]:
             floor_info = self.has_played_info[dungeon_type][floor_id]
             if room_id in floor_info['rooms']:
@@ -772,7 +780,7 @@ class UserDungeon(GameModel):
                         #计算整个room一共有多少星
                         room_total_star = 0
                         #取得该room的配置信息
-                        room_conf_info = game_config.normal_dungeon_config[floor_id]['rooms'][room_id]
+                        room_conf_info = dungeon_config[floor_id]['rooms'][room_id]
                         for hard in hard_list:
                             if hard == 'normal':
                                 room_total_star += 3
@@ -794,7 +802,7 @@ class UserDungeon(GameModel):
                     #计算整个room一共有多少星
                     room_total_star = 0
                     #取得该room的配置信息
-                    room_conf_info = game_config.normal_dungeon_config[floor_id]['rooms'][room_id]
+                    room_conf_info = dungeon_config[floor_id]['rooms'][room_id]
                     for hard in hard_list:
                         if hard == 'normal':
                             room_total_star += 3
@@ -814,7 +822,7 @@ class UserDungeon(GameModel):
                 #计算整个room一共有多少星
                 room_total_star = 0
                 #取得该room的配置信息
-                room_conf_info = game_config.normal_dungeon_config[floor_id]['rooms'][room_id]
+                room_conf_info = dungeon_config[floor_id]['rooms'][room_id]
                 for hard in hard_list:
                     if hard == 'normal':
                         room_total_star += 3
@@ -850,7 +858,7 @@ class UserDungeon(GameModel):
             floor_info['rooms'][room_id][hard_ratio]={}
             floor_info['rooms'][room_id][hard_ratio]['get_star'] = int(star_ratio)
             #取得该room的配置信息
-            room_conf_info = game_config.normal_dungeon_config[floor_id]['rooms'][room_id]
+            room_conf_info = dungeon_config[floor_id]['rooms'][room_id]
             #计算整个room一共有多少星
             room_total_star = 0
             for hard in hard_list:
@@ -896,4 +904,11 @@ class UserDungeon(GameModel):
             self.dungeon_repeat_info[dungeon_type][floor_id][room_id] = 0
         elif dungeon_type == 'daily':
             self.dungeon_repeat_info[dungeon_type][floor_id] = 0
+        self.put()
+
+    def add_repeat_cnt(self, dungeon_type, floor_id, room_id, cnt=1):
+        if dungeon_type == 'normal':
+            self.dungeon_repeat_info[dungeon_type][floor_id][room_id] += cnt
+        elif dungeon_type == 'daily':
+            self.dungeon_repeat_info[dungeon_type][floor_id] += cnt
         self.put()

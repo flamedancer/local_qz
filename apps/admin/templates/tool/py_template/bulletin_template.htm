@@ -1,0 +1,34 @@
+﻿<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Login Bulletin</title>
+  <link rel="stylesheet" type="text/css" href="bulletin_ui/%(css_file)s" />
+</head>
+
+<!-- ipad: 1024x768, iphone: 960x480 -->
+<body style="background-color: transparent">
+
+  <script>
+    function show_div(i_div) {
+      var n_div=%(total_more_div)s;
+      for (i=0; i<=n_div; i++) {
+        if (i != i_div)
+          document.getElementById('title_div_'+i).style.display = 'none';
+        else
+          document.getElementById('title_div_'+i).style.display = 'block';
+      }
+      return false
+    }
+  </script>
+
+  <div id=title_div_0>
+  %(all_details)s
+  </div>
+
+  %(all_mores)s
+
+</body>
+</html>
+
+

@@ -42,7 +42,7 @@ class UserCollection(UserModel):
         }
         return user_collection
 
-    def get_collected_cards(self,key='cards'):
+    def get_collected_cards(self, key='cards'):
         """ 根据收集物品的分类获取用户收集到的物品列表
         Args:
             category:图鑑类型(如：卡片，怪物等)
