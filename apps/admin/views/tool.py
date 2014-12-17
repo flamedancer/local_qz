@@ -370,7 +370,7 @@ def customer_service(request):
             charge_log_list.append(tmp)
         data['charge_log'] = charge_log_list
         data['sale'] = sale
-        data["index_list"] = request.index_list
+    data["index_list"] = request.index_list
     return render_to_response('tool/customer_service.html',data ,RequestContext(request))
 
 def _get_charge_record(uid,start_date,end_date):
