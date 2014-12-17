@@ -431,18 +431,14 @@ class UserCards(GameModel):
         """
         锁定武将
         """
-        pt_fg = False
+
         for ucid in self.cards:
             if ucid in ucids:
                 if not self.cards[ucid].get('lock',False):
                     self.cards[ucid]['lock'] = True
-                    pt_fg = True
-            else:
-                if self.cards[ucid].get('lock',False):
+                else:
                     self.cards[ucid]['lock'] = False
-                    pt_fg = True
-        if pt_fg:
-            self.put()
+        self.put()
 
     def is_locked(self,ucids):
         """

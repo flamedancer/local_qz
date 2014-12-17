@@ -51,7 +51,7 @@
 
     {% if config_name %} 
         <div class="alert alert-danger hide">你提交的设置有问题喔，没有成功保存设置：&nbsp;<span class="error-message"></span></div>
-        <form action="/admin/xls_to_dict_test/submit_game_settings_by_excel/?config_name={{ config_name }}" method="post" enctype="multipart/form-data">
+        <form action="/admin/xls_to_dict/submit_game_settings_by_excel/?config_name={{ config_name }}" method="post" enctype="multipart/form-data">
            <input type="file" name='xls' value="上传文件" />
            {% if submit_game_settings_by_excel %}
                <input type="hidden" name="subarea_default" value="{{ subarea_default }}">

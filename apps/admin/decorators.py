@@ -3,7 +3,10 @@ import urllib
 from django.http import HttpResponseRedirect
 
 import apps.admin.auth
+from django.conf import settings
 from apps.admin import admin_configuration
+from django.template import RequestContext
+from django.shortcuts import render_to_response
 
 def require_permission(view_func):
     """
@@ -21,8 +24,15 @@ def require_permission(view_func):
             return HttpResponseRedirect("/admin/login/")
         else:
             index_list = admin_configuration.view_perm_mappings.get_allow_index_paths(moderator)
-            request.index_list = index_list
-            return view_func(request,*args,**kwargs)
+            # request.index_list = index_list
+            return_inf = view_func(request, *args, **kwargs)
+            if isinstance(return_inf, tuple):
+                template, data = return_inf
+                data["appname"] = settings.APP_NAME
+                data["index_list"] = index_list
+                return render_to_response(template, data ,RequestContext(request))
+            else:
+                return return_inf
 
     return wrapped_view_func
 

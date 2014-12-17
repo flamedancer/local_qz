@@ -306,10 +306,10 @@ def show_open_server_gift(rk_user, params):
     ul = rk_user.user_login
     add_time = utils.timestamp_toDatetime(rk_user.add_time)
     now = datetime.datetime.now()
-    # 账号注册已达45天，或者全部领取了，则清空全部开服礼包
+    # 账号注册已达45天（包括注册当天），或者全部领取了，则清空全部开服礼包
     if (now - add_time).days + 1 > 45 or ug.has_got_all_open_server_gifts():
         ug.clear_open_server_gift()
-        return 0, {}
+        return 11, {'msg': utils.get_msg('gift','clear_open_server')}
     awards = game_config.loginbonus_config['open_server_gift'].get('awards', {})
     data = {'gifts': {}}
     for days, award in awards.items():
@@ -353,10 +353,11 @@ def show_sign_in_gift(rk_user, params):
     返回前端当月签到奖励信息
     '''
     now = datetime.datetime.now()
-    str_date = utils.datetime_toString(now).split(' ')[0]
-    month = str(int(str_date.split('-')[1]))
-    today = str(int(str_date.split('-')[2]))
+    month = str(now.month)
+    today = str(now.day)
     awards = game_config.loginbonus_config['sign_in_bonus'].get(month, {})
+    if not awards:
+        return 11, {'msg': utils.get_msg('gift', 'no_sign_in_gift')}
     data = {'gifts': {}}
     ug = rk_user.user_gift
     # 新的月份，领取信息全部置False
@@ -390,9 +391,8 @@ def get_sign_in_gift(rk_user, params):
     day = params['day']
     ug = rk_user.user_gift
     now = datetime.datetime.now()
-    str_date = utils.datetime_toString(now).split(' ')[0]
-    month = str(int(str_date.split('-')[1]))
-    today = str(int(str_date.split('-')[2])) # 比如 '02' ---> '2'
+    month = str(now.month)
+    today = str(now.day)
     if day != today:
         return 11, {'msg': utils.get_msg('gift', 'gift_not_in_right_time')}
     if ug.sign_in_record[day]['has_got']:

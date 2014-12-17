@@ -139,8 +139,14 @@ def send_op_mail(rk_user):
 
 
 def _is_between_times(mail):
-    if len(mail['start_time']) == len(mail['end_time']) == 19:
-        now = utils.datetime_toString(datetime.datetime.now())
-        if mail['start_time'] <= now <= mail['end_time']:
-            return True
-    return False
+    # start 和end time 要符合 年月日 时分秒的格式 ，例如'2014-10-06 11:00:00'
+    try:
+        start_time = utils.string_toDatetime(mail['start_time'])
+        end_time = utils.string_toDatetime(mail['end_time'])
+    except ValueError:
+        return False
+
+    if start_time <= datetime.datetime.now() <= end_time:
+        return True
+    else:
+        return False

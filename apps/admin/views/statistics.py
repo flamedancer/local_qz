@@ -186,18 +186,16 @@ def index(request):
             weekday_names[(now - timedelta(days=iDay) ).date()] =  (now - timedelta(days=iDay) ).strftime('%a')
 
 
-        return render_to_response('statistics/weekly_users_charges.html', 
-            {'login_users': login_users,
-             'register_users': register_users,
-             'daily_charge_sum': daily_charge_sum,
-             'daily_charge_sum_rmb': dict( [ (aDate, int(daily_charge_sum[aDate] * 0.06)) for aDate in daily_charge_sum ] ),
-             'daily_charge_count': daily_charge_count,
-             'daily_charge_unique_users': daily_charge_unique_users,
-             'left_rate': left_rate,
-             'weekday_names': weekday_names,
-             },
-
-            RequestContext(request) )
+        return 'statistics/weekly_users_charges.html', {
+                'login_users': login_users,
+                'register_users': register_users,
+                'daily_charge_sum': daily_charge_sum,
+                'daily_charge_sum_rmb': dict( [ (aDate, int(daily_charge_sum[aDate] * 0.06)) for aDate in daily_charge_sum ] ),
+                'daily_charge_count': daily_charge_count,
+                'daily_charge_unique_users': daily_charge_unique_users,
+                'left_rate': left_rate,
+                'weekday_names': weekday_names,
+            }
 
 
 
@@ -262,18 +260,13 @@ def index(request):
                 monthly_charge_unique_users[ row['_id'] ] = row['users']
 
 
-        return render_to_response('statistics/monthly_login_charges.html', 
-            {'monthly_login_users': monthly_login_users,
-             'monthly_charge_value': monthly_charge_value,
-             'monthly_charge_value_rmb': monthly_charge_value_rmb,
-             'monthly_charge_count': monthly_charge_count,
-             'monthly_charge_unique_users': monthly_charge_unique_users,
-             },
-
-            RequestContext(request) )
-
-
-
+        return 'statistics/monthly_login_charges.html', {
+                'monthly_login_users': monthly_login_users,
+                'monthly_charge_value': monthly_charge_value,
+                'monthly_charge_value_rmb': monthly_charge_value_rmb,
+                'monthly_charge_count': monthly_charge_count,
+                'monthly_charge_unique_users': monthly_charge_unique_users,
+            }
 
 
 ########################### download monthly charge list ############
@@ -320,9 +313,6 @@ def index(request):
         response['Content-Length'] = os.path.getsize(file_full_name)
         response['Content-Disposition'] = 'attachment; filename=monthly_charges.csv'
         return response
-
-
-
 
 
 ##########################################################
@@ -376,21 +366,16 @@ def index(request):
             charge_counts_per_user[n] = float(charge_counts[n]) / level_stat[n] 
             charge_amounts_per_user[n] = charge_amounts[n] / level_stat[n]
 
-        return render_to_response('statistics/all_users_level.html', 
-            {
-             'level_stat': level_stat,
-             'total_level_spans': total_level_spans,
-             'level_span_names': level_span_names,
-             'total_users': total_users,
-             'charge_counts': charge_counts,
-             'charge_amounts': charge_amounts,
-             'charge_counts_per_user': charge_counts_per_user,
-             'charge_amounts_per_user': charge_amounts_per_user,
-             },
-
-            RequestContext(request) )
-
-
+        return 'statistics/all_users_level.html', {
+                'level_stat': level_stat,
+                'total_level_spans': total_level_spans,
+                'level_span_names': level_span_names,
+                'total_users': total_users,
+                'charge_counts': charge_counts,
+                'charge_amounts': charge_amounts,
+                'charge_counts_per_user': charge_counts_per_user,
+                'charge_amounts_per_user': charge_amounts_per_user,
+            }
 
 
 ######################################################################
@@ -409,11 +394,7 @@ def index(request):
             for l in results:
                 level_users[ l['_id'] ] = l['count']
 
-        return render_to_response('statistics/yesterday_users_level.html', 
-            { 'level_users': level_users,
-             },
-            RequestContext(request) )
-
+        return 'statistics/yesterday_users_level.html', { 'level_users': level_users}
 
 
 #################################################################
@@ -452,16 +433,11 @@ def index(request):
             else:
                 daily_charge_sum[ (now - timedelta(days=iDay) ).date() ] = 0
                 daily_charge_count[ (now - timedelta(days=iDay) ).date() ] = 0
-
-
-        return render_to_response('statistics/register_users_charge.html', 
-            {
-             'register_users': register_users,
-             'daily_charge_sum': daily_charge_sum,
-             'daily_charge_count': daily_charge_count,
-            },
-            RequestContext(request) )
-
+        return 'statistics/register_users_charge.html', {
+                'register_users': register_users,
+                'daily_charge_sum': daily_charge_sum,
+                'daily_charge_count': daily_charge_count,
+            }
 
 ##################################################################
     if charge_users_ratio:
@@ -508,15 +484,11 @@ def index(request):
 
 
 
-        return render_to_response('statistics/charge_users_ratio.html', 
-            {
-             'charge_users': charge_users,
-             'login_users': login_users,
-             'charge_ratio': charge_ratio,
-            },
-            RequestContext(request) )
-
-
+        return 'statistics/charge_users_ratio.html', {
+                'charge_users': charge_users,
+                'login_users': login_users,
+                'charge_ratio': charge_ratio,
+            }
 
 
 ############################################################################
@@ -593,9 +565,6 @@ def index(request):
         all_login_users = sum(dlevel_users.values())
 
 
-
-
-        
         #Yesterday Registered Users'
         results = UserBase.mongo_find( 
                     {'baseinfo.add_time': {
@@ -630,21 +599,17 @@ def index(request):
         total_yesterday_register_users = sum(yesterday_register_users_stat.values())
 
 
+        return 'statistics/dungeon_level_users.html', {
+                'dungeon_level_users': dlevel_users,
+                'dlevel_users_keys': dlevel_users_keys,
+                'all_login_users': all_login_users,
 
+                'yesterday_dlevel_users': yesterday_dlevel_users,
+                'yesterday_login_users': yesterday_login_users,
 
-        return render_to_response('statistics/dungeon_level_users.html', 
-            {
-             'dungeon_level_users': dlevel_users,
-             'dlevel_users_keys': dlevel_users_keys,
-             'all_login_users': all_login_users,
-
-             'yesterday_dlevel_users': yesterday_dlevel_users,
-             'yesterday_login_users': yesterday_login_users,
-
-             'yesterday_register_users_stat': yesterday_register_users_stat,
-             'total_yesterday_register_users': total_yesterday_register_users,
-            },
-            RequestContext(request) )
+                'yesterday_register_users_stat': yesterday_register_users_stat,
+                'total_yesterday_register_users': total_yesterday_register_users,
+            }
 
 
 ############################################################################
@@ -707,10 +672,7 @@ def index(request):
             'users_by_date': users_by_date,
         }
 
-        return render_to_response('statistics/coin_consumed.html', 
-            data_dict,
-            RequestContext(request) )
-
+        return 'statistics/coin_consumed.html', data_dict
 
 
 ############################ revive statistics ##################
@@ -991,10 +953,7 @@ def index(request):
 
         }
 
-        return render_to_response('statistics/revive.html', 
-            data_dict,
-            RequestContext(request) )
-
+        return 'statistics/revive.html', data_dict
 
 
 
@@ -1084,10 +1043,7 @@ def index(request):
             'today_login_continue_count': today_login_continue_count,
         }
 
-        return render_to_response('statistics/continue_login.html', 
-            data_dict,
-            RequestContext(request) )
-
+        return 'statistics/continue_login.html', data_dict
 
 
 
@@ -1194,10 +1150,7 @@ def index(request):
             'coins_yestlogin_stat': coins_yestlogin_stat,
         }
 
-        return render_to_response('statistics/coins_in_hand.html', 
-            data_dict,
-            RequestContext(request) )
-
+        return 'statistics/coins_in_hand.html', data_dict
 
 
 #################################################################
@@ -1347,9 +1300,8 @@ def index(request):
                 'unique_users': unique_users,
                 }
 
-        return render_to_response('statistics/equipment.html', 
-            data_dict,
-            RequestContext(request) )
+        return 'statistics/equipment.html', data_dict
+
 
 #################################################################
     if request.GET.get('dungeon_type_hot'):
@@ -1690,12 +1642,7 @@ def index(request):
 
         }
 
-        return render_to_response('statistics/revive_by_date.html', 
-            data_dict,
-            RequestContext(request) )
-
-
-
+        return 'statistics/revive_by_date.html', data_dict
 
 
 #################### ItemProduct,  Item bought in one week 药水购买的 #########
@@ -1751,15 +1698,9 @@ def index(request):
                 'items_bought': items_bought,
                 'buy_item_users': buy_item_users,
                 }
-        data_dict["index_list"] = request.index_list
-        return render_to_response('statistics/items_bought.html', 
-            data_dict,
-            RequestContext(request) )
-
-
+        return 'statistics/items_bought.html', data_dict
 
 
 ########################## default index page #############
     else:
-        return render_to_response('statistics/index.html', {"index_list": request.index_list},
-            RequestContext(request) )
+        return 'statistics/index.html', {}

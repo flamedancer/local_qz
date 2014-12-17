@@ -4,13 +4,10 @@
 import xlrd
 import traceback
 import sys
-from django.shortcuts import render_to_response
-from django.template import RequestContext
-from django.http import HttpResponse
 from apps.admin.decorators import require_permission
 from apps.models.config import Config
-from apps.admin.auth import get_moderator_by_request
 from apps.config import config_list
+
 
 canuse_config_list = [
     'system_config',
@@ -214,35 +211,35 @@ class System_config(XlsToDict):
 def submit_game_settings_by_excel(request):
     data = {}
     config_name = str(request.GET.get('config_name'))
+    subarea_default = request.POST.get('subarea_default')
     data['config_name'] = config_name
+
+    str_subareas_confname = config_list.get_configname_by_subarea('subareas_conf', '1')
+    subareas_conf = Config.get(str_subareas_confname)
+    if not subareas_conf:
+        subareas_conf = Config.create(str_subareas_confname)
+    subareas_conf_dict = eval(subareas_conf.data)
+    return_subareas_conf = []
+    for key in sorted(subareas_conf_dict.keys()):
+        return_subareas_conf.append((key, subareas_conf_dict[key]))
+
     if not config_name in canuse_config_list:
-       data['config_value'] = 'developering...'
+        data['config_value'] = make_config(request, config_name)
     else:
         x_func = eval(config_name.capitalize() +'()')
         files = request.FILES.get('xls', None)
         if not files:
-            data['config_value'] = 'Nothing...'
+            data['config_value'] = 'Miss files!'
         else:
             data['config_value'] = x_func.make_config(files, config_name)
+    str_config_description = config_list.get_description(config_name)
+    data['config_title'] = str_config_description
+    data['subareas_conf'] = return_subareas_conf
+    data['saved'] = False
+    data['submit_game_settings_by_excel'] = True
+    data['subarea_default'] = subarea_default
 
-        str_config_description = config_list.get_description(config_name)
-        data['config_title'] = str_config_description
-        data['config_title'] += '__%s' % config_name
-        data['saved'] = False
-    moderator = get_moderator_by_request(request)
-    return render_to_response('admin/game_setting.html', data, context_instance = RequestContext(request))
-
-def _make_configstring_by_excel(config_name, files):
-    config_string = ''
-    if not config_name in canuse_config_list:
-        config_string = 'developering...'
-    else:
-        x_func = eval(config_name.capitalize() +'()')
-        if not files:
-            config_string = 'Nothing...'
-        else:
-            config_string = x_func.make_config(files, config_name)
-    return config_string
+    return 'admin/game_setting.html', data
 
 def _verify_game_config(config_name, value):
     #用于验证配置是否正确
@@ -251,7 +248,7 @@ def _verify_game_config(config_name, value):
         'loginbonus_config': ['bonus'],
         'shop_config': ['sale'],
         'user_level_config': ['1'],
-        'gacha_config': ['free_rate', 'charge_rate',],
+        'gacha_config': ['gold_rate', 'charge_rate',],
         'card_config': ['1_card', ],
         'card_level_config': ['exp_type', ],
         'card_update_config': ['cost_gold', ],
@@ -277,13 +274,390 @@ def _verify_game_config(config_name, value):
 def _verify_dungeon_config(config_name, value):
     """战场掉落敌将，而在敌将配置中未配置的验证"""
     if config_name == 'normal_dungeon_config':
-        for dungeon_floor in value:
-            mdset = set(value[dungeon_floor]['monster_drop'].keys())
-            mset = set(game_config.monster_config.keys())
-            if mdset & mset != mdset:
-                vdresult = mdset - (mdset & mset)
-                if vdresult:
-                    for mid in vdresult:
-                        return "敌将配置__monster_config 缺少配置ID：" + str(mid)
+        pass
+        # for dungeon_floor in value:
+        #     mdset = set(value[dungeon_floor]['monster_drop'].keys())
+        #     mset = set(game_config.monster_config.keys())
+        #     if mdset & mset != mdset:
+        #         vdresult = mdset - (mdset & mset)
+        #         if vdresult:
+        #             for mid in vdresult:
+        #                 return "敌将配置__monster_config 缺少配置ID：" + str(mid)
     return ''
+
+def make_config(request, config_name):
+    try:
+        if config_name.endswith('_conf'):
+            config_name = config_name + 'ig'
+        data_string = ''
+        filename = request.FILES.get('xls', None)
+        excel = xlrd.open_workbook(file_contents = filename.read());
+        sheet = excel.sheet_by_name(config_name)
+        data_string = globals().get(config_name, defuault_excel_explain)(sheet)
+        # data_string += {
+        #     'special_dungeon_config': lambda: special_dungeon_config(sheet),
+        #     'dungeon_config': lambda: dungeon_config(sheet),
+        #     'card_config': lambda: card_config(sheet),
+        #     'monster_config': lambda: monster_config(sheet),
+        #     'user_level_config': lambda: user_level_config(sheet),
+        #     'compgacha_config': lambda: compgacha_config(sheet),
+        #     'equip_config': lambda: equip_config(sheet),
+        #     'item_config': lambda: item_config(sheet),
+        #     'material_config': lambda: material_config(sheet),
+        #     'material_desc_config': lambda: material_desc_config(sheet),
+        #     'item_desc_config': lambda: item_desc_config(sheet),
+        #     'card_desc_config': lambda: card_desc_config(sheet),
+        #     'equip_desc_config': lambda: equip_desc_config(sheet),
+        #     'skill_desc_config': lambda: skill_desc_config(sheet),
+        #     'dungeon_desc_config': lambda: dungeon_desc_config(sheet),
+        #     'gacha_config':lambda: gacha_config(sheet),
+        #     'card_level_config':lambda: card_level_config(sheet),
+        #     'weekly_dungeon_config':lambda: weekly_dungeon_config(sheet),
+        #     'skill_config':lambda: skill_config(sheet),
+        #     'leader_skill_config':lambda: leader_skill_config(sheet),
+        #     'fate_conf': lambda: fate_config(sheet),
+        #     'props_config':lambda: props_config(sheet),
+        #     'props_desc_config':lambda:props_desc_config(sheet),
+        #     'user_vip_conf': lambda: user_vip_config(sheet),
+        #     'equip_exp_conf': lambda: equip_exp_config(sheet),
+        #     'talent_skill_config': lambda: talent_skill_config(sheet),
+        #     'drop_info_config': lambda: drop_info_config(sheet),
+        #     'talent_value_config': lambda: talent_value_config(sheet),
+        #     'explore_config': lambda: explore_config(sheet),
+        #     'dungeon_world_config': lambda: dungeon_world_config(sheet),
+        #     'daily_dungeon_config': lambda: daily_dungeon_config(sheet),
+        # }[config_name]()
+        return str(data_string)
+    except Exception,e:
+        traceback.print_exc(file=sys.stderr)
+        return traceback.format_exc()
+
+def make_dict(sheet):
+    make_dict = {}
+    first_columu = sheet.col_values(0)
+    first_row = sheet.row_values(0)
+    for j in range(1, len(first_columu)):
+        keys = sheet.cell(j,0).value
+        values = sheet.cell(j,1).value
+        type_cell = sheet.cell(j,2).value
+        keys_list = keys.split('>')
+        set_key_value(keys_list, values, make_dict, type_cell)
+    return make_dict
+
+def set_key_value(keys_list, values, make_dict, type_value):
+    walk_dict = make_dict
+    count = 0
+    try:
+        for key in keys_list:
+            key = str(key)
+            count += 1
+            if not key in walk_dict:
+                walk_dict[key] = {}
+                if count == len(keys_list):
+                    if type_value == 'bool':
+                        if values == 1:
+                            walk_dict[key] = True
+                        else:
+                            walk_dict[key] = False
+                    elif type_value == 'list':
+                        walk_dict[key] = eval(values)
+                    elif type_value == 'str':
+                        walk_dict[key] = str(values)
+                    elif type_value == 'float':
+                        values = str(values).replace("'", "")
+                        walk_dict[key] = float(values)
+                    elif type_value == 'int':
+                        walk_dict[key] = int(values)
+                    elif type_value == 'unicode':
+                        walk_dict[key] = values
+            walk_dict = walk_dict[key]
+    except Exception, e:
+        print e
+        reload(sys)
+        sys.setdefaultencoding( "utf-8" )
+        error_msg = u"THE ERROR LINE IS:     {}, {}, {}".format(unicode(key), unicode(values), unicode(type_value))
+        print error_msg, type_value
+        raise ValueError(error_msg)
+
+def print_dict(values, indented,sort_keys = None):
+    dict_string = ''
+    indented += '    '
+    for keys in sort_keys if sort_keys else values:
+        walk_values = values[keys]
+        if isinstance(keys, str):
+            keys_extend = "'" + keys + "'"
+        else:
+            keys_extend = str(keys)
+
+        if isinstance(walk_values, dict):
+            dict_string += indented + keys_extend  + ":{\n"
+            try:
+                next_sort_keys = [str(i) for i in sorted([ int(i) for i in walk_values.keys()])]
+            except:
+                try:
+                    next_sort_keys = [str(i) for i in sorted([ i for i in walk_values.keys()])]
+                except:
+                    next_sort_keys = None
+            dict_string += print_dict(walk_values, indented,next_sort_keys)
+            dict_string += indented + "},\n"
+        elif isinstance(walk_values, str):
+            dict_string += indented + keys_extend + ":'" + walk_values + "',\n"
+        elif isinstance(walk_values, (int, float)):
+            dict_string += indented + keys_extend + ":" + str(walk_values) + ",\n"
+        elif isinstance(walk_values, unicode):
+            walk_values = walk_values.encode('utf-8')
+            dict_string += indented + keys_extend + ":unicode('" + walk_values + "','utf-8'),\n"
+        elif isinstance(walk_values, list):
+            dict_string += indented + keys_extend + ":" + str(walk_values) + ",\n"
+
+    return dict_string
+
+
+def defuault_excel_explain(sheet):
+    indented = '\t'
+    config = make_dict(sheet)
+    config_string = "{\n" + print_dict(config, indented) + "\n}"
+    return config_string
+
+
+def fate_config(sheet):
+    #缘分配置的上传函数
+    indented = ''
+    fate_config = make_dict(sheet)
+    sort_keys = [ 'ch_%s' % tag for tag in sorted([int(i.split('_')[1]) for i in fate_config])]
+    fate_config_string = "{\n" + print_dict(fate_config, indented,sort_keys) + "\n}"
+    return fate_config_string
+
+def props_config(sheet):
+    #道具配置的上传函数
+    indented = ''
+    props_config = make_dict(sheet)
+    sort_keys = [ '%s_props' % tag for tag in sorted([int(i.split('_')[0]) for i in props_config])]
+    props_config_string = "{\n" + print_dict(props_config, indented,sort_keys) + "\n}"
+    return props_config_string
+
+def drop_info_config(sheet):
+    #战场掉落的上传函数
+    indented = ''
+    drop_info_config = make_dict(sheet)
+    drop_info_config_string = "{\n" + print_dict(drop_info_config, indented) + "\n}"
+    return drop_info_config_string
+
+def dungeon_world_config(sheet):
+    #战场世界的上传函数
+    indented = ''
+    dungeon_world_config = make_dict(sheet)
+    dungeon_world_config_string = "{\n" + print_dict(dungeon_world_config, indented) + "\n}"
+    return dungeon_world_config_string
+
+def daily_dungeon_config(sheet):
+    #每日战场的上传函数
+    indented = ''
+    daily_dungeon_config = make_dict(sheet)
+    daily_dungeon_config_string = "{\n" + print_dict(daily_dungeon_config, indented) + "\n}"
+    return daily_dungeon_config_string
+
+def explore_config(sheet):
+    #探索配置的上传函数
+    indented = ''
+    explore_config = make_dict(sheet)
+    explore_config_string = "{\n" + print_dict(explore_config, indented) + "\n}"
+    return explore_config_string
+
+def talent_skill_config(sheet):
+    #天赋技能配置的上传函数
+    indented = ''
+    talent_skill_config = make_dict(sheet)
+    talent_skill_config_string = "{\n" + print_dict(talent_skill_config, indented) + "\n}"
+    return talent_skill_config_string
+
+def talent_value_config(sheet):
+    #天赋配置的上传函数
+    indented = ''
+    talent_value_config = make_dict(sheet)
+    talent_value_config_string = "{\n" + print_dict(talent_value_config, indented) + "\n}"
+    return talent_value_config_string
+
+def props_desc_config(sheet):
+    #道具描述的上传配置
+    indented = ''
+    props_desc_config = make_dict(sheet)
+    sort_keys = [ '%s_props' % tag for tag in sorted([int(i.split('_')[0]) for i in props_desc_config])]
+    props_desc_config_string = "{\n" + print_dict(props_desc_config, indented,sort_keys) + "\n}"
+    return props_desc_config_string
+
+def user_vip_config(sheet):
+    #vip 配置的上传函数
+    indented = ''
+    user_vip_config = make_dict(sheet)
+    user_vip_config_string = "{\n" + print_dict(user_vip_config, indented) + "\n}"
+    return user_vip_config_string
+
+def equip_exp_config(sheet):
+    #装备经验配置的上传配置
+    indented = ''
+    equip_exp_config = make_dict(sheet)
+    equip_exp_config_string = "{\n" + print_dict(equip_exp_config, indented) + "\n}"
+    return equip_exp_config_string
+
+def skill_config(sheet):
+    #技能配置的上传函数
+    indented = ''
+    skill_config = make_dict(sheet)
+    sort_keys = [ '%s_skill' % tag for tag in sorted([int(i.split('_')[0]) for i in skill_config])]
+    skill_config_string = "{\n" + print_dict(skill_config, indented,sort_keys) + "\n}"
+    return skill_config_string
+
+def leader_skill_config(sheet):
+    indented = ''
+    leader_skill_config = make_dict(sheet)
+    leader_skill_config_string = "{\n" + print_dict(leader_skill_config, indented) + "\n}"
+    return leader_skill_config_string
+
+def item_config(sheet):
+    #药品配置的上传函数
+    indented = ''
+    item_config = make_dict(sheet)
+    sort_keys = [ '%s_item' % tag for tag in sorted([int(i.split('_')[0]) for i in item_config])]
+    item_config_string = "{\n" + print_dict(item_config, indented,sort_keys) + "\n}"
+    return item_config_string
+
+def material_config(sheet):
+    indented = ''
+    material_config = make_dict(sheet)
+    sort_keys = [ '%s_mat' % tag for tag in sorted([int(i.split('_')[0]) for i in material_config])]
+    material_config_string = "{\n" + print_dict(material_config, indented,sort_keys) + "\n}"
+    return material_config_string
+
+def material_desc_config(sheet):
+    indented = ''
+    material_config = make_dict(sheet)
+    sort_keys = [ '%s_mat' % tag for tag in sorted([int(i.split('_')[0]) for i in material_config])]
+    material_config_string = "{\n" + print_dict(material_config, indented,sort_keys) + "\n}"
+    return material_config_string
+
+def card_desc_config(sheet):
+    indented = ''
+    card_desc_config = make_dict(sheet)
+    sort_keys = [ '%s_card' % tag for tag in sorted([int(i.split('_')[0]) for i in card_desc_config])]
+    card_config_string = "{\n" + print_dict(card_desc_config, indented,sort_keys) + "\n}"
+    return card_config_string
+
+def equip_desc_config(sheet):
+    indented = ''
+    equip_desc_config = make_dict(sheet)
+    sort_keys = [ '%s_equip' % tag for tag in sorted([int(i.split('_')[0]) for i in equip_desc_config])]
+    equip_config_string = "{\n" + print_dict(equip_desc_config, indented,sort_keys) + "\n}"
+    return equip_config_string
+
+def item_desc_config(sheet):
+    indented = ''
+    item_desc_config = make_dict(sheet)
+    sort_keys = [ '%s_item' % tag for tag in sorted([int(i.split('_')[0]) for i in item_desc_config])]
+    item_config_string = "{\n" + print_dict(item_desc_config, indented,sort_keys) + "\n}"
+    return item_config_string
+
+def skill_desc_config(sheet):
+    indented = ''
+    skill_desc_config = make_dict(sheet)
+    sort_keys_skill = [ '%s_skill' % tag for tag in sorted([int(i.split('_')[0]) for i in skill_desc_config if 'skill' in i])]
+    sort_keys_leader = [ '%s_leader' % tag for tag in sorted([int(i.split('_')[0]) for i in skill_desc_config if 'leader' in i])]
+    sort_keys_talent = [ '%s_talent' % tag for tag in sorted([int(i.split('_')[0]) for i in skill_desc_config if 'talent' in i])]
+    sort_keys_skill.extend(sort_keys_leader)
+    sort_keys_skill.extend(sort_keys_talent)
+    skill_config_string = "{\n" + print_dict(skill_desc_config, indented,sort_keys_skill) + "\n}"
+    return skill_config_string
+
+def dungeon_desc_config(sheet):
+    indented = ''
+    dungeon_desc_config = make_dict(sheet)
+    #sort_keys = [ '%s' % tag for tag in sorted([int(i) for i in dungeon_desc_config])]
+    dun_config_string = "{\n" + print_dict(dungeon_desc_config, indented) + "\n}"
+    return dun_config_string
+
+def special_dungeon_config(sheet):
+    indented = ''
+    special_dungeon_config = make_dict(sheet)
+    sort_keys = [ '%s' % tag for tag in sorted([int(i) for i in special_dungeon_config])]
+    special_dungeon_config_string = "{\n" + print_dict(special_dungeon_config, indented,sort_keys) + "\n}"
+    return special_dungeon_config_string
+
+def weekly_dungeon_config(sheet):
+    indented = ''
+    weekly_dungeon_config = make_dict(sheet)
+    sort_keys = [ '%s' % tag for tag in sorted([int(i) for i in weekly_dungeon_config])]
+    weekly_dungeon_config_string = "{\n" + print_dict(weekly_dungeon_config, indented,sort_keys) + "\n}"
+    return weekly_dungeon_config_string
+
+def normal_dungeon_config(sheet):
+    indented = ''
+    dungeon_config = make_dict(sheet)
+    sort_keys = [ '%s' % tag for tag in sorted([int(i) for i in dungeon_config])]
+    dungeon_config_string = "{\n" + print_dict(dungeon_config, indented,sort_keys) + "\n}"
+    return dungeon_config_string
+
+def card_config(sheet):
+    indented = ''
+    card_config = make_dict(sheet)
+    sort_keys = [ '%s_card' % tag for tag in sorted([int(i.split('_')[0]) for i in card_config])]
+    card_config_string = "{\n" + print_dict(card_config, indented,sort_keys) + "\n}"
+    return card_config_string
+
+def monster_config(sheet):
+    indented = ''
+    monster_config = make_dict(sheet)
+    sort_keys = sorted(monster_config.keys())
+    monster_config_string = "{\n" + print_dict(monster_config, indented,sort_keys) + "\n}"
+    return monster_config_string
+
+def user_level_config(sheet):
+    indented = ''
+    user_level_config = make_dict(sheet)
+    sort_keys = [ '%s' % tag for tag in sorted([int(i) for i in user_level_config])]
+    user_level_config_string = "{\n" + print_dict(user_level_config, indented,sort_keys) + "\n}"
+    return user_level_config_string
+
+def gacha_config(sheet):
+    indented = '\t'
+    gacha_config = make_dict(sheet)
+    gacha_config_string = "{\n" + print_dict(gacha_config, indented) + "\n}"
+    return gacha_config_string
+
+def card_level_config(sheet):
+    indented = '\t'
+    card_level_config = make_dict(sheet)
+    card_level_config_string = "{\n" + print_dict(card_level_config, indented) + "\n}"
+    return card_level_config_string
+
+def compgacha_config(sheet):
+    indented = '\t'
+    compgacha_config = make_dict(sheet)
+    compgacha_config_string = "{\n" + print_dict(compgacha_config, indented) + "\n}"
+    return compgacha_config_string
+
+def equip_config(sheet):
+    indented = ''
+    equip_config = make_dict(sheet)
+    sort_keys = [ '%s_equip' % tag for tag in sorted([int(i.split('_')[0]) for i in equip_config])]
+    equip_config_string = "{\n" + print_dict(equip_config, indented,sort_keys) + "\n}"
+    return equip_config_string
+
+def pk_config(sheet):
+    indented = '\t'
+    config = make_dict(sheet)
+    config_string = "{\n" + print_dict(config, indented) + "\n}"
+    return config_string
+
+def equip_upgrade_config(sheet):
+    indented = '\t'
+    config = make_dict(sheet)
+    config_string = "{\n" + print_dict(config, indented) + "\n}"
+    return config_string
+
+def suit_type_config(sheet):
+    indented = '\t'
+    config = make_dict(sheet)
+    config_string = "{\n" + print_dict(config, indented) + "\n}"
+    return config_string
+
 

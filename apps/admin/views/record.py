@@ -18,12 +18,10 @@ def index(request):
     if view_type == 'charge':
         item_info = game_config.shop_config['sale'].items()
         item_info.sort(key = lambda x:x[1]['num'])
-        return render_to_response('record/index.html',
-            {"view_type":view_type,"item_info":item_info,"index_list": request.index_list},
-            RequestContext(request))
-    return render_to_response('record/index.html',
-                {"view_type":view_type,"index_list": request.index_list,},
-                RequestContext(request))
+        return 'record/index.html', {"view_type":view_type,"item_info":item_info}
+
+    return 'record/index.html', {"view_type":view_type}
+
 
 @require_permission
 def consume(request):
@@ -31,8 +29,8 @@ def consume(request):
     查询消费记录
     """
     data = consume_data(request)
-    data["index_list"] = request.index_list
-    return render_to_response('record/result.html',data,RequestContext(request))
+    return 'record/result.html' ,data
+
 
 @require_permission
 def charge(request):
@@ -79,8 +77,8 @@ def charge(request):
         'total_count':total_count,
         "charge_way":charge_way,
     }
-    data["index_list"] = request.index_list
-    return render_to_response('record/result.html',data,RequestContext(request))
+    return 'record/result.html', data
+
 
 @require_permission
 def consume_contrast(request):
@@ -134,8 +132,8 @@ def consume_contrast(request):
     data['second_total_count'] = second_data['total_count']
     data['count_contrast_result'] = count_contrast_result
     data['sum_contrast_result'] = sum_contrast_result
-    data["index_list"] = request.index_list
-    return render_to_response('record/result.html',data,RequestContext(request))
+    return 'record/result.html', data
+
 
 def consume_data(request, start_date = '', end_date = ''):
     """消费记录数据返回

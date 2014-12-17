@@ -40,8 +40,7 @@ def index(request):
     data = {'support': False, 'debug':debug}
     data['app_name'] = ''
     data['notice_versions'] = range(total_notice_versions)
-    data["index_list"] = request.index_list
-    return render_to_response('tool/index.html', data, RequestContext(request))
+    return 'tool/index.html', data
 
 
 def gacha(request):
@@ -370,8 +369,7 @@ def customer_service(request):
             charge_log_list.append(tmp)
         data['charge_log'] = charge_log_list
         data['sale'] = sale
-    data["index_list"] = request.index_list
-    return render_to_response('tool/customer_service.html',data ,RequestContext(request))
+    return 'tool/customer_service.html', data
 
 def _get_charge_record(uid,start_date,end_date):
     match_query = {}
@@ -493,8 +491,6 @@ def view_static(request):
 def cards_product_statistic(request):
     """元宝gacha武将产出统计
     """
-    
-
     product_cards = []
     info = ""
 
@@ -657,5 +653,4 @@ def bulletin(request):
             '1_notice_file_head': '1_notice_v' + str(id),
             }
 
-    return render_to_response('tool/bulletin.html', data, 
-            RequestContext(request) )
+    return 'tool/bulletin.html', data

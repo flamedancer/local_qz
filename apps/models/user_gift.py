@@ -565,7 +565,7 @@ class UserGift(GameModel):
         self.put()
 
     def has_got_all_open_server_gifts(self):
-        for gid, info in self.open_server_record:
+        for info in self.open_server_record.values():
             if not info['has_got']:
                 return False
         return True
@@ -575,7 +575,7 @@ class UserGift(GameModel):
         当日的开服礼包是否领取
         '''
         ul = self.user_login
-        for gid, info in self.open_server_record.items():
-            if ul.total_login_num == int(gid):
+        for days, info in self.open_server_record.items():
+            if ul.total_login_num == int(days):
                 return info['has_got']
         return False

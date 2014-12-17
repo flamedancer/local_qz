@@ -38,12 +38,11 @@ def index(request):
     """
     status = request.GET.get("status")
     user_type = request.GET.get("user_type",'')
-    return render_to_response('user/index.html', {
-        "status":status,
-        "user_type":user_type,
-        'raw_db_data_list': sorted(raw_db_data_list),
-        "index_list": request.index_list,
-        }, RequestContext(request) )
+    return 'user/index.html', {
+            "status":status,
+            "user_type":user_type,
+            'raw_db_data_list': sorted(raw_db_data_list),
+        }
 
 @require_permission
 def edit_user(request):
@@ -590,9 +589,8 @@ def edit_user(request):
             mail['awards'].pop(0)
 
     data['mails'] = sorted(temp_mails, key=operator.itemgetter('can_get', 'create_time'), reverse=True)
-    
-    data["index_list"] = request.index_list
-    return render_to_response('user/edit.html',data,RequestContext(request))
+
+    return 'user/edit.html', data
 
 def view_user(request):
     """

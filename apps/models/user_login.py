@@ -416,7 +416,7 @@ class UserLogin(GameModel):
         if 'continuous_tomorrow_bonus' not in self.login_info:
             self.login_info['continuous_tomorrow_bonus'] = {}
         return self.login_info['continuous_tomorrow_bonus']
-            
+    
     @property
     def upgrade_bonus_record(self):
         if 'upgrade_bonus_record' not in self.login_info:
@@ -544,7 +544,7 @@ class UserLogin(GameModel):
                     }
                     break
         return data
-     
+
     def get_award_info(self,user_property_obj):
         """得到 月份奖励的信息返回给前端
         """

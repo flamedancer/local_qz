@@ -49,10 +49,6 @@ def index(request):
         return HttpResponseRedirect("/admin/main/")
 
 
-# @require_permission
-# def main(request):
-#     return render_to_response("admin/main.html",{"appname":settings.APP_NAME},RequestContext(request))
-
 def login(request):
     """
         首页，登录用
@@ -79,6 +75,7 @@ def login(request):
             return render_to_response("admin/login.html",{"status":3,"appname":appname},RequestContext(request))
     else:
         return render_to_response("admin/login.html",{"appname":appname},RequestContext(request))
+
 
 def registration(request):
     """
@@ -132,10 +129,7 @@ def registration(request):
                     settings.EMAIL_ACCOUNT, error_ml, fail_silently=False,
                     auth_user=settings.EMAIL_ACCOUNT.split('@')[0],
                     auth_password=settings.EMAIL_PASSWORD )
-
-
         return HttpResponse(u"谢谢注册, 请耐心等待我们管理员的人工审核.")
-
 
 
 def send_verify_email_code(request):
@@ -158,6 +152,7 @@ def send_verify_email_code(request):
             fail_silently=False,
             auth_user=settings.EMAIL_ACCOUNT.split('@')[0],
             auth_password=settings.EMAIL_PASSWORD )
+
 
 def generate_verify_email_code(email):
     ''' 注册时, 发一个email给用户, 内含确认码， 让用户确认. 
@@ -196,7 +191,6 @@ def logout(request):
     response = HttpResponseRedirect("/admin/")
     apps.admin.auth.logout(request,response)
     return response
-
 
 
 def forgot_password(request):
@@ -262,10 +256,7 @@ def main(request):
         in_review_list = Moderator.find({'in_review' : True}) 
         if in_review_list:
             message = True
-    return render_to_response("admin/main.html",{
-        "index_list": request.index_list,
-        'message': message},
-        RequestContext(request))
+    return "admin/main.html", {'message': message}
 
 
 @require_permission
@@ -277,7 +268,8 @@ def moderator_list(request):
     from apps.admin.models import Moderator
     mod_list = Moderator.find({'is_staff':1})
     mod_list.sort(key=lambda mod: mod.last_login, reverse=True)   #sort according to data
-    return render_to_response("admin/moderator_list.html", {"moderator_list":mod_list, "index_list": request.index_list},RequestContext(request))
+    return "admin/moderator_list.html", {"moderator_list":mod_list}
+
 
 def agree_inreview(request):
     """
@@ -287,6 +279,7 @@ def agree_inreview(request):
     from apps.admin.models import Moderator
     mod_list = Moderator.find({'in_review':True})
     return render_to_response("admin/moderator_list.html",{"moderator_list":mod_list},RequestContext(request))
+
 
 @require_permission
 def pk_top(request):
@@ -314,8 +307,8 @@ def pk_top(request):
             tmp['lv'] = user_prop_obj.lv
             data.append(tmp)
 
-    return render_to_response("admin/pk_top.html",
-            {'data':data, "index_list": request.index_list,},RequestContext(request))
+    return "admin/pk_top.html", {'data':data}
+
 
 @require_permission
 def lv_top(request):
@@ -327,7 +320,8 @@ def lv_top(request):
         tmp['lv'] = int(lv)
         tmp['username'] = UserBase.get(uid).username
         data.append(tmp)
-    return render_to_response("admin/lv_top.html",{'data':data, "index_list": request.index_list},RequestContext(request))
+    return "admin/lv_top.html", {'data':data}
+
 
 @require_permission
 def moderator_permissions(request):
@@ -340,9 +334,7 @@ def moderator_permissions(request):
     for perm in moderator.get_permissions():
         perms.append(admin_configuration.all_permissions[perm])
 
-    return render_to_response("admin/moderator_permissions.html",{"perm_list":perms, "index_list": request.index_list,},RequestContext(request))
-
-
+    return "admin/moderator_permissions.html", {"perm_list":perms}
 
 
 @require_permission
@@ -358,7 +350,7 @@ def view_all_permissions(request):
         for perm in mod.get_permissions():
             mod.perms.append(admin_configuration.all_permissions[perm])
 
-    return render_to_response("admin/moderator_all_perm.html",{"moderator_list":mod_list}, RequestContext(request))
+    return "admin/moderator_all_perm.html", {"moderator_list":mod_list}
 
 
 @require_permission
@@ -384,11 +376,12 @@ def add_moderator(request):
             return HttpResponseRedirect('/admin/moderator/add_moderator_done/')
     else:
         form = ModeratorCreationForm()
+    return "admin/add_moderator.html", {'form':form}
 
-    return render_to_response("admin/add_moderator.html",{'form':form},context_instance = RequestContext(request))
 
 def add_moderator_done(request):
     return render_to_response("admin/add_moderator_done.html")
+
 
 @require_permission
 def manage_moderator(request):
@@ -422,11 +415,13 @@ def manage_moderator(request):
             return render_to_response("admin/manage_moderator.html",{"form":form,"mid":mid},RequestContext(request))
 
     form = ModeratorManageForm({"permissions":moderator.get_permissions()})
-    return render_to_response("admin/manage_moderator.html",{'moderator':moderator,'form':form,"mid":mid},RequestContext(request))
+    return "admin/manage_moderator.html", {'moderator':moderator, 'form':form, "mid":mid}
+
 
 @require_permission
 def manage_moderator_done(request):
-    return render_to_response("admin/manage_moderator_done.html",{},RequestContext(request))
+    return "admin/manage_moderator_done.html", {}
+
 
 @require_permission
 def change_password(request):
@@ -444,9 +439,8 @@ def change_password(request):
     else:
         form = ModeratorResetPasswordForm()
 
-    return render_to_response("admin/change_password.html",
-                        {'moderator':moderator,'form':form,  "index_list": request.index_list},
-                        RequestContext(request))
+    return "admin/change_password.html", {'moderator':moderator,'form':form}
+
 
 @require_permission
 def delete_moderator(request):
@@ -464,13 +458,15 @@ def delete_moderator(request):
         apps.admin.auth.delete_moderator(mid,moderator.mid)
         return HttpResponseRedirect("/admin/moderator/delete_moderator_done/")
     else:
-        return render_to_response("admin/delete_moderator.html",{},RequestContext(request))
+        return "admin/delete_moderator.html", {}
+
 
 def delete_moderator_done(request):
     """
     删除管理员成功
     """
     return render_to_response("admin/delete_moderator_done.html",{},RequestContext(request))
+
 
 def _config_skill_params_by_ruby(config_value, request):
     # 调用ruby的脚本处理ruby_skill_params_config，将得到的最终配置存入skill_params_config
@@ -481,8 +477,6 @@ def _config_skill_params_by_ruby(config_value, request):
     with open(in_file_path, 'w') as in_file:
         in_file.write(config_value)
         in_file.close()
-    
-    
     ruby_cmd = "/usr/local/ruby212/bin/ruby {} {} {}".format(ruby_script, in_file_path, out_file_path)
     (status, output) = commands.getstatusoutput(ruby_cmd)
     print "ruby_result", status, output
@@ -504,6 +498,7 @@ def _config_skill_params_by_ruby(config_value, request):
     os.remove(in_file_path)
     os.remove(out_file_path)
     return ''
+
 
 @require_permission
 def game_setting(request,request_info=None, return_dict=False):
@@ -609,9 +604,7 @@ def game_setting(request,request_info=None, return_dict=False):
                 data['subarea_name'] = subareas_conf_dict[subarea]
                 data['same_contents_subareas'] = same_contents_subareas
                 data['diff_contents_subareas'] = diff_contents_subareas
-                data["index_list"] = request.index_list
-                return render_to_response('admin/sync_conf_to_subarea.html',
-                    data, context_instance = RequestContext(request))
+                return 'admin/sync_conf_to_subarea.html', data
 
     else:
         #显示所有
@@ -640,15 +633,11 @@ def game_setting(request,request_info=None, return_dict=False):
             config_md5sum_calculated = hashlib.md5( config_value.strip() ).hexdigest()
         data['config_md5sum'] = config_md5sum_calculated
 
-
-
     #data['app_name'] = settings.APP_NAME
     #data['environment_type'] = settings.ENVIRONMENT_TYPE
 
-
     #show config backup
     conf_backup_date = RedisTool.get('conf_backup_date')
-#   print '##### main.conf_backup_date=', conf_backup_date
 
     data['conf_backup_date'] = conf_backup_date
     data['backup_diff_from_now'] = {}
@@ -683,10 +672,7 @@ def game_setting(request,request_info=None, return_dict=False):
                          conf_name + '&subarea=' + subarea + '">' + conf_name + '(' + subarea + ')</a>' ]
         data['changed_from_today'] = ', '.join(data['changed_from_today'])
 
-    data["index_list"] = request.index_list
-    return render_to_response('admin/game_setting.html',data,
-            context_instance = RequestContext(request))
-
+    return 'admin/game_setting.html', data
 
 
 def verify_game_config(config_name, value):
@@ -704,9 +690,7 @@ def verify_game_config(config_name, value):
         'dungeon_config': ['1', ],
         'normal_dungeon_effect_config': ['rule', ],
     }
-
     verify_info = ''
-
     if config_name in verify_dict:
         for verify_value in verify_dict[config_name]:
             if not verify_value in value:
@@ -718,6 +702,7 @@ def verify_game_config(config_name, value):
     #     return dcverify
 
     return verify_info
+
 
 def verify_dungeon_config(config_name, value):
     """战场掉落敌将，而在敌将配置中未配置的验证"""
@@ -732,9 +717,9 @@ def verify_dungeon_config(config_name, value):
                         return "敌将配置__monster_config 缺少配置ID：" + str(mid)
     return ''
 
+
 @require_permission
 def gift(request):
-
     data = {}
     data['status'] = '0'
     gift_keys = game_config.gift_config['gift_config']
@@ -770,8 +755,8 @@ def gift(request):
         temp["used_code"] = ', '.join(used_code)
         temp["not_used_code"] = ', '.join(not_used_code)
     data["gift_record"] = gift_record
-    data["index_list"] = request.index_list
-    return render_to_response('admin/gift.html',data,RequestContext(request))
+    return 'admin/gift.html', data
+
 
 def save_game_settings(request):
     '''
@@ -837,7 +822,6 @@ def save_game_settings(request):
     return render_to_response('admin/game_setting.html',data,context_instance = RequestContext(request))
 
 
-
 def diff_2_str(str1='', str2=''):
     ''' bash's diff command, give better result than Python's difflib
 
@@ -871,7 +855,6 @@ def diff_2_str(str1='', str2=''):
                         tmpFile1, tmpFile2) ).strip()
 
 
-
 @require_permission
 def config_md5sum(request):
     config_name = request.GET.get('config_name')
@@ -887,20 +870,15 @@ def config_md5sum(request):
         return HttpResponse(hashlib.md5( config_value.strip().encode('utf-8') ).hexdigest())
 
 
-
 @require_permission
 def config_changes(request):
     '''config change history'''
 
     logs = ConfigHistory.log_mongo_find_last_n({}, 
                 sort_field="date_time", n=50)
-
     data = {}
     data['logs'] = logs
-    data["index_list"] = request.index_list
-    return render_to_response('admin/config_changes.html',
-            data, RequestContext(request))
-
+    return 'admin/config_changes.html', data
 
 
 @require_permission
@@ -911,6 +889,7 @@ def view_setting(request):
     else:
         return game_setting(request, view_only=True)
 
+
 @require_permission
 def view_setting_backup(request):
     config_name = request.GET.get('conf')
@@ -918,7 +897,8 @@ def view_setting_backup(request):
     date_str = request.GET.get('date')
     return HttpResponse( show_config_backup(config_name=config_name,
             subarea=subarea, date_str=date_str),  
-            content_type="text/plain; charset=UTF8" )
+            content_type="text/plain; charset=UTF8")
+
 
 @require_permission
 def setting_backup_diff(request):
@@ -941,7 +921,6 @@ def setting_backup_diff(request):
 #   print '#### diffs="' + diffs + '", total length=', len(diffs)
     
     return HttpResponse( diffs, content_type="text/plain; charset=UTF8" )
-
 
 
 @require_permission
@@ -1001,9 +980,7 @@ def sync_conf_to_subarea(request):
             'subarea': current_subarea,
             'subarea_id_name_list': subarea_id_name_list,
             }
-    data["index_list"] = request.index_list
-    return render_to_response('admin/sync_subarea_done.html',
-            data, RequestContext(request))
+    return 'admin/sync_subarea_done.html', data
 
 
 
@@ -1067,7 +1044,6 @@ def beautify_config_value(value_str):
     return '\n'.join(lines)
 
 
-
 def captcha_image(request):
     '''利用 PyCaptcha (它用了PIL, Python Image Library),
     处理 /admin/captcha_image/?id=#X$#@123
@@ -1086,7 +1062,6 @@ def captcha_image(request):
     buf.close()
 
     return HttpResponse(jpeg_str, content_type="image/jpeg" )
-
 
 
 def get_captcha_image_id():

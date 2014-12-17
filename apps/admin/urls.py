@@ -104,10 +104,6 @@ urlpatterns += patterns('apps.admin.views.xls_to_dict',
     url(r'^xls_to_dict/submit_game_settings_by_excel/$', 'submit_game_settings_by_excel'),
 )
 
-urlpatterns += patterns('apps.admin.views.xls_to_dict_test',
-    url(r'^xls_to_dict_test/submit_game_settings_by_excel/$', 'submit_game_settings_by_excel'),
-)
-
 urlpatterns += patterns('apps.admin.views.monster',
     url(r'^monster/monster_drop_index/$', 'monster_drop_index'),
     url(r'^monster/monster_drop/$', 'monster_drop'),
