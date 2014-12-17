@@ -1,16 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-        "http://www.w3.org/TR/html4/loose.dtd">
-
-{% load tags %}
-
-<html>
-<head>
-    <title>查询</title>
-    <script src="../js/calendar.js">
-    </script>
-</head>
-<body>
- 
+{% extends "admin/main.html" %}
+{% block right %}
+    <script src="../js/calendar.js"></script>
     <form action="../tool/cards_product_statistic/" method="post">
         <h3>元宝抽将武将产出统计</h3>
             <span>从
@@ -159,5 +149,4 @@
 
     {% endif %}
 
-</body>
-</html>
+{% endblock %}

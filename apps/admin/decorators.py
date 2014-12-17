@@ -20,6 +20,8 @@ def require_permission(view_func):
         if not admin_configuration.view_perm_mappings.is_view_allow(path,moderator):
             return HttpResponseRedirect("/admin/login/")
         else:
+            index_list = admin_configuration.view_perm_mappings.get_allow_index_paths(moderator)
+            request.index_list = index_list
             return view_func(request,*args,**kwargs)
 
     return wrapped_view_func
@@ -27,9 +29,10 @@ def require_permission(view_func):
 def get_moderator_username(request):
     """获得用户的名字
     """
+    port = request.META["HTTP_HOST"].split(":")[1]
     username = ''
     #指定账号使用查询武将丢失的功能
-    cv = request.COOKIES.get("rkmoderator", '')
+    cv = request.COOKIES.get("rkmoderator" + port, '')
     if cv:
         cv = urllib.unquote(cv).decode("ascii")
         mid,login_stamp,token = cv.split('|')

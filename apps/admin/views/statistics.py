@@ -1751,7 +1751,7 @@ def index(request):
                 'items_bought': items_bought,
                 'buy_item_users': buy_item_users,
                 }
-
+        data_dict["index_list"] = request.index_list
         return render_to_response('statistics/items_bought.html', 
             data_dict,
             RequestContext(request) )
@@ -1761,5 +1761,5 @@ def index(request):
 
 ########################## default index page #############
     else:
-        return render_to_response('statistics/index.html', 
+        return render_to_response('statistics/index.html', {"index_list": request.index_list},
             RequestContext(request) )

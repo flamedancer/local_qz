@@ -32,6 +32,7 @@ ConsumeRecord = data_log_mod.get_log_model("CoinConsume")
 
 total_notice_versions = 10
 
+@require_permission
 def index(request):
     """
     """
@@ -39,7 +40,7 @@ def index(request):
     data = {'support': False, 'debug':debug}
     data['app_name'] = ''
     data['notice_versions'] = range(total_notice_versions)
-
+    data["index_list"] = request.index_list
     return render_to_response('tool/index.html', data, RequestContext(request))
 
 
@@ -369,6 +370,7 @@ def customer_service(request):
             charge_log_list.append(tmp)
         data['charge_log'] = charge_log_list
         data['sale'] = sale
+        data["index_list"] = request.index_list
     return render_to_response('tool/customer_service.html',data ,RequestContext(request))
 
 def _get_charge_record(uid,start_date,end_date):

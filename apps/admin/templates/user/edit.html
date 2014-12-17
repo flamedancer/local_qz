@@ -1,14 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-        "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <title>编辑用户信息</title>
-    <style type="text/css">
-      tr.odd {background-color:#c7dccc;color:#376400;}
-      tr.even {background-color:white;}
-    </style>
-</head>
-<body>
+{% extends "admin/main.html" %}
+{% block right %}
     {% ifequal status 1 %}
     <div class="success">
         <span style="color:red;">保存成功</span>
@@ -20,34 +11,24 @@
             <a href="javascript:window.location = window.location">刷新</a>
         </div>
         <hr/>
-        <table>
+        <table class="table table-bordered">
             <tr>
-                <td>用户名</td>
-                <td>
+                <td> <label>用户名</label>
                     <span style="color:red;">{{ user.username }}</span>
                 </td>
-                <td>手机号</td>
-                <td>
-                    <span style="color:red;">{% if user_property_obj.mobile_num %}{{ user_property_obj.mobile_num }}{% else %}无{% endif %}</span>
-                </td>
-                <td>性别</td>
-                <td>
+                <td><label>性别</label>
                     <span style="color:red;">{% if user.baseinfo.sex %}男{% else %}女{% endif %}</span>
                 </td>
-                <td>客户端类型</td>
-                <td>
+                <td><label>客户端类型</label>
                     <span style="color:red;">{{ client_type }}</span>
                 </td>
-                <td>安装时间</td>
-                <td>
+                <td><label>安装时间</label>
                     <span style="color:red;">{{ add_time }}</span>
                 </td>
-                <td>最后登录时间</td>
-                <td>
+                <td><label>最后登录时间</label>
                     <span style="color:red;">{{ last_login_time }}</span>
                 </td>
-                <td>登录记录</td>
-                <td>
+                <td><label>登录记录</label>
                     <select name="login_record" size="1">
                         {% for login_date in login_record%}
                         <option>{{login_date}}</option>
@@ -56,45 +37,49 @@
                 </td>
             </tr>
             <tr>
-                <td>级别</td>
-                <td>
+                <td><label>等级</label>
                     <span style="color:red;">{{ user_property_obj.lv }}</span>
                 </td>
-                <td>经验</td>
-                <td>
+                <td><label>经验</label>
                     <span style="color:red;">{{ user_property_obj.exp }}</span>
+                    <input type="text" size="5" maxlength="10" id="add_exp" name="add_exp"/>
+                    <input type="submit" value="加"/>
                 </td>
-                <td>铜钱</td>
-                <td>
+                <td><label>铜钱</label>
                     <span style="color:red;">{{ user_property_obj.gold }}</span>
+                    <input type="text" size="5" maxlength="10" id="add_gold" name="add_gold"/>
+                    <input type="submit" value="加"/>
                 </td>
-                <td>元宝</td>
-                <td>
+                <td><label>元宝</label>
                     <span style="color:red;">{{ user_property_obj.coin }}</span>
-                </td>             
+                    <input type="text" size="5" maxlength="10" id="add_coin" name="add_coin"/>
+                    <input type="submit" value="加"/>
+                </td>   
+                 <td><label>武将经验点</label>
+                    <span style="color:red;">{{ user_property_obj.property_info.card_exp_point }}</span>
+                    <input type="text" size="5" maxlength="10" id="add_card_point" name="add_card_point"/>
+                    <input type="submit" value="加"/>
+                </td> 
+                <td><label>战魂</label>
+                    <span style="color:red;">{{ user_property_obj.property_info.fight_soul }}</span>
+                    <input type="text" size="5" maxlength="10" id="add_fight_soul" name="add_fight_soul"/>
+                    <input type="submit" value="加"/>
+                </td> 
             </tr>
             <tr>
-                  <td>用户帐号类型</td>
-                  <td>
+                  <td><label>用户帐号类型</label>
                     <span style="color:red;">{{ user.platform }}</span>
                 </td>
                 <td>
                     <label for="state">账号状态</label>
-                </td>
-                <td>
                     <select id="state" name="state">
                         <option value="0" {% if not user.in_frozen %}selected="selected"{% endif %}>正常</option>
                         <option value="1" {% if user.in_frozen %}selected="selected"{% endif %}>冻结</option>
                     </select>
-                </td>
-                <td>
                     {% if user.in_frozen and not user.frozen and user.baseinfo.unfroze_time %}解封时间:{{user.baseinfo.unfroze_time|date:"Y-m-d H:i:s"}}{% endif %}
-                </td>
-                <td>
                     <input type="submit" value="更改状态"/>
                 </td>
-                <td>当前战场进度：</td>
-                <td>
+                <td><label>当前战场进度：</label>
                     <span style="color:red;">{{current_dungeon.floor_id}}-{{current_dungeon.room_id}}</span>
                 </td>
                 <td>
@@ -112,36 +97,47 @@
                     </form>
                     {% endif %}
                 </td>
-                <td>当前体力：</td>
-                <td>
+                <td>当前体力：
                     <span style="color:red;">{{user_property_obj.stamina}}</span>
+                    <input name="add_stamina" id="add_stamina"/>
+                    <input type="submit" value="加" />
                 </td>
-
+                {% if user_property_obj.newbie %}
+                <td>
+                    <input type="hidden" name="newbie_pass" value="yes" />
+                    <input type="submit" value="跳过新手引导" />
+                </td>
+            {% endif %}
             </tr>
             <tr>
-                 <td>pk 胜负 </td>
-                <td>
-                    <span style="color:red;">win:{{user_real_pvp_obj.pvp_info.total_win}}</span>
-                    <span style="color:red;">lose:{{user_real_pvp_obj.pvp_info.total_lose}}</span>
+                 <td>pk 胜负 
+                    <span style="color:red;">win:{{user_real_pvp_obj.total_win}}</span>
+                    <span style="color:red;">lose:{{user_real_pvp_obj.total_lose}}</span>
                 </td>
-                 <td>pk 积分 </td>
-                <td>
-                    <span style="color:red;">{{user_real_pvp_obj.pvp_info.pt}}</span>
-                </td>
-                <td>pk 称号</td>
-                <td>
-                    <span style="color:red;">{{user_real_pvp_obj.pvp_info.pvp_title}}</span>
+                 <td><label>pk积分</label>
+                    <span style="color:red;">{{ user_real_pvp_obj.pt }}</span>
+                    <input type="text" size="5" maxlength="10" id="add_pk_pt" name="add_pk_pt"/>
+                    <input type="submit" value="加(不会改变排名)"/>
+                </td>  
+                <td>pk 称号
+                    <span style="color:red;">{{user_real_pvp_obj.pvp_title}}</span>
                 </td>
                 <td>
                     vip等级: <span style="color:red;">{{user_property_obj.vip_cur_level}}</span>
-                </td>
-
-                <td>
-                <form method="post">
                     <input type="text" size="5" maxlength="10" id="modify_vip_lv" name="modify_vip_lv"/>
                     <input type="submit" value="更改vip等级"/>
-                </form>
                 </td>
+                 <td><label>功勋</label>
+                    <span style="color:red;">{{ user_real_pvp_obj.honor }}</span>
+                    <input type="text" size="5" maxlength="10" id="add_honor" name="add_honor"/>
+                    <input type="submit" value="加(不会改变排名)"/>
+                </td>  
+                <td>    
+                <form method="post">
+                    <input type="hidden" name="del_user" value="yes" />
+                    <input type="submit" value="删除用户" />
+                </form> 
+            </td> 
 
             </tr>   
         </table>
@@ -173,72 +169,6 @@
 
     <table>     
         <h3>玩家物品</h3>
-        <tr>    
-            <td>    
-                <form method="post">
-                    <input type="hidden" name="del_user" value="yes" />
-                    <input type="submit" value="删除用户" />
-                </form> 
-            </td>       
-            <form method="post">
-                <td>
-                    加铜钱
-                    <input type="text" size="5" maxlength="10" id="add_gold" name="add_gold"/>
-                </td>
-                
-                <td>
-                    加元宝
-                    <input type="text" size="5" maxlength="10" id="add_coin" name="add_coin"/>
-                </td>
-                <td>
-                    加经验点
-                    <input type="text" size="5" maxlength="10" id="add_card_point" name="add_card_point"/>
-                </td>
-                <td>    
-                    加经验
-                    <input type="text" size="5" maxlength="10" id="add_exp" name="add_exp"/>
-                </td>
-                <td>
-                    加pk 积分(不会改变排名)
-                    <input type="text" size="5" maxlength="10" id="add_pk_pt" name="add_pk_pt"/>
-                </td> 
-                <td>
-                    加功勋
-                    <input type="text" size="5" maxlength="10" id="add_honor" name="add_honor"/>
-
-                </td>
-                <td>
-                    加战魂
-                    <input type="text" size="5" maxlength="10" id="add_fight_soul" name="add_fight_soul"/>
-                </td>                    
-                <td>
-                    <input type="submit" value="确定"/>
-                </td>
-           </form>
-        </tr>
-        <hr /> 
-        <tr>
-            {% if user_property_obj.stamina != user_property_obj.max_stamina %}
-            <td>
-                <form method="post">
-                    <input type="hidden" name="recover_stamina" value="yes" />
-                    <input type="submit" value="回复体力" />
-                </form>
-            </td>
-                    
-            {% else %}
-            <td>体力满值</td>
-            {% endif %}
-
-            {% if user_property_obj.newbie %}
-            <td>
-                <form method="post">
-                    <input type="hidden" name="newbie_pass" value="yes" />
-                    <input type="submit" value="跳过新手引导" />
-                </form>
-            </td>
-            {% endif %}
-        </tr>
         <tr>
             <td colspan=4>
                 <form method="post">
@@ -881,7 +811,4 @@
         </table>
     </form>
 
-
-
-</body>
-</html>
+{% endblock %}

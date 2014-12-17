@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>
+    {{ appname }}
+	</title>
+    <link rel="stylesheet" href="../../../admin/js/bootstrap/dist/css/bootstrap.min.css" />
+    <script type="text/javascript" src="../../../admin/js/jquery/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="../../../admin/js/ace/ace.js"></script>
+    <script type="text/javascript" src="../../../admin/js/ace/theme-github.js"></script>
+    <script type="text/javascript" src="../../../admin/js/ace/mode-python.js"></script>
+    <script type="text/javascript" src="../js/calendar.js"></script>
+    <style type="text/css">
+        ul
+        {
+        float:left;
+        width:100%;
+        padding:0;
+        margin:0;
+        list-style-type:none;
+        }
+        a.tab_view
+        {
+        float:left;
+        width:7em;
+        text-decoration:none;
+        /*color:white;*/
+        /*background-color:purple;*/
+        padding:0.2em 0.6em;
+        /*border-right:1px solid white;*/
+        }
+        a.tab_view:hover {background-color:#ff3300}
+        li {display:inline}
+    </style>
+
+    <script type="text/javascript">
+
+    var xmlhttp;
+    function loadXMLDoc(url)
+    {
+    xmlhttp=null;
+    if (window.XMLHttpRequest)
+      {// code for Firefox, Opera, IE7, etc.
+      xmlhttp=new XMLHttpRequest();
+      }
+    else if (window.ActiveXObject)
+      {// code for IE6, IE5
+      xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+      }
+    if (xmlhttp!=null)
+      {
+      xmlhttp.onreadystatechange=state_Change;
+      xmlhttp.open("GET",url,true);
+      xmlhttp.send(null);
+      // set_cont();
+      }
+    else
+      {
+      alert("Your browser does not support XMLHTTP.");
+      }
+    }
+
+    function state_Change()
+    {
+    if (xmlhttp.readyState==4)
+      {// 4 = "loaded"
+      if (xmlhttp.status==200)
+        {// 200 = "OK"
+        document.getElementById('right_content').innerHTML=xmlhttp.responseText;
+        // set_innerHTML('right_content', xmlhttp.responseText);
+        }
+      else
+        {
+        alert("Problem retrieving data:" + xmlhttp.statusText);
+        }
+      }
+    }
+    function set_cont() {
+        if($('textarea[name="config_value"]')) {
+            var $textarea = $('textarea[name="config_value"]');
+            var $editor = $('#ace-editor');
+            var editor = ace.edit('ace-editor');
+            editor.setTheme("ace/theme/github");
+
+            var PyMode = require("ace/mode/python").Mode;
+            editor.getSession().setMode(new PyMode());
+
+            editor.getSession().setTabSize(4);
+            editor.getSession().setUseSoftTabs(true);
+            editor.getSession().on('change', function() {
+            });
+
+            $('#settings_form').submit(function(e) {
+                $textarea.val(editor.getSession().getValue());
+                var $form = $(this);
+                var config_value = $textarea.val();
+            });
+        }
+    }
+</script>
+</head>
+<!-- <frameset cols="150,*" frameborder="no" border="0" framespacing="0">
+    <frame src="/admin/left/" name="leftFrame" scrolling="No" noresize="noresize" id="leftFrame" title="leftFrame"/>
+    <frame src="about:blank" name="mainFrame" id="mainFrame" title="mainFrame" />
+</frameset> -->
+<div id="left_content" style="float:left;width:10%">
+{% block left %}{% endblock %}
+</div>
+<div id="right_content" style="float: left;margin-left:5px;width:80%">
+{% block right %}{% endblock %}
+</div>
+</html>

@@ -1,13 +1,26 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+<!-- <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
         "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-    <title>
-    {{ appname }}
-	</title>
+    <title>菜单</title>
 </head>
-<frameset cols="150,*" frameborder="no" border="0" framespacing="0">
-    <frame src="/admin/left/" name="leftFrame" scrolling="No" noresize="noresize" id="leftFrame" title="leftFrame"/>
-    <frame src="about:blank" name="mainFrame" id="mainFrame" title="mainFrame" />
-</frameset>
-</html>
+
+<body> -->
+{% extends "admin/index.html" %}
+
+{% block left %}
+{% for ind in index_list %}
+    <!-- <a class='tab_view' herf='#' onclick="loadXMLDoc('{{ ind.path }}')">{{ ind.name }}</a><br/> -->
+    <a class='tab_view' href='{{ ind.path }}' >{{ ind.name }}</a><br/>
+{% endfor %}
+
+{% if message%}
+<a class='tab_view' href="/admin/moderator/agree_inreview/" target="mainFrame" style="color:red">新注册帐号提醒</a><br/>
+{% endif %}
+{% endblock %}
+
+{% block right %}
+{% endblock %}
+
+<!-- </body>
+</html> -->

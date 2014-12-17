@@ -1,17 +1,12 @@
-{% load tags %}
-<html>
+{% extends "admin/main.html" %}
+{% block right %}
 
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>Statistics</title>
+{% load tags %}
+
     <style type="text/css">
         tr.odd {background-color:#ccc;color: black;}
         tr.even {background-color:white;}
     </style>
-</head>
-
-<body>
   <h2>统计信息 Statistics Info
   </h2> 
 
@@ -78,5 +73,4 @@
       </li>
 
     </ul>
-</body>
-</html>
+{% endblock %}

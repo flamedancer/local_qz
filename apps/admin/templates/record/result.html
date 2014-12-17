@@ -1,22 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-        "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <title>查询</title>
-    <script type="text/javascript">
-        function get_data(date_k){
-            if (document.getElementById('btn_' + date_k).value == "展开"){
-                document.getElementById('btn_' + date_k).value = "折叠";
-                document.getElementById('detail_' + date_k).style.display = "block";
-            }
-            else{
-                document.getElementById('btn_' + date_k).value = "展开";
-                document.getElementById('detail_' + date_k).style.display = "none";
-            }
-        }
-    </script>
-</head>
-<body>
+{% extends "admin/main.html" %}
+{% block right %}
     {% load filters %}
     <script src="../../js/calendar.js">
     </script>
@@ -201,5 +184,17 @@
     </table>
     {% endif %}
     </div>
-</body>
-</html>
+
+    <script type="text/javascript">
+        function get_data(date_k){
+            if (document.getElementById('btn_' + date_k).value == "展开"){
+                document.getElementById('btn_' + date_k).value = "折叠";
+                document.getElementById('detail_' + date_k).style.display = "block";
+            }
+            else{
+                document.getElementById('btn_' + date_k).value = "展开";
+                document.getElementById('detail_' + date_k).style.display = "none";
+            }
+        }
+    </script>
+{% endblock %}

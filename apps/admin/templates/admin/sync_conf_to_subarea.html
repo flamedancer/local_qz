@@ -1,7 +1,7 @@
-{% extends "admin/base.html" %}
+{% extends "admin/main.html" %}
 {% load tags %}
 
-{% block main %}
+{% block right %}
 
 <h3>当前配置: {{ config_description }}, 分区{{subarea}}: {{subarea_name}} </h3>
 
@@ -51,4 +51,4 @@
 
      <p>不同步, 继续编辑: <a href=/admin/game_setting/?config_name={{config_name}}&subarea={{subarea}}>{{subarea}}分区: {{config_description}}</a>
 
-{% endblock main %}
+{% endblock %}

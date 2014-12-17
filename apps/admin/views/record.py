@@ -6,8 +6,10 @@ from django.template import RequestContext
 
 from apps.common import record
 from apps.config.game_config import game_config
+from apps.admin.decorators import require_permission
 
 
+@require_permission
 def index(request):
     """
     查询首页
@@ -16,16 +18,23 @@ def index(request):
     if view_type == 'charge':
         item_info = game_config.shop_config['sale'].items()
         item_info.sort(key = lambda x:x[1]['num'])
-        return render_to_response('record/index.html',{"view_type":view_type,"item_info":item_info},RequestContext(request))
-    return render_to_response('record/index.html',{"view_type":view_type},RequestContext(request))
+        return render_to_response('record/index.html',
+            {"view_type":view_type,"item_info":item_info,"index_list": request.index_list},
+            RequestContext(request))
+    return render_to_response('record/index.html',
+                {"view_type":view_type,"index_list": request.index_list,},
+                RequestContext(request))
 
+@require_permission
 def consume(request):
     """
     查询消费记录
     """
     data = consume_data(request)
+    data["index_list"] = request.index_list
     return render_to_response('record/result.html',data,RequestContext(request))
 
+@require_permission
 def charge(request):
     """
     查询充值记录
@@ -70,8 +79,10 @@ def charge(request):
         'total_count':total_count,
         "charge_way":charge_way,
     }
+    data["index_list"] = request.index_list
     return render_to_response('record/result.html',data,RequestContext(request))
 
+@require_permission
 def consume_contrast(request):
     """
     对比消费记录
@@ -123,6 +134,7 @@ def consume_contrast(request):
     data['second_total_count'] = second_data['total_count']
     data['count_contrast_result'] = count_contrast_result
     data['sum_contrast_result'] = sum_contrast_result
+    data["index_list"] = request.index_list
     return render_to_response('record/result.html',data,RequestContext(request))
 
 def consume_data(request, start_date = '', end_date = ''):

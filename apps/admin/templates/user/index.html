@@ -1,10 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-        "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <title>修改用户</title>
-</head>
-<body>
+{% extends "admin/main.html" %}
+{% block right %}
+
 {% ifequal status "1" %}
     <div class="error">
      指定的uid不存在
@@ -48,6 +44,4 @@
        <input type="submit" value="确定"/>
     </form>
 
-
-</body>
-</html>
+{% endblock %}

@@ -211,7 +211,7 @@ class System_config(XlsToDict):
                             'tapjoy_fg', 'log_control', 'bind_phone_is_open', 'auto_fight_is_open', 'auto_fight_no_charge','popen', 'push_open', 'push_open_1', 
                            ]
 
-#@require_permission
+@require_permission
 def submit_game_settings_by_excel(request):
     data = {}
     config_name = str(request.GET.get('config_name'))
@@ -243,7 +243,7 @@ def submit_game_settings_by_excel(request):
     data['submit_game_settings_by_excel'] = True
     data['subarea_default'] = subarea_default
 
-    #moderator = get_moderator_by_request(request)
+    data["index_list"] = request.index_list
     return render_to_response('admin/game_setting.html', data, context_instance = RequestContext(request))
 
 def _verify_game_config(config_name, value):

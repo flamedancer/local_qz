@@ -36,9 +36,9 @@ class RegexUrlPermissionPattern(object):
         "是否允许指定管理员访问"
 
         # 检查是否路径匹配
-        match = self.regex.search(path)
-        if not match:
-            return False
+        # match = self.regex.search(path)
+        # if not match:
+        #     return False
 
         if isinstance(self.permissions,basestring):
             if self.permissions=="all":
@@ -46,7 +46,6 @@ class RegexUrlPermissionPattern(object):
 
         if moderator.has_permissions(self.permissions):
             return True
-
         return False
 
 
@@ -93,7 +92,7 @@ class ViewPermMappings(object):
 
     def is_view_allow(self,view_path,moderator):
         "检查指定的view url是否允许"
-
+        print "last_path", view_path
         for map in self.mapping_list:
             if map.is_allow(view_path,moderator):
                 return True

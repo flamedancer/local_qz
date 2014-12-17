@@ -1,14 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-        "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <title>查看用户信息</title>
-    <style type="text/css">
-      tr.odd {background-color:#c7dccc;color:#376400;}
-      tr.even {background-color:white;}
-    </style>
-</head>
-<body>
+{% extends "admin/main.html" %}
+{% block right %}
     {% ifequal status 1 %}
     <div class="success">
         <span style="color:red;">保存成功</span>
@@ -69,7 +60,7 @@
                     <span style="color:red;">{{ user_property_obj.gold }}</span>
                 </td>
                 <td>元宝</td>
-                <td>
+                <td> 
                     <span style="color:red;">{{ user_property_obj.coin }}</span>
                 </td>
                 <td>宝石</td>
@@ -335,7 +326,4 @@
         </tr>
         {%endfor%}
     </table>
-
-
-</body>
-</html>
+{% endblock %}

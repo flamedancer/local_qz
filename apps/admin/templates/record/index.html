@@ -1,21 +1,7 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-        "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <title>查询</title>
-    <script src="../js/calendar.js">
-    </script>
-    <script type="text/javascript">
-        function set_date(){
-            var first_day = new Date();
-            first_day.setDate(1);
-            document.getElementById("start_date").value = first_day.format("yyyy-MM-dd");
-            var today = new Date();
-            document.getElementById("end_date").value = today.format("yyyy-MM-dd");
-        }
-    </script>
-</head>
-<body onload="set_date()">
+{% extends "admin/main.html" %}
+{% block right %}
+
+
     {% if view_type == "consume" %}
     <form action="../record/consume/" method="post">
     <h3>查询消费<span style="color:red;">（大数据量查询不要使用后台，请联系技术人员）</span></h3>
@@ -97,5 +83,14 @@
         </div>
     </form>
     <hr/>
-</body>
-</html>
+
+    <script src="../js/calendar.js">
+    </script>
+    <script type="text/javascript">
+        var first_day = new Date();
+        first_day.setDate(1);
+        document.getElementById("start_date").value = first_day.format("yyyy-MM-dd");
+        var today = new Date();
+        document.getElementById("end_date").value = today.format("yyyy-MM-dd");
+    </script>
+{% endblock %}

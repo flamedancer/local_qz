@@ -49,9 +49,9 @@ def index(request):
         return HttpResponseRedirect("/admin/main/")
 
 
-@require_permission
-def main(request):
-    return render_to_response("admin/main.html",{"appname":settings.APP_NAME},RequestContext(request))
+# @require_permission
+# def main(request):
+#     return render_to_response("admin/main.html",{"appname":settings.APP_NAME},RequestContext(request))
 
 def login(request):
     """
@@ -250,20 +250,20 @@ def forgot_password(request):
 
 
 @require_permission
-def left(request):
+def main(request):
     """
     左侧列表页
     """
     #获取当前用户
     moderator = apps.admin.auth.get_moderator_by_request(request)
-    index_list = admin_configuration.view_perm_mappings.get_allow_index_paths(moderator)
+    # index_list = admin_configuration.view_perm_mappings.get_allow_index_paths(moderator)
     message = False
     if moderator.permissions == 'super':
         in_review_list = Moderator.find({'in_review' : True}) 
         if in_review_list:
             message = True
-    return render_to_response("admin/left.html",{
-        "index_list":index_list, 
+    return render_to_response("admin/main.html",{
+        "index_list": request.index_list,
         'message': message},
         RequestContext(request))
 
@@ -277,7 +277,7 @@ def moderator_list(request):
     from apps.admin.models import Moderator
     mod_list = Moderator.find({'is_staff':1})
     mod_list.sort(key=lambda mod: mod.last_login, reverse=True)   #sort according to data
-    return render_to_response("admin/moderator_list.html",{"moderator_list":mod_list},RequestContext(request))
+    return render_to_response("admin/moderator_list.html", {"moderator_list":mod_list, "index_list": request.index_list},RequestContext(request))
 
 def agree_inreview(request):
     """
@@ -315,7 +315,7 @@ def pk_top(request):
             data.append(tmp)
 
     return render_to_response("admin/pk_top.html",
-            {'data':data},RequestContext(request))
+            {'data':data, "index_list": request.index_list,},RequestContext(request))
 
 @require_permission
 def lv_top(request):
@@ -327,7 +327,7 @@ def lv_top(request):
         tmp['lv'] = int(lv)
         tmp['username'] = UserBase.get(uid).username
         data.append(tmp)
-    return render_to_response("admin/lv_top.html",{'data':data},RequestContext(request))
+    return render_to_response("admin/lv_top.html",{'data':data, "index_list": request.index_list},RequestContext(request))
 
 @require_permission
 def moderator_permissions(request):
@@ -340,7 +340,7 @@ def moderator_permissions(request):
     for perm in moderator.get_permissions():
         perms.append(admin_configuration.all_permissions[perm])
 
-    return render_to_response("admin/moderator_permissions.html",{"perm_list":perms},RequestContext(request))
+    return render_to_response("admin/moderator_permissions.html",{"perm_list":perms, "index_list": request.index_list,},RequestContext(request))
 
 
 
@@ -444,7 +444,9 @@ def change_password(request):
     else:
         form = ModeratorResetPasswordForm()
 
-    return render_to_response("admin/change_password.html",{'moderator':moderator,'form':form},RequestContext(request))
+    return render_to_response("admin/change_password.html",
+                        {'moderator':moderator,'form':form,  "index_list": request.index_list},
+                        RequestContext(request))
 
 @require_permission
 def delete_moderator(request):
@@ -607,7 +609,7 @@ def game_setting(request,request_info=None, return_dict=False):
                 data['subarea_name'] = subareas_conf_dict[subarea]
                 data['same_contents_subareas'] = same_contents_subareas
                 data['diff_contents_subareas'] = diff_contents_subareas
-
+                data["index_list"] = request.index_list
                 return render_to_response('admin/sync_conf_to_subarea.html',
                     data, context_instance = RequestContext(request))
 
@@ -681,6 +683,7 @@ def game_setting(request,request_info=None, return_dict=False):
                          conf_name + '&subarea=' + subarea + '">' + conf_name + '(' + subarea + ')</a>' ]
         data['changed_from_today'] = ', '.join(data['changed_from_today'])
 
+    data["index_list"] = request.index_list
     return render_to_response('admin/game_setting.html',data,
             context_instance = RequestContext(request))
 
@@ -767,6 +770,7 @@ def gift(request):
         temp["used_code"] = ', '.join(used_code)
         temp["not_used_code"] = ', '.join(not_used_code)
     data["gift_record"] = gift_record
+    data["index_list"] = request.index_list
     return render_to_response('admin/gift.html',data,RequestContext(request))
 
 def save_game_settings(request):
@@ -893,6 +897,7 @@ def config_changes(request):
 
     data = {}
     data['logs'] = logs
+    data["index_list"] = request.index_list
     return render_to_response('admin/config_changes.html',
             data, RequestContext(request))
 
@@ -996,7 +1001,7 @@ def sync_conf_to_subarea(request):
             'subarea': current_subarea,
             'subarea_id_name_list': subarea_id_name_list,
             }
-
+    data["index_list"] = request.index_list
     return render_to_response('admin/sync_subarea_done.html',
             data, RequestContext(request))
 

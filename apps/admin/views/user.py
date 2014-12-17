@@ -31,7 +31,7 @@ from pprint import pformat
 
 ChargeRecord = data_log_mod.get_log_model("ChargeRecord")
 
-
+@require_permission
 def index(request):
     """
     用户管理导航页
@@ -42,6 +42,7 @@ def index(request):
         "status":status,
         "user_type":user_type,
         'raw_db_data_list': sorted(raw_db_data_list),
+        "index_list": request.index_list,
         }, RequestContext(request) )
 
 @require_permission
@@ -342,8 +343,9 @@ def edit_user(request):
             user_dungeon_obj.dungeon_info['normal_current']['status'] = 0
             user_dungeon_obj.put()
         #回复体力
-        if request.POST.get('recover_stamina',''):
-            user.user_property.recover_stamina()
+        if request.POST.get('add_stamina', ''):
+            add_stamina = int(request.POST.get('add_stamina'))
+            user_property_obj.add_stamina(add_stamina)
         #equip
         if request.POST.get("add_equips", ""):
             user_equips_obj = UserEquips.get(uid)
@@ -589,7 +591,7 @@ def edit_user(request):
 
     data['mails'] = sorted(temp_mails, key=operator.itemgetter('can_get', 'create_time'), reverse=True)
     
-
+    data["index_list"] = request.index_list
     return render_to_response('user/edit.html',data,RequestContext(request))
 
 def view_user(request):
@@ -763,5 +765,5 @@ def view_user(request):
     data.update(soul.get_all(user, None)[1])
     for sid, soul_conf in data['normal_souls'].items():
         soul_conf['name'] = game_config.card_config[sid].get('star','') + u'星 ' + game_config.card_config[sid].get('name','') + u' 将魂'
-
+    data["index_list"] = request.index_list
     return render_to_response('user/view.html',data,RequestContext(request))

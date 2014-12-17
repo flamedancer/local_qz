@@ -8,7 +8,8 @@ from apps.oclib.auth import build_rkauth_signature
 
 def get_moderator_by_request(request):
     "通过request获取moderator"
-    cv = request.COOKIES.get("rkmoderator")
+    port = request.META["HTTP_HOST"].split(":")[1]
+    cv = request.COOKIES.get("rkmoderator" + port)
     if cv is None:
         return None
     else:
@@ -56,6 +57,7 @@ def login(request,response,moderator):
     """
     login_time = datetime.datetime.now()
     login_ip = request.META["REMOTE_ADDR"]
+    port = request.META["HTTP_HOST"].split(":")[1]
     moderator.set_last_login(login_time,login_ip)
 
     mid = moderator.mid
@@ -67,11 +69,12 @@ def login(request,response,moderator):
     })
     cv = "%s|%s|%s" % (mid, last_login_stamp,token)
     cv = urllib.quote(cv.encode("ascii"))
-    response.set_cookie("rkmoderator",cv,expires=datetime.datetime.now() + datetime.timedelta(seconds = int(60*60*24)))
+    response.set_cookie("rkmoderator" + port,cv,expires=datetime.datetime.now() + datetime.timedelta(seconds = int(60*60*24)))
     return response
 
 def logout(request,response):
-    response.delete_cookie("rkmoderator")
+    port = request.META["HTTP_HOST"].split(":")[1]
+    response.delete_cookie("rkmoderator" + port)
 
 def delete_moderator(mid,operator):
     """
