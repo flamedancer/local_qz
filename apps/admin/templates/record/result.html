@@ -1,8 +1,6 @@
 {% extends "admin/main.html" %}
 {% block right %}
     {% load filters %}
-    <script src="../../js/calendar.js">
-    </script>
     {% if view_type == "consume" %}
     <form action="../../record/consume/" method="post">
     <h3>查询消费<span style="color:red;">（大数据量查询不要使用后台，请联系技术人员）</span></h3>

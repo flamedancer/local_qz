@@ -241,7 +241,7 @@ def update(rk_user,params):
                 return 11,{'msg':utils.get_msg('pack', 'not_enough_props')}
             if not check_use_type == game_config.props_config[props_id]['used_by']:
                 return 11,{'msg':utils.get_msg('pack', 'wrong_used')}
-            all_exp = int(game_config.props_config[props_id]['exp']) * num
+            all_exp += int(game_config.props_config[props_id]['exp']) * num
         #计算升级所消耗的金钱 强制转化为int类型的
         update_gold = int(all_exp * game_config.equip_exp_config['gold_exp_transform_coe'].get('treasure_update_coe',1))
         #判断用户金币是否足够

@@ -16,6 +16,7 @@ from apps.common import utils
 from apps.common import tools
 from apps.config.game_config import game_config
 from apps.models import data_log_mod
+from apps.common.utils import datetime_toString
 
 
 def banquet_info(rk_user, params):
@@ -87,6 +88,9 @@ def get_banquet_stamina(rk_user, params):
         return 11, {'msg':utils.get_msg('active', 'already_banquet')}
     # 获取可以领取多少体力
     get_stamina = game_config.operat_config.get('banquet_click_get_stamina', 50)
+    #  运营活动  特定时间内收益翻倍
+    multiply_income_conf = rk_user.game_config.operat_config.get("multiply_income", {}).get("banquet", {})
+    get_stamina = get_stamina * multiply_income(multiply_income_conf)
     ua.banquet_info[str(start_time)] = True
     ua.put()
     rk_user.user_property.add_stamina(get_stamina)
@@ -222,93 +226,23 @@ def add_explore_info(explore_type, rk_user, times):
     return {"get_info": all_get_goods, "show_things": show_things}
 
         
+def multiply_income(multiply_income_conf):
+    """特定时间内功能 收益翻倍
+    banquet 美味大餐体力收益翻倍；
+    daily_dungeon  试炼副本掉落物品道具，铜钱，经验值等数量翻倍；
+    pk  实时pvp胜利pt点收益翻倍；
+    start_time"， "end_time"  翻倍开始和结束时间，  "multiply" 翻的倍数
 
-    #     get_type = get_explore_type.replace(explore_type+'_','')
-    #     if get_type not in data:
-    #         #判断类型是否在里面
-    #         data[get_type] = {}
-    #     if get_id not in data[get_type]:
-    #         #判断id 是否在里面
-    #         data[get_type][get_id] = 0
-    #     data[get_type][get_id] += get_num
-    # #后面的代码可以使用 user_property 里面的 test_add_gift 进行操作
-    # #添加探索所获得的内容
-    # for g_type in data:
-    #     if g_type == 'mat':
-    #         user_pack_obj = UserPack.get_instance(uid)
-    #         #看素材类型是否在返回的内容中
-    #         if 'materials' not in returndata:
-    #             returndata['materials'] = {}
-    #         #添加素材和返回素材内容
-    #         for m_id in data[g_type]:
-    #             m_num = data[g_type][m_id]
-    #             user_pack_obj.add_material(m_id,m_num,where='explore_'+explore_type)
-    #             returndata['materials'][m_id] = m_num
-    #     elif g_type == 'item':
-    #         user_pack_obj = UserPack.get_instance(uid)
-    #         #看药品类型是否在返回的内容中
-    #         if 'item' not in returndata:
-    #             returndata['item'] = {}
-    #         #添加药品和返回药品内容
-    #         for item_id in data[g_type]:
-    #             item_num = data[g_type][item_id]
-    #             user_pack_obj.add_item(item_id,item_num,where='explore_'+explore_type)
-    #             returndata['item'][item_id] = item_num
-    #     elif g_type == 'props':
-    #         user_pack_obj = UserPack.get_instance(uid)
-    #         #看道具类型是否在返回的内容中
-    #         if 'props' not in returndata:
-    #             returndata['props'] = {}
-    #         #添加道具和返回道具内容
-    #         for p_id in data[g_type]:
-    #             p_num = data[g_type][p_id]
-    #             user_pack_obj.add_props(p_id,p_num,where='explore_'+explore_type)
-    #             returndata['props'][p_id] = p_num
-    #     elif g_type == 'card':
-    #         #判断武将是否在要返回的内容中
-    #         user_card_obj = UserCards.get_instance(uid)
-    #         if 'card' not in returndata:
-    #             returndata['card'] = []
-    #         for card_id in data[g_type]:
-    #             c_num = data[g_type][card_id]
-    #             for x in xrange(c_num):
-    #                 fg,all_cards_num,ucid,is_first = user_card_obj.add_card(card_id,where='explore_'+explore_type)
-    #                 tmp = {'ucid':ucid}
-    #                 tmp.update(user_card_obj.cards[ucid])
-    #                 returndata['card'].append(tmp)
-    #     elif g_type == 'equip':
-    #         #判断装备是否在要返回的内容中
-    #         user_equips_obj = UserEquips.get_instance(uid)
-    #         if 'equips' not in returndata:
-    #             returndata['equips'] = []
-    #         for equip_id in data[g_type]:
-    #             e_num = data[g_type][equip_id]
-    #             for x in xrange(e_num):
-    #                 fg, all_equips_num, ueid, is_first = user_equips_obj.add_equip(equip_id,where='explore_'+explore_type)
-    #                 tmp = {'ueid':ueid}
-    #                 tmp.update(user_equips_obj.equips[ueid])
-    #                 returndata['equips'].append(tmp)
-    #     elif 'soul' in g_type:
-    #         user_souls_obj = UserSouls.get_instance(uid)
-    #         if 'soul' not in returndata:
-    #             returndata['soul'] = {}
-    #         if 'equip' in g_type:
-    #             #处理装备碎片的逻辑
-    #             if 'equip' not in returndata['soul']:
-    #                 returndata['soul']['equip'] = {}
-    #             for equip_id in data[g_type]:
-    #                 equip_soul_num = int(data[g_type][equip_id])
-    #                 #添加装备碎片
-    #                 user_souls_obj.add_equip_soul(equip_id,equip_soul_num,where='explore_'+explore_type)
-    #                 returndata['soul']['equip'][equip_id] = equip_soul_num
-    #         elif 'card' in g_type:
-    #             #处理武将碎片的逻辑
-    #             if 'card' not in returndata['soul']:
-    #                 returndata['soul']['card'] = {}
-    #             for card_id in data[g_type]:
-    #                 card_soul_num = int(data[g_type][card_id])
-    #                 #添加装备碎片
-    #                 user_souls_obj.add_normal_soul(card_id,card_soul_num,where='explore_'+explore_type)
-    #                 returndata['soul']['card'][card_id] = card_soul_num
-        
-    # return returndata
+
+    Returns:
+        multiply     收益翻倍翻的倍数
+    """
+    if not multiply_income_conf:
+        return 1
+    now_str = datetime_toString(datetime.datetime.now())
+    # 未开放
+    start_time = multiply_income_conf.get("start_time", 0)
+    end_time = multiply_income_conf.get("end_time", 0)
+    if now_str > end_time or now_str < start_time:
+        return 1
+    return multiply_income_conf.get("multiply", 1)

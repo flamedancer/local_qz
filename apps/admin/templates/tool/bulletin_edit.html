@@ -1,15 +1,5 @@
-{% load tags %}
-<html>
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title> 登录公告修改助手 / Login Bulletin Editing Assistant</title>
-
-
-    <script src="../../js/calendar.js"></script>
-</head>
-
-<body>
+{% extends "admin/main.html" %}
+{% block right %}
   <h3> 修改登录公告 </h3>
   版本{{id}}
 
@@ -121,6 +111,4 @@
     <p><br></p>
     <p><br></p>
 
-
-</body>
-</html>
+{% endblock %}

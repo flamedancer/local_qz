@@ -94,7 +94,6 @@ def _pack_store_info(store_info):
     for each_good_info in store_info["pk_store"]:
         if not isinstance(each_good_info, dict):
             continue
-        print each_good_info
         good_id = each_good_info["goods"]["_id"]
         num = each_good_info["goods"]["num"]
         pack = tools.pack_good(good_id, num)

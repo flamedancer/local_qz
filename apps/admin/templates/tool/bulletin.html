@@ -1,12 +1,6 @@
+{% extends "admin/main.html" %}
+{% block right %}
 {% load tags %}
-<html>
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title> 登录公告修改助手</title>
-    <base href='/static/html/'>
-</head>
-<body>
   {% if action_result %}
   <script type=text/javascript>
     alert("{{action_result}}")
@@ -130,6 +124,4 @@
       <input type=submit name='generate_html' value='Generate Html' >
     </form>
 -->
-
-</body>
-</html>
+{% endblock %}

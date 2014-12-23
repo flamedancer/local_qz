@@ -25,6 +25,7 @@ from apps.logics.main import __calculate_loopgap_dungeon_time
 from apps.logics import vip
 from apps.common.exceptions import GameLogicError
 from apps.logics import card
+from apps.logics.activity import multiply_income
 
 
 def start(rk_user, params):
@@ -144,6 +145,13 @@ def enter_dungeon(rk_user, params, user_dungeon_obj, conf):
     #增加进入战场打印
     print 'start_dun_%s:%s_%s_%s' % (str(rk_user.uid),dungeon_type,floor_id,room_id)
 
+    #  运营活动  特定时间内收益翻倍
+    multiply = 1
+    if dungeon_type == 'daily':
+        multiply_income_conf = rk_user.game_config.operat_config.get("multiply_income", {}
+        ).get("daily_dungeon", {}).get(floor_id)
+        multiply = multiply_income(multiply_income_conf)
+
     last_info = {}
 
     data = {}
@@ -156,22 +164,22 @@ def enter_dungeon(rk_user, params, user_dungeon_obj, conf):
     last_info['dungeon_stamina'] = need_stamina
 
     #计算每一个小节的敌将和掉落信息
-    steps_res = calculate_steps(params, conf,rk_user)
+    steps_res = calculate_steps(params, conf, rk_user, multiply)
     #格式化返回的数据
     data['all_drop_info'] = steps_res['all_drop_info']
     data['steps_info'] = steps_res['steps_info']
     data['dungeon_uid'] = last_info['dungeon_uid']
-    data['exp_point'] = conf.get('exp_point',0)
+    data['exp_point'] = steps_res['exp_point']
     data['boss_id'] = conf['boss'][0]
     #将本次计算的信息作为历史信息保存
     last_info['floor_id'] = floor_id
     last_info['room_id'] = room_id
     last_info['dungeon_type'] = dungeon_type
-    last_info['all_drop_info'] = steps_res.get('all_drop_info',{})
+    last_info['all_drop_info'] = steps_res['all_drop_info']
     #######################################################################################
     last_info['total_gold'] = steps_res['total_gold']
     last_info['dungeon_gold'] = steps_res['dungeon_gold']
-    last_info['exp_point'] = conf.get('exp_point',0)
+    last_info['exp_point'] = steps_res['exp_point']
     #######################################################################################
     last_info["dungeon_data"] = data
     now = datetime.datetime.now()
@@ -184,20 +192,17 @@ def enter_dungeon(rk_user, params, user_dungeon_obj, conf):
     #将结果返回给前端
     return data
 
-def calculate_steps(params, conf,rk_user = None,self_leader_skill='',helper_leader_skill=''):
+def calculate_steps(params, conf, rk_user, multiply=1):
     """
     计算本次进入战场的每步数据
-    miaoyichao
+    Arges:
+        multiply  活动收益翻倍翻得倍数
     """
     data = {}
-    #获取每一步的信息
-    all_points_info = []
     #获取每一小节的敌将信息
     steps_info = copy.deepcopy(conf['steps_info'])
     #获取到每一小节 并排序
     step_key = sorted(steps_info.keys())
-    user_dungeon_obj = UserDungeon.get_instance(rk_user.uid)
-    normal_current = user_dungeon_obj.normal_current
     return_step = []
     max_gold = 0
     for step in step_key:
@@ -211,7 +216,7 @@ def calculate_steps(params, conf,rk_user = None,self_leader_skill='',helper_lead
             monster_list['monster_id'] = monster_info[0]
             monster_list['gold'] = random.randint(gold_config[0],gold_config[1])
             #统计总的金币掉落
-            max_gold += monster_list['gold']
+            max_gold += monster_list['gold'] * multiply
             #将敌将信息给当前小节
             cur_step_info.append(monster_list)
         #将每一步的信息赋值到要返回的信息中
@@ -222,7 +227,7 @@ def calculate_steps(params, conf,rk_user = None,self_leader_skill='',helper_lead
     if dungeon_type == 'normal':
         dungeon_drop_config  = game_config.drop_info_config.get('normal_dungeon',{})
     elif dungeon_type == 'daily':
-        dungeon_drop_config  = game_config.drop_info_config.get('daily_dungeon',{})
+        dungeon_drop_config = game_config.drop_info_config.get('daily_dungeon',{})
     room_drop_config = conf.get('drop_info',{})
     invisible_drop = conf.get('invisible_drop',{})
     all_drop = {'visible_drop':room_drop_config,'invisible_drop':invisible_drop}
@@ -248,7 +253,7 @@ def calculate_steps(params, conf,rk_user = None,self_leader_skill='',helper_lead
                     drop_rate = drop_config.get(visible_type,[[0,0],0])[1]
                     #判断掉落是否发生
                     if utils.is_happen(drop_rate):
-                        num = random.randint(drop_config[visible_type][0][0],drop_config[visible_type][0][1])
+                        num = random.randint(drop_config[visible_type][0][0],drop_config[visible_type][0][1]) * multiply
                         #判断掉落的类型是否在返回的内容中
                         '''
                         在这里面赋值而不在for外面赋值的原因是不确定是否掉落
@@ -274,7 +279,7 @@ def calculate_steps(params, conf,rk_user = None,self_leader_skill='',helper_lead
                     drop_rate = drop_config[visible_type][1]
                     #判断掉落是否发生
                     if utils.is_happen(drop_rate):
-                        num = random.randint(drop_config[visible_type][0][0],drop_config[visible_type][0][1])
+                        num = random.randint(drop_config[visible_type][0][0],drop_config[visible_type][0][1]) * multiply
                         '''
                         在这里面赋值而不在for外面赋值的原因是不确定是否掉落
                         '''
@@ -292,11 +297,13 @@ def calculate_steps(params, conf,rk_user = None,self_leader_skill='',helper_lead
     #将素材道具随机分配到敌将身上
     steps_info = random_monster_info(conf['boss'],return_step,all_drop_info)
     #结果返回
-    data['dungeon_gold'] = conf.get('gold',0)
+
+    data['dungeon_gold'] = conf.get('gold',0) * multiply
     data['exp'] = int(conf.get('exp',0))
     data['steps_info'] = steps_info
     data['all_drop_info'] = all_drop_info
-    data['total_gold'] = max_gold
+    data['total_gold'] = max_gold * multiply
+    data['exp_point'] = conf.get('exp_point',0) * multiply
     return data
 
 def random_monster_info(boss_id,return_step,all_drop_info):

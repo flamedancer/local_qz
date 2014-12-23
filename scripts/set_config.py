@@ -9,7 +9,7 @@ import apps.settings_local
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "apps.settings_local")
 #setup_environ(settings)
 print cur_dir
-from apps.models.config import Config
+from apps.config.config import Config
 config_dict = eval(open("config_file.txt", "r").read())
 for sconfig_name in config_dict:
 

@@ -565,7 +565,7 @@ class UserGift(GameModel):
         self.put()
 
     def has_got_all_open_server_gifts(self):
-        for info in self.open_server_record.values():
+        for info in self.open_server_record['gifts'].values():
             if not info['has_got']:
                 return False
         return True

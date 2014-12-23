@@ -263,7 +263,7 @@ def signature_auth(func):
             # 签名认证不通过
             if local_arg != arg:
                 signature_fail = True
-                if 'method' in request.REQUEST and request.REQUEST['method'] in ['main.set_name']:
+                if 'method' in request.REQUEST and request.REQUEST['method'] in ['main.set_name', 'pack.rename']:
                     signature_fail = False
                 if signature_fail:
                     print 'signature auth failed!', request.REQUEST.get('pid', 'none')

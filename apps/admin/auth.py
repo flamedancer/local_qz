@@ -14,8 +14,12 @@ def get_moderator_by_request(request):
         return None
     else:
         cv = urllib.unquote(cv).decode("ascii")
-        mid,login_stamp,token = cv.split('|')
-        moderator = get_moderator(mid)
+        mid_login_stamp_token = cv.split('|')
+        if len(mid_login_stamp_token) != 3:
+            moderator = None
+        else:
+            mid,login_stamp,token = mid_login_stamp_token
+            moderator = get_moderator(mid)
         if moderator is None:
             return None
 

@@ -3,6 +3,7 @@
 """
 import copy
 from apps.common import utils
+from apps.common import tools
 from apps.models.user_gift import UserGift
 from apps.models.user_login import UserLogin
 from apps.config.game_config import game_config
@@ -306,6 +307,15 @@ def show_open_server_gift(rk_user, params):
     ul = rk_user.user_login
     add_time = utils.timestamp_toDatetime(rk_user.add_time)
     now = datetime.datetime.now()
+    today = utils.get_today_str()
+    # 初始化
+    if not ug.open_server_record:
+        # 'gifts'按领取天数记录奖励是否领取，比如登录过10天，但只领过一次，这时gifts记录的是['1']['has_got']=True ,其他为False
+        # 因为每天只能领取一次，'date_info'用来按日期记录哪天是否已领过一次
+        ug.open_server_record = {'gifts': {}, 'date_info': {}}
+        for day in range(1, 32):
+            ug.open_server_record['gifts'].setdefault(str(day), {})['has_got'] = False
+        ug.put()
     # 账号注册已达45天（包括注册当天），或者全部领取了，则清空全部开服礼包
     if (now - add_time).days + 1 > 45 or ug.has_got_all_open_server_gifts():
         ug.clear_open_server_gift()
@@ -314,36 +324,58 @@ def show_open_server_gift(rk_user, params):
     data = {'gifts': {}}
     for days, award in awards.items():
         data['gifts'].setdefault(days, {})['awards'] = award
-        data['gifts'][days]['has_got'] = ug.open_server_record.setdefault(days, {}).setdefault('has_got', False)
+        #data['gifts'][days]['has_got'] = ug.open_server_record.setdefault(days, {}).setdefault('has_got', False)
+        data['gifts'][days]['has_got'] = ug.open_server_record['gifts'][days]['has_got']
         # 给前端现实能否领取，不需存在model中
-        data['gifts'][days]['can_get'] = True if ul.total_login_num >= int(days) else False
+        #data['gifts'][days]['can_get'] = True if ul.total_login_num >= int(days) else False
+        if int(days) == _got_days(ug)+1 and not ug.open_server_record['date_info'].get(today, False):
+            data['gifts'][days]['can_get'] = True
+        else:
+            data['gifts'][days]['can_get'] = False
 
-    data['has_got_today_gift'] = ug.has_got_today_open_server_gift()
+    #data['has_got_today_gift'] = ug.has_got_today_open_server_gift()
+    #data['total_login_num'] = ul.total_login_num
     return 0, data
+
+def _got_days(ug):
+    '''已领取开服奖励的天数'''
+    days = 0
+    for info in ug.open_server_record['gifts'].values():
+        if info['has_got']:
+            days += 1
+    return days
 
 def get_open_server_gift(rk_user, params):
     '''
     领取开服礼包中的奖励
     参数
-        params['days'] 登陆天数
+        params['day'] 第几次领
     '''
-    days = params['days']
+    day = params['day']
     ug = rk_user.user_gift
     ul = rk_user.user_login
     awards = game_config.loginbonus_config['open_server_gift'].get('awards', {})
-    if days not in awards.keys():
+    if day not in awards.keys():
         return 11, {'msg': utils.get_msg('gift', 'gift_not_exist')}
-    the_gift = ug.open_server_record[days]
+    the_gift = ug.open_server_record['gifts'][day]
     if the_gift['has_got']:
         return 11, {'msg': utils.get_msg('gift', 'gift_has_got')}
-    if ul.total_login_num < int(days):
-        return 11, {'msg': utils.get_msg('gift', 'invalid_need_days')}
+    # 一天只能领一次
+    today = utils.get_today_str()
+    if ug.open_server_record['date_info'].get(today, False):
+        return 11, {'msg': utils.get_msg('gift', 'today_has_signed_in')}
+    # 按顺序领取
+    if int(day) != _got_days(ug)+1:
+        return 11, {'msg': utils.get_msg('gift', 'signin_in_turn')}
     data = tools.add_things(
         rk_user, 
         [{"_id": goods, "num": awards[goods]} for goods in awards if goods],
         where="open_server_gift"
     )
+    
     the_gift['has_got'] = True
+    # 因为每天只能领取一次，'date_info'用来按日期记录哪天是否已领过一次
+    ug.open_server_record['date_info'][today] = True 
     ug.put()
     return 0, data
 
@@ -356,22 +388,34 @@ def show_sign_in_gift(rk_user, params):
     month = str(now.month)
     today = str(now.day)
     awards = game_config.loginbonus_config['sign_in_bonus'].get(month, {})
+
     if not awards:
         return 11, {'msg': utils.get_msg('gift', 'no_sign_in_gift')}
     data = {'gifts': {}}
     ug = rk_user.user_gift
-    # 新的月份，领取信息全部置False
+    # 当月总签到天数
+    sign_in_days = _get_total_sign_in_days(ug)
+    # 当月总登陆天数
+    month_login_days = rk_user.user_login.month_total_login
+    # 新的月份，领取信息重置，全部置False
     if today == '1':
         for n in range(31):
             ug.sign_in_record[str(n)]['has_got'] = False
-    
+            ug.sign_in_record[str(n)]['today_has_signed_in'] = False
+        ug.put()
     for day, award in awards.items():
         data['gifts'].setdefault(day, {})['awards'] = award
         data['gifts'][day]['has_got'] = ug.sign_in_record.setdefault(day, {}).setdefault('has_got', False)
-        data['gifts'][day]['can_get'] = True if day == today else False
+        #data['gifts'][day]['can_get'] = True if int(day) == sign_in_days+1 else False
+        #  每天只能签到一次
+        if int(day) == sign_in_days+1 and not ug.sign_in_record.setdefault(today, {}).setdefault('today_has_signed_in', False):
+            data['gifts'][day]['can_get'] = True
+        else:
+            data['gifts'][day]['can_get'] = False
     ug.put()
 
-    data['total_sign_in_days'] = _get_total_sign_in_days(ug)
+    data['total_sign_in_days'] = sign_in_days
+    data['month_login_days'] = month_login_days
     return 0, data
 
 
@@ -386,18 +430,21 @@ def _get_total_sign_in_days(ug):
 def get_sign_in_gift(rk_user, params):
     '''
     领取签到奖励
-    params['day'] 当月日期，作为id使用
+    params['day'] 代表第几次签到，如果当月已签到3次则day应该是4
     '''
     day = params['day']
     ug = rk_user.user_gift
     now = datetime.datetime.now()
     month = str(now.month)
     today = str(now.day)
-    if day != today:
-        return 11, {'msg': utils.get_msg('gift', 'gift_not_in_right_time')}
     if ug.sign_in_record[day]['has_got']:
         return 11, {'msg': utils.get_msg('gift', 'gift_has_got')}
-
+    # 一天只能领一次
+    if ug.sign_in_record[today].get('today_has_signed_in', False):
+        return 11, {'msg': utils.get_msg('gift', 'today_has_signed_in')}
+    # 不能跳领，必须一天一个按顺序领
+    if day != str(_get_total_sign_in_days(ug) + 1):
+        return 11, {'msg': utils.get_msg('gift', 'signin_in_turn')}
     # 添加奖励
     awards = game_config.loginbonus_config['sign_in_bonus'].get(month, {}).get(day, {})
     data = tools.add_things(
@@ -405,7 +452,10 @@ def get_sign_in_gift(rk_user, params):
         [{"_id": goods, "num": awards[goods]} for goods in awards if goods],
         where="sign_in_gift"
     )
+    #  用来给前端显示是否已领取,这时sign_in_record的下一层字段代表签到天数
     ug.sign_in_record[day]['has_got'] = True
+    #  每天只能签到一次，此字段用来后端判断当天是否已签到过，这时sign_in_record的下一层字段代表日期
+    ug.sign_in_record[today]['today_has_signed_in'] = True
     ug.put()
 
     return 0, data

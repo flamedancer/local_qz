@@ -527,9 +527,6 @@ def cards_product_statistic(request):
     return render_to_response('tool/cards_product_statistic.html', {'start_date': start_date, 'end_date': end_date, 'product_cards': product_cards , 'info': info, 'sort_by': sort_by}, RequestContext(request))
 
 
-
-
-
 @require_permission
 def bulletin(request):
     '''
@@ -567,8 +564,7 @@ def bulletin(request):
                 'bulletin': b.data[int(title_index)],
                 'id': id,
                 }
-        return render_to_response('tool/bulletin_edit.html', data, 
-            RequestContext(request) )
+        return 'tool/bulletin_edit.html', data
 
     elif request.POST.get('save_title','').strip():
         title_index = request.POST.get('title_index','').strip()

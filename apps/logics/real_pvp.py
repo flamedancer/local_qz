@@ -7,6 +7,7 @@ from apps.models.user_real_pvp import UserRealPvp
 
 from apps.models import pvp_redis
 from apps.oclib import app
+from apps.logics.activity import multiply_income
 
 from apps.realtime_pvp import readying_player_redis
 
@@ -53,6 +54,9 @@ def result_fight(win_uid, lose_uid):
     lose_deduct_pt = _calculate_win_or_lose_pt(lose_real_pvp_obj.pt, pt_gap, victory=False)
 
     win_pt = win_real_pvp_obj.add_pt(win_add_pt)
+    #  运营活动  特定时间内收益翻倍
+    multiply_income_conf = win_real_pvp_obj.game_config.operat_config.get("multiply_income", {}).get("pk", {})
+    win_pt = win_pt * multiply_income(multiply_income_conf)
     win_real_pvp_obj.pvp_info['total_win'] += 1
     win_real_pvp_obj.pvp_info['total_join'] += 1
 

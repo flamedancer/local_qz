@@ -5,72 +5,87 @@
         <span style="color:red;">保存成功</span>
     </div>
     {% endifequal %}
-    <form method="post">
-        <div>
-            用户ID:&nbsp;{{ user.uid }}
-            <a href="javascript:window.location = window.location">刷新</a>
-        </div>
-        <hr/>
-        <table class="table table-bordered">
-            <tr>
-                <td> <label>用户名</label>
-                    <span style="color:red;">{{ user.username }}</span>
-                </td>
-                <td><label>性别</label>
-                    <span style="color:red;">{% if user.baseinfo.sex %}男{% else %}女{% endif %}</span>
-                </td>
-                <td><label>客户端类型</label>
-                    <span style="color:red;">{{ client_type }}</span>
-                </td>
-                <td><label>安装时间</label>
-                    <span style="color:red;">{{ add_time }}</span>
-                </td>
-                <td><label>最后登录时间</label>
-                    <span style="color:red;">{{ last_login_time }}</span>
-                </td>
-                <td><label>登录记录</label>
-                    <select name="login_record" size="1">
-                        {% for login_date in login_record%}
-                        <option>{{login_date}}</option>
-                        {% endfor %}
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td><label>等级</label>
-                    <span style="color:red;">{{ user_property_obj.lv }}</span>
-                </td>
-                <td><label>经验</label>
+    <div>
+        用户ID:&nbsp;{{ user.uid }}
+        <a href="javascript:window.location = window.location">刷新</a>
+    </div>
+    <hr/>
+    <table class="table table-bordered">
+        <tr>
+            <td> <label>用户名</label>
+                <span style="color:red;">{{ user.username }}</span>
+            </td>
+            <td><label>性别</label>
+                <span style="color:red;">{% if user.baseinfo.sex %}男{% else %}女{% endif %}</span>
+            </td>
+            <td><label>客户端类型</label>
+                <span style="color:red;">{{ client_type }}</span>
+            </td>
+            <td><label>安装时间</label>
+                <span style="color:red;">{{ add_time }}</span>
+            </td>
+            <td><label>最后登录时间</label>
+                <span style="color:red;">{{ last_login_time }}</span>
+            </td>
+            <td><label>登录记录</label>
+                <select name="login_record" size="1">
+                    {% for login_date in login_record%}
+                    <option>{{login_date}}</option>
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td><label>等级</label>
+                <span style="color:red;">{{ user_property_obj.lv }}</span>
+            </td>
+            <td>
+                <form method="post">
+                    <label>经验</label>
                     <span style="color:red;">{{ user_property_obj.exp }}</span>
                     <input type="text" size="5" maxlength="10" id="add_exp" name="add_exp"/>
                     <input type="submit" value="加"/>
-                </td>
-                <td><label>铜钱</label>
+                </form>
+            </td>
+            <td>
+                <form method="post">
+                    <label>铜钱</label>
                     <span style="color:red;">{{ user_property_obj.gold }}</span>
                     <input type="text" size="5" maxlength="10" id="add_gold" name="add_gold"/>
                     <input type="submit" value="加"/>
-                </td>
-                <td><label>元宝</label>
+                </form>
+            </td>
+            <td>
+                <form method="post">
+                    <label>元宝</label>
                     <span style="color:red;">{{ user_property_obj.coin }}</span>
                     <input type="text" size="5" maxlength="10" id="add_coin" name="add_coin"/>
                     <input type="submit" value="加"/>
-                </td>   
-                 <td><label>武将经验点</label>
+                </form> 
+            </td>   
+             <td>
+                <form method="post">
+                    <label>武将经验点</label>
                     <span style="color:red;">{{ user_property_obj.property_info.card_exp_point }}</span>
                     <input type="text" size="5" maxlength="10" id="add_card_point" name="add_card_point"/>
                     <input type="submit" value="加"/>
-                </td> 
-                <td><label>战魂</label>
+                </form> 
+            </td> 
+            <td>
+                <form method="post">
+                    <label>战魂</label>
                     <span style="color:red;">{{ user_property_obj.property_info.fight_soul }}</span>
                     <input type="text" size="5" maxlength="10" id="add_fight_soul" name="add_fight_soul"/>
                     <input type="submit" value="加"/>
-                </td> 
-            </tr>
-            <tr>
-                  <td><label>用户帐号类型</label>
-                    <span style="color:red;">{{ user.platform }}</span>
-                </td>
-                <td>
+                </form> 
+            </td> 
+        </tr>
+        <tr>
+              <td><label>用户帐号类型</label>
+                <span style="color:red;">{{ user.platform }}</span>
+            </td>
+            <td>
+                <form method="post">
                     <label for="state">账号状态</label>
                     <select id="state" name="state">
                         <option value="0" {% if not user.in_frozen %}selected="selected"{% endif %}>正常</option>
@@ -78,70 +93,84 @@
                     </select>
                     {% if user.in_frozen and not user.frozen and user.baseinfo.unfroze_time %}解封时间:{{user.baseinfo.unfroze_time|date:"Y-m-d H:i:s"}}{% endif %}
                     <input type="submit" value="更改状态"/>
-                </td>
-                <td><label>当前战场进度：</label>
-                    <span style="color:red;">{{current_dungeon.floor_id}}-{{current_dungeon.room_id}}</span>
-                </td>
-                <td>
+                </form> 
+            </td>
+            <td><label>当前战场进度：</label>
+                <span style="color:red;">{{current_dungeon.floor_id}}-{{current_dungeon.room_id}}</span>
+            </td>
+            <td>
+                <form method="post">
                     {% if max_dungeon %}
                     <span style="color:red";>已到最深层战场</span>
                     {% else %}
-                    <form method="post">
-                        开放战场
-                        <select name="open_dungeon" size="1">
-                            {% for dungeon in all_dungeon%}
-                            <option value="{{dungeon}}" {%if forloop.first%}selected="selected"{%endif%}>{{dungeon}}</option>
-                            {% endfor %}
-                        </select>
-                        <input type="submit" value="开放"/>
-                    </form>
-                    {% endif %}
-                </td>
-                <td>当前体力：
+                    开放战场
+                    <select name="open_dungeon" size="1">
+                        {% for dungeon in all_dungeon%}
+                        <option value="{{dungeon}}" {%if forloop.first%}selected="selected"{%endif%}>{{dungeon}}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="submit" value="开放"/>
+                </form>
+                {% endif %}
+            </td>
+            <td>
+                <form method="post">
+                    当前体力：
                     <span style="color:red;">{{user_property_obj.stamina}}</span>
                     <input name="add_stamina" id="add_stamina"/>
                     <input type="submit" value="加" />
-                </td>
-                {% if user_property_obj.newbie %}
-                <td>
+                </form> 
+            </td>
+            {% if user_property_obj.newbie %}
+            <td>
+                <form method="post">
                     <input type="hidden" name="newbie_pass" value="yes" />
                     <input type="submit" value="跳过新手引导" />
-                </td>
-            {% endif %}
-            </tr>
-            <tr>
-                 <td>pk 胜负 
-                    <span style="color:red;">win:{{user_real_pvp_obj.total_win}}</span>
-                    <span style="color:red;">lose:{{user_real_pvp_obj.total_lose}}</span>
-                </td>
-                 <td><label>pk积分</label>
-                    <span style="color:red;">{{ user_real_pvp_obj.pt }}</span>
+                </form> 
+            </td>
+        {% endif %}
+        </tr>
+        <tr>
+             <td>pk 胜负 
+                <span style="color:red;">win:{{user_real_pvp_obj.total_win}}</span>
+                <span style="color:red;">lose:{{user_real_pvp_obj.total_lose}}</span>
+            </td>
+             <td>
+                <form method="post">
+                    <label>pk积分</label>
+                    <span style="color:red;">{{ user_real_pvp_obj.pt }}</span>        
                     <input type="text" size="5" maxlength="10" id="add_pk_pt" name="add_pk_pt"/>
                     <input type="submit" value="加(不会改变排名)"/>
-                </td>  
-                <td>pk 称号
-                    <span style="color:red;">{{user_real_pvp_obj.pvp_title}}</span>
-                </td>
-                <td>
+                </form> 
+            </td>  
+            <td>pk 称号
+                <span style="color:red;">{{user_real_pvp_obj.pvp_title}}</span>
+            </td>
+            <td>
+                <form method="post">
                     vip等级: <span style="color:red;">{{user_property_obj.vip_cur_level}}</span>
                     <input type="text" size="5" maxlength="10" id="modify_vip_lv" name="modify_vip_lv"/>
                     <input type="submit" value="更改vip等级"/>
-                </td>
-                 <td><label>功勋</label>
+                </form> 
+            </td>
+             <td>
+                <form method="post">
+                    <label>功勋</label>
                     <span style="color:red;">{{ user_real_pvp_obj.honor }}</span>
                     <input type="text" size="5" maxlength="10" id="add_honor" name="add_honor"/>
                     <input type="submit" value="加"/>
-                </td>  
-                <td>
-                <form method="post">
-                    <input type="hidden" name="del_user" value="yes" />
-                    <input type="submit" value="删除用户" />
                 </form> 
             </td> 
+            <td>    
+            <form method="post">
+                <input type="hidden" name="del_user" value="yes" />
+                <input type="submit" value="删除用户" />
+            </form> 
+        </td> 
 
-            </tr>   
-        </table>
-    </form>
+        </tr>   
+    </table>
+
     <hr /> 
         <h3>邮件系统</h3>
             <form method="post">

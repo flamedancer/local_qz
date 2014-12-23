@@ -67,6 +67,18 @@ class UserLogin(GameModel):
     def total_login_num(self):
         return self.login_info['total_login_num']
 
+    @property
+    def month_total_login(self):
+        '''当前本月累计登陆次数'''
+        now = datetime.datetime.now()
+        month = str(now.month)
+        records = self.login_info['login_record']
+        cnt = 0
+        for r in records:
+            if month == r.split('-')[1]: # for example, r is "2014-12-11"
+                cnt += 1
+        return cnt
+
     def login(self, params):
         """登录
         发送登录奖励邮件
@@ -91,8 +103,8 @@ class UserLogin(GameModel):
         if not last_login_time or now.date() != utils.timestamp_toDatetime(last_login_time).date():
             self.login_info['total_login_num'] += 1
             self.login_info['login_record'].insert(0, str(now.date()))
-            # 获取最大的记录长度
-            if len(self.login_info['login_record']) > game_config.system_config.get('login_record_length', 30):
+            # 获取最大的记录长度,长度不要读配置，如果配置记录长度改的太小会有bug
+            if len(self.login_info['login_record']) > 40:
                 self.login_info['login_record'].pop()
             # 连续登录
             if now.date() == (utils.timestamp_toDatetime(last_login_time) + datetime.timedelta(days=1)).date():
@@ -166,8 +178,9 @@ class UserLogin(GameModel):
         user_property_obj.property_info.get('bind_award'):
             mail_awards['bind_award'] = self.game_config.weibo_config['bind_award']
             user_property_obj.property_info['bind_award'] = False
-            
-        rtn_data = self.new_login_bonus(now, user_property_obj)
+        
+        if not user_property_obj.newbie:
+            rtn_data = self.new_login_bonus(now, user_property_obj)
 
         # 根据上一次22:00的pvp排名给予相应的功勋奖励
         mail_awards.update(self.get_honor_award())
@@ -208,16 +221,18 @@ class UserLogin(GameModel):
         delta = now - last_login_time
         
         conf = self.game_config.user_level_config[str(user_property.lv)]['outline_permin_award']
-        minutes = min(delta.days*1440 + delta.seconds/60, 1440)
+        mm = delta.seconds % 3600 / 60
+        hh = delta.days * 24 + delta.seconds / 3600
+        minutes = min(hh * 60 + mm, 1440)
         gold = int(round(conf['gold'] * minutes))
         exp_point = int(round(conf['card_exp_point'] * minutes))
-        user_property.add_gold(gold)
-        user_property.add_card_exp_point(exp_point)
+        user_property.add_gold(gold, 'login_bonus')
+        user_property.add_card_exp_point(exp_point, 'login_bonus')
         data['gold'] = gold
         data['exp_point'] = exp_point
         # 离线的分钟和小时
-        data['mm'] = delta.seconds % 3600 / 60
-        data['hh'] = delta.days * 24 + delta.seconds / 3600
+        data['mm'] = mm
+        data['hh'] = hh
         return data
 
     def __refresh_month_card_info(self,user_property_obj):

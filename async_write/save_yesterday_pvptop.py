@@ -13,8 +13,6 @@ cur_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(cur_dir, ".."))
 # import apps.settings as settings
 env = "apps.settings"
-if len(sys.argv) > 1:
-    env = "apps.settings_" + sys.argv[1]
 settings = importlib.import_module(env)
 
 # import apps.settings_stg as settings
@@ -22,8 +20,8 @@ from django.core.management import setup_environ
 setup_environ(settings)
 
 from apps.oclib import app
-from apps.config.game_config import game_config
 from apps.models import pvp_redis
+from apps.config.game_config import game_config
 
 
 top_name = 'real_pvp'

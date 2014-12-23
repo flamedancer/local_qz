@@ -582,7 +582,6 @@ def edit_user(request):
     # 整理awards内容，就显示good_id和num
     for mail in temp_mails:
         for award in mail['awards'][:]:
-            print "debug guochen mail", mail
             if not 'good_id' in award.values()[0]:
                 continue
             mail['awards'].append({award.values()[0]['good_id']: award.values()[0].get('num', 0)})
