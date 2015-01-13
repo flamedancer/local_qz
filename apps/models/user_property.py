@@ -88,22 +88,20 @@ class UserProperty(GameModel):
                             'gold':0,
                             'coin':0,
                             'stamina':0,
+                            'card_exp_point': 1000, # 拥有的武将经验点数
+                            'fight_soul': 0, #战魂
                             'stamina_upd_time': int(time.time()),
-                            'first_charge':True,
-                            'first_charge_date':None,
-                            'charged_fg':None,
 
                             'newbie': True,     # 是否新手
                             'newbie_steps':0,     # 已完成的新手步骤
 
                             'bind_award':True,
 
-                            'special_first_charge':True,#是否第一次购买特殊元宝礼包
-                            'vip_charge_info':[],     #Vip等级所购买的vip礼包 只可以买一次
-                            "charge_sumcoin":0,
-                            "charge_sum_money":0,
+                            'has_bought_vip_package':[],     #Vip等级所购买的vip礼包 只可以买一次
+                            'charge_coins': 0,       # 总共充值的人民币
+                            'charge_money': 0,      #  总共购买过元宝数
+                            'charge_item_bought_times': {},    #  每种充值商品已购买次数
                             "update_award":[], #版本更新奖励
-                            "double_charge_date":[],        #双倍充值日期
 
                             'charged_user':False,#是否付费用户，包含大礼包
 
@@ -119,8 +117,7 @@ class UserProperty(GameModel):
                                 },               #刷新副本次数                                
                             },         #使用元宝购买回复的次数
                             'wipe_out_times': 0,    # 当天已扫荡次数
-                            'card_exp_point': 1000, # 拥有的武将经验点数
-                            'fight_soul': 0 #战魂
+
                         }
         # 初始化每个试炼战场回复次数都为0
         daily_floods = up.game_config.daily_dungeon_config.keys()
@@ -189,13 +186,6 @@ class UserProperty(GameModel):
         miaoyichao
         """
         return self.exp - self.this_lv_exp
-
-    @property
-    def first_charge_date(self):
-        """
-        用户的首次充值日期
-        """
-        return self.property_info.get('first_charge_date', '')
 
     @property
     def charged_fg(self):
@@ -327,34 +317,6 @@ class UserProperty(GameModel):
         return self.property_info.get('first_charge',False)
 
     @property
-    def special_first_charge(self):
-        return self.property_info.get('special_first_charge',True)
-
-    @property
-    def vip_this_lv_charge_info(self):
-        '''
-        vip当前充值标志
-        '''
-        vip_lv = self.vip_cur_level
-        return self.property_info['vip_charge_info'].get(str(vip_lv),False)
-
-    @property
-    def vip_charge_info(self):
-        '''
-        vip的充值礼包购买信息
-        这里使用每一次去读配置的原因就是为了可扩展性 
-        '''
-        vip_charge_info = {}
-        user_vip_conf = self.game_config.user_vip_config
-        #遍历所有的 vip 等级信息
-        for vip_lv in user_vip_conf:
-            if vip_lv in self.property_info['vip_charge_info']:
-                vip_charge_info[str(vip_lv)] = True
-            else:
-                vip_charge_info[str(vip_lv)] = False
-        return vip_charge_info
-
-    @property
     def stamina(self):
         '''
         返回当前用户的体力值
@@ -377,22 +339,14 @@ class UserProperty(GameModel):
         """
         得到该玩家累计的充值元宝个数
         """
-        return self.property_info["charge_sumcoin"]
+        return self.property_info["charge_coins"]
 
     @property
     def charge_sum_money(self):
         '''
         得到玩家累计充值rmb
         '''
-        return self.property_info["charge_sum_money"]
-
-
-    @property
-    def double_charge_date(self):
-        """
-        记录双倍充值的记录 只保留五次信息
-        """
-        return self.property_info["double_charge_date"]
+        return self.property_info["charge_money"]
 
     def refresh_lv(self,version):
         """
@@ -1138,25 +1092,9 @@ class UserProperty(GameModel):
         """检查用户体力是否已满"""
         max_stamina = self.game_config.user_level_config[str(self.lv)]['stamina']
         return self.property_info['stamina'] >= max_stamina
-
-    def add_charge_sumcoin(self, coin):
-        """
-        增加累计的充元宝记录
-        miaoyichao 
-        """
-        self.property_info["charge_sumcoin"] += coin
-        self.put()
-
-    def add_charge_sum_money(self, price):
-        '''
-        增加充值的金钱
-        miaoyichao
-        '''
-        self.property_info["charge_sum_money"] += price
-        self.put()
         
-    def add_vip_gift_id(self,vip_gift_id):
-        self.property_info['vip_charge_info'].append(vip_gift_id)
+    def add_bought_vip_package(self, vip_gift_id):
+        self.property_info['has_bought_vip_package'].append(vip_gift_id)
         self.put()
         
     def get_bind_weibo_award(self):

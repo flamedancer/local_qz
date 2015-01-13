@@ -1,7 +1,10 @@
 #!/bin/bash
-DIR=/data/sites/MaxStrike
+DIR=$(dirname $(readlink -f $0))
 PSID=`ps aux|grep $DIR|grep uwsgi |grep -v grep|wc -l`
+
+#python $DIR/import_test.py
 /usr/local/bin/python $DIR/import_test.py
+
 if [ $PSID -gt 0 ]; then
     kill -HUP `cat $DIR/logs/uwsgi.pid`
     echo "uwSGI restart done!"

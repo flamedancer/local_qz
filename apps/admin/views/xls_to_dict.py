@@ -199,7 +199,7 @@ class System_config(XlsToDict):
                             'other_gacha_pt', 'revive_coin', 'dungeon_clear_coin', 'card_extend_num',
                             'free_stamina_cnt', 'tranform_divider', 'newbie_days', 'recover_copy_coin', 'bind_phone_cnt', 
                            ]
-        self.dict_cnames = ['res_url_online', 'popularize', 'bind_mobile_conf', 'timing_notice_conf', 'push_info', 'you', 
+        self.dict_cnames = ['res_url_online', 'popularize', 'timing_notice_conf', 'push_info', 'you', 
                            ]
         self.list_cnames = ['allow_uids', 'help_links', 
                            ]

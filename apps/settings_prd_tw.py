@@ -21,6 +21,8 @@ BASE_URL = 'http://twqz.negaplay.com'
 
 #  报错邮件配置
 EMAIL_HOST = 'mail.touchgame.net'
+# 多少封邮件后， 发送短信提醒
+MOBILE_ERROR_NUM = 30
 EMAIL_PORT = 25
 EMAIL_ACCOUNT = 'sgqz@touchgame.net'
 EMAIL_PASSWORD = 'jnwUZV47i08S'

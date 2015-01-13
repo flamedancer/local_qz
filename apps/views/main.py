@@ -91,7 +91,7 @@ def index(request):
 #    mktid = request.REQUEST.get("mktid", "")
 #    if mktid and mktid not in request.rk_user.mktids:
 #        request.rk_user.add_mktid(mktid)
-    data_log_mod.set_log('LoginRecord', request.rk_user, **{})
+    data_log_mod.set_log('LoginRecord', request.rk_user, **{'version': request.REQUEST.get('version', '')})
     return HttpResponse(
         json.dumps(data, indent=1),
         content_type='application/x-javascript',
@@ -197,16 +197,16 @@ def setConfigUpdateTime(subarea):
 
         "card_config",
         "monster_config",
-        "city_config",
+        # "city_config",
         "equip_config",
-        "item_config",
+        "skill_params_config",      # 技能的配置
         "material_config",
         "system_config",
 
         "card_desc_config",
         "skill_desc_config",
         "equip_desc_config",
-        "dungeon_desc_config",
+        # "dungeon_desc_config",
         "material_desc_config",
         "props_desc_config",
 
@@ -231,7 +231,7 @@ def info(request):
     """
     
     params = request.REQUEST
-    subarea = params.get("subarea", "1")
+    subarea = params.get("subarea", "1") or '1'
     game_config.set_subarea(subarea)
     # config_update_time = get_config_version(subarea, 'config')
     # if not config_update_time:
@@ -266,15 +266,15 @@ def info(request):
         "cup_value": update_time_records["card_config"],
         "mup_value": update_time_records["monster_config"],
         "sup_value": update_time_records["system_config"],
-        "cityup_value": update_time_records["city_config"],
+        # "cityup_value": update_time_records["city_config"],
         "equp_value": update_time_records["equip_config"],
-        "itemup_value": update_time_records["item_config"],
+        "skill_params_value": update_time_records["skill_params_config"],
         "materialup_value": update_time_records["material_config"],
 
         'card_desc_version': str(update_time_records["card_desc_config"]),
         'skill_desc_version': str(update_time_records["skill_desc_config"]),
         'equip_desc_version': str(update_time_records["equip_desc_config"]),
-        'dungeon_desc_version': str(update_time_records["dungeon_desc_config"]),
+        # 'dungeon_desc_version': str(update_time_records["dungeon_desc_config"]),
         'mat_item_desc_version': str(update_time_records["material_desc_config"]),
         "props_desc_config": str(update_time_records["props_desc_config"]),
 
@@ -342,7 +342,7 @@ def get_material_item_desc_config(request):
               'rc':0,
               'data':copy.deepcopy(game_config.material_desc_config),
            }
-    data['data'].update(game_config.item_desc_config)
+    # data['data'].update(game_config.item_desc_config)
     data['data'].update(game_config.props_desc_config)
     return HttpResponse(
                 json.dumps(data, indent=1),
@@ -392,24 +392,24 @@ def get_skill_desc_config(request):
             )
 
 
-def get_dungeon_desc_config(request):
-    #"""获得装备的描述配置
-    #"""
+# def get_dungeon_desc_config(request):
+#     #"""获得战场的描述配置
+#     #"""
     
-    data = {
-            'rc':0,
-            'data':game_config.dungeon_desc_config,
-          }
-    return HttpResponse(
-                json.dumps(data, indent=1),
-                content_type='application/x-javascript',
-            )
+#     data = {
+#             'rc':0,
+#             'data':game_config.dungeon_desc_config,
+#           }
+#     return HttpResponse(
+#                 json.dumps(data, indent=1),
+#                 content_type='application/x-javascript',
+#             )
 
 
 def get_res_url(res_version, game_config):
     #获得资源链接列表地址，及资源的版本号
     res_url_online = game_config.system_config.get("res_url_online", {})
-    if res_url_online and res_version in res_url_online:
+    if res_url_online and str(int(res_version)) in res_url_online:
         res_url = res_url_online.get(res_version, {}).get('url', '')
         res_ver = res_url_online.get(res_version, {}).get('res_version', '')
     else:

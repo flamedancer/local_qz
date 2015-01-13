@@ -113,17 +113,17 @@ class UserDungeon(GameModel):
             'last':{},
         }
         # #每周的活动战场数据
-        weekly_dungeon = {}
-        weekly_dungeon_conf = obj.game_config.weekly_dungeon_config
-        for week_key,week_value in weekly_dungeon_conf.iteritems():
-            week_temp = {
-                'status':0,
-                'rooms':{},
-            }
-            for room_id in week_value['rooms']:
-                week_temp['rooms'][room_id] = 0
-            weekly_dungeon[week_key] = week_temp
-        obj.dungeon_info['weekly'] = weekly_dungeon
+        # weekly_dungeon = {}
+        # weekly_dungeon_conf = obj.game_config.weekly_dungeon_config
+        # for week_key,week_value in weekly_dungeon_conf.iteritems():
+        #     week_temp = {
+        #         'status':0,
+        #         'rooms':{},
+        #     }
+        #     for room_id in week_value['rooms']:
+        #         week_temp['rooms'][room_id] = 0
+        #     weekly_dungeon[week_key] = week_temp
+        # obj.dungeon_info['weekly'] = weekly_dungeon
         #每日的活动战场数据
         daily_dungeon = {}
         daily_dungeon_conf = obj.game_config.daily_dungeon_config
@@ -137,23 +137,23 @@ class UserDungeon(GameModel):
             daily_dungeon[daily_key] = daily_temp
         obj.dungeon_info['daily'] = daily_dungeon
         #特殊活动的战场数据
-        special_dungeon_conf = obj.game_config.special_dungeon_config
-        special_dungeon = {}
-        now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        for special_key,special_value in special_dungeon_conf.iteritems():
-            if (now_str > special_value['end_time'] or now_str < special_value['start_time']):
-                continue
-            special_temp = {
-                'status':0,
-                'rooms':{},
-            }
-            for room_id in special_value['rooms']:
-                special_temp['rooms'][room_id] = 0
-            special_dungeon[special_key] = special_temp
-        obj.dungeon_info['special'] = special_dungeon
-        obj.dungeon_info['record'] = {
-            'special':{},
-        }
+        # special_dungeon_conf = obj.game_config.special_dungeon_config
+        # special_dungeon = {}
+        # now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # for special_key,special_value in special_dungeon_conf.iteritems():
+        #     if (now_str > special_value['end_time'] or now_str < special_value['start_time']):
+        #         continue
+        #     special_temp = {
+        #         'status':0,
+        #         'rooms':{},
+        #     }
+        #     for room_id in special_value['rooms']:
+        #         special_temp['rooms'][room_id] = 0
+        #     special_dungeon[special_key] = special_temp
+        # obj.dungeon_info['special'] = special_dungeon
+        # obj.dungeon_info['record'] = {
+        #     'special':{},
+        # }
         obj.put()
         return obj
     
@@ -205,8 +205,8 @@ class UserDungeon(GameModel):
         # has_played_info_copy = copy.deepcopy(self.has_played_info)
         dungeon_info = {
             'normal_current':dungeon_info_copy['normal_current'],
-            'special':dungeon_info_copy['special'],
-            'weekly':dungeon_info_copy.get('weekly',{}),
+            # 'special':dungeon_info_copy['special'],
+            # 'weekly':dungeon_info_copy.get('weekly',{}),
             'daily':dungeon_info_copy.get('daily',{}),
         }
         return dungeon_info
@@ -216,12 +216,12 @@ class UserDungeon(GameModel):
         * 初始化周战场信息
         '''
         floor_data = {}
-        #获取每日活动副本配置信息
-        dungeon_config_conf = self.game_config.weekly_dungeon_config
-        for floor_id in dungeon_config_conf:
-            floor_data[floor_id] = {}
-            for room_id in dungeon_config_conf[floor_id]['rooms']:
-                floor_data[floor_id][room_id] = self.get_today_copy_info('weekly',floor_id,room_id)
+        #获取每周活动副本配置信息
+        # dungeon_config_conf = self.game_config.weekly_dungeon_config
+        # for floor_id in dungeon_config_conf:
+        #     floor_data[floor_id] = {}
+        #     for room_id in dungeon_config_conf[floor_id]['rooms']:
+        #         floor_data[floor_id][room_id] = self.get_today_copy_info('weekly',floor_id,room_id)
         #获取已经打过的战场的信息
         #has_played_weekly_info = copy.deepcopy(self.has_played_info.get('weekly',{}))
         #floor_data.update(has_played_weekly_info)
@@ -365,15 +365,11 @@ class UserDungeon(GameModel):
         * miaoyichao
         * 获取今日可打副本的次数和总共打的次数
         '''
-        #获取vip的等级
-        vip_cur_level = copy.deepcopy(UserProperty.get(self.uid).vip_cur_level)
-        #获取vip的配置信息
-        vip_config_obj = self.game_config.user_vip_config
 
         #real_config实际的配置信息
-        if dungeon_type == 'special':
-            real_config = self.game_config.special_dungeon_config
-        elif dungeon_type == 'daily':
+        # if dungeon_type == 'special':
+        #     real_config = self.game_config.special_dungeon_config
+        if dungeon_type == 'daily':
             real_config = self.game_config.daily_dungeon_config
         else:
             real_config = self.game_config.normal_dungeon_config
@@ -383,8 +379,7 @@ class UserDungeon(GameModel):
             cur_can_in = real_config[floor_id].get('can_make_copy_cn',10)
         else:
             cur_can_in = real_config[floor_id]['rooms'][room_id].get('can_make_copy_cn',10)
-        #设置修改保存标志位
-        put_fg = 0
+
         #获取战场当前已经打的信息
         dungeon_repeat_info = self.dungeon_repeat_info
         #获取当天信息
@@ -469,8 +464,8 @@ class UserDungeon(GameModel):
         self.put()
         data = {
             'normal_current':self.dungeon_info['normal_current'],
-            'special':self.dungeon_info['special'],
-            'weekly':self.dungeon_info.get('weekly',{}),
+            # 'special':self.dungeon_info['special'],
+            # 'weekly':self.dungeon_info.get('weekly',{}),
             'daily':self.dungeon_info.get('daily',{}),
         }
         if clear_floor_coin:
@@ -495,22 +490,22 @@ class UserDungeon(GameModel):
         重置每天只能打一次战场关卡状态
         """
         pt_fg = False
-        for floor_id in self.dungeon_info['special']:
-            open_special_coin = self.game_config.dungeon_world_config.get('open_special_coin',[])
-            if open_special_coin and 'open_dungeon_info' in self.dungeon_info['special'][floor_id]:
-                open_coin = open_special_coin[0]
-                self.dungeon_info['special'][floor_id]['open_dungeon_info'] = {
-                                                                                  'open_cnt':0,
-                                                                                  'open_coin':open_coin,
-                                                                                  'expire_time':0,
-                                                                                  }
-                pt_fg = True
-            if not self.dungeon_info['special'][floor_id].get('once_daily',{}):
-                continue
-            self.dungeon_info['special'][floor_id]['once_daily']['can_fight'] = True
-            for rmid in self.dungeon_info['special'][floor_id]['once_daily']['rooms']:
-                self.dungeon_info['special'][floor_id]['once_daily']['rooms'][rmid] = True
-            pt_fg = True
+        # for floor_id in self.dungeon_info['special']:
+        #     open_special_coin = self.game_config.dungeon_world_config.get('open_special_coin',[])
+        #     if open_special_coin and 'open_dungeon_info' in self.dungeon_info['special'][floor_id]:
+        #         open_coin = open_special_coin[0]
+        #         self.dungeon_info['special'][floor_id]['open_dungeon_info'] = {
+        #                                                                           'open_cnt':0,
+        #                                                                           'open_coin':open_coin,
+        #                                                                           'expire_time':0,
+        #                                                                           }
+        #         pt_fg = True
+        #     if not self.dungeon_info['special'][floor_id].get('once_daily',{}):
+        #         continue
+        #     self.dungeon_info['special'][floor_id]['once_daily']['can_fight'] = True
+        #     for rmid in self.dungeon_info['special'][floor_id]['once_daily']['rooms']:
+        #         self.dungeon_info['special'][floor_id]['once_daily']['rooms'][rmid] = True
+        #     pt_fg = True
         if pt_fg:
             self.put()
         
@@ -541,104 +536,104 @@ class UserDungeon(GameModel):
             put_fg = True
         #检查是否有新的战场
         #特殊战场
-        special_conf = self.game_config.special_dungeon_config
-        open_special_coin = self.game_config.dungeon_world_config.get('open_special_coin',[])
-        for special_key,special_value in special_conf.iteritems():
-            if 'loop_gap' not in special_value and\
-             'special_key' in self.dungeon_info['special'] and\
-             'open_dungeon_info' in self.dungeon_info['special'][special_key]:
-                self.dungeon_info['special'][special_key].pop('open_dungeon_info')
-                put_fg = True
-            tag,return_start_time,return_end_time = utils.in_speacial_time(special_conf[special_key],False)
-            if not tag and 'loop_gap' not in special_value:
-                continue
-            if special_key in self.dungeon_info['special']:
-                #如果有新追加的关卡，加入进去，并设置为未通关状态
-                once_daily_conf = special_value.get('once_daily',False)
-                once_daily = self.dungeon_info['special'][special_key].get('once_daily',{})
-                new_once_daily_room = False
-                if once_daily_conf and not once_daily:
-                    self.dungeon_info['special'][special_key]['once_daily'] = {'rooms':{},'can_fight':True}
-                    put_fg = True
-                elif not once_daily_conf and once_daily:
-                    self.dungeon_info['special'][special_key].pop('once_daily')
-                    put_fg = True
-                for room_id in special_value['rooms']:
-                    if room_id not in self.dungeon_info['special'][special_key]['rooms']:
-                        self.dungeon_info['special'][special_key]['rooms'][room_id] = 0
-                        self.dungeon_info['special'][special_key]['status'] = 0
-                        if once_daily_conf:
-                            self.dungeon_info['special'][special_key]['once_daily']['rooms'][room_id] = True
-                            new_once_daily_room = True
-                        put_fg = True
-                    elif once_daily_conf and room_id not in self.dungeon_info['special'][special_key]['once_daily']['rooms']:
-                        self.dungeon_info['special'][special_key]['once_daily']['rooms'][room_id] = True
-                        put_fg = True
-                if once_daily_conf and \
-                new_once_daily_room and not self.dungeon_info['special'][special_key]['once_daily']['can_fight']:
-                    self.dungeon_info['special'][special_key]['once_daily']['can_fight'] = True
-                    put_fg = True
-            else:
-                special_temp = {
-                    'status':0,
-                    'rooms':{},
-                }
-                once_daily_conf = special_value.get('once_daily',False)
-                if once_daily_conf:
-                    special_temp['once_daily'] = {'rooms':{},'can_fight':True}
-                for room_id in special_value['rooms']:
-                    special_temp['rooms'][room_id] = 0
-                    if once_daily_conf:
-                        special_temp['once_daily']['rooms'][room_id] = True
-                self.dungeon_info['special'][special_key] = special_temp
-                put_fg = True
-            #加入提前开启活动战场信息
-            #循环战场加一项提前开启信息
-            if 'loop_gap' in special_value and 'open_dungeon_info' not in self.dungeon_info['special'][special_key]:
-                if open_special_coin:
-                    open_coin = open_special_coin[0]
-                    self.dungeon_info['special'][special_key]['open_dungeon_info'] = {
-                                                                                      'open_cnt':0,
-                                                                                      'open_coin':open_coin,
-                                                                                      'expire_time':0,
-                                                                                      }
-                    put_fg = True
-        #每天限时战场
-        weekly_conf = self.game_config.weekly_dungeon_config
-        for weekly_key,weekly_value in weekly_conf.iteritems():
-            if 'weekly' not in self.dungeon_info:
-                self.dungeon_info['weekly'] = {}
-                put_fg = True
-            if weekly_key not in self.dungeon_info['weekly']:
-                week_temp = {
-                    'status':0,
-                    'rooms':{},
-                }
-                for room_id in weekly_value['rooms']:
-                    week_temp['rooms'][room_id] = 0
+        # special_conf = self.game_config.special_dungeon_config
+        # open_special_coin = self.game_config.dungeon_world_config.get('open_special_coin',[])
+        # for special_key,special_value in special_conf.iteritems():
+        #     if 'loop_gap' not in special_value and\
+        #      'special_key' in self.dungeon_info['special'] and\
+        #      'open_dungeon_info' in self.dungeon_info['special'][special_key]:
+        #         self.dungeon_info['special'][special_key].pop('open_dungeon_info')
+        #         put_fg = True
+        #     tag,return_start_time,return_end_time = utils.in_speacial_time(special_conf[special_key],False)
+        #     if not tag and 'loop_gap' not in special_value:
+        #         continue
+        #     if special_key in self.dungeon_info['special']:
+        #         #如果有新追加的关卡，加入进去，并设置为未通关状态
+        #         once_daily_conf = special_value.get('once_daily',False)
+        #         once_daily = self.dungeon_info['special'][special_key].get('once_daily',{})
+        #         new_once_daily_room = False
+        #         if once_daily_conf and not once_daily:
+        #             self.dungeon_info['special'][special_key]['once_daily'] = {'rooms':{},'can_fight':True}
+        #             put_fg = True
+        #         elif not once_daily_conf and once_daily:
+        #             self.dungeon_info['special'][special_key].pop('once_daily')
+        #             put_fg = True
+        #         for room_id in special_value['rooms']:
+        #             if room_id not in self.dungeon_info['special'][special_key]['rooms']:
+        #                 self.dungeon_info['special'][special_key]['rooms'][room_id] = 0
+        #                 self.dungeon_info['special'][special_key]['status'] = 0
+        #                 if once_daily_conf:
+        #                     self.dungeon_info['special'][special_key]['once_daily']['rooms'][room_id] = True
+        #                     new_once_daily_room = True
+        #                 put_fg = True
+        #             elif once_daily_conf and room_id not in self.dungeon_info['special'][special_key]['once_daily']['rooms']:
+        #                 self.dungeon_info['special'][special_key]['once_daily']['rooms'][room_id] = True
+        #                 put_fg = True
+        #         if once_daily_conf and \
+        #         new_once_daily_room and not self.dungeon_info['special'][special_key]['once_daily']['can_fight']:
+        #             self.dungeon_info['special'][special_key]['once_daily']['can_fight'] = True
+        #             put_fg = True
+        #     else:
+        #         special_temp = {
+        #             'status':0,
+        #             'rooms':{},
+        #         }
+        #         once_daily_conf = special_value.get('once_daily',False)
+        #         if once_daily_conf:
+        #             special_temp['once_daily'] = {'rooms':{},'can_fight':True}
+        #         for room_id in special_value['rooms']:
+        #             special_temp['rooms'][room_id] = 0
+        #             if once_daily_conf:
+        #                 special_temp['once_daily']['rooms'][room_id] = True
+        #         self.dungeon_info['special'][special_key] = special_temp
+        #         put_fg = True
+        #     #加入提前开启活动战场信息
+        #     #循环战场加一项提前开启信息
+        #     if 'loop_gap' in special_value and 'open_dungeon_info' not in self.dungeon_info['special'][special_key]:
+        #         if open_special_coin:
+        #             open_coin = open_special_coin[0]
+        #             self.dungeon_info['special'][special_key]['open_dungeon_info'] = {
+        #                                                                               'open_cnt':0,
+        #                                                                               'open_coin':open_coin,
+        #                                                                               'expire_time':0,
+        #                                                                               }
+        #             put_fg = True
+        # #每天限时战场
+        # weekly_conf = self.game_config.weekly_dungeon_config
+        # for weekly_key,weekly_value in weekly_conf.iteritems():
+        #     if 'weekly' not in self.dungeon_info:
+        #         self.dungeon_info['weekly'] = {}
+        #         put_fg = True
+        #     if weekly_key not in self.dungeon_info['weekly']:
+        #         week_temp = {
+        #             'status':0,
+        #             'rooms':{},
+        #         }
+        #         for room_id in weekly_value['rooms']:
+        #             week_temp['rooms'][room_id] = 0
 
-                self.dungeon_info['weekly'][weekly_key] = week_temp
-                put_fg = True
-            else:
-                #如果有新追加的关卡，加入进去，并设置为未通关状态
-                for room_id in weekly_value['rooms']:
-                    if room_id not in self.dungeon_info['weekly'][weekly_key]['rooms']:
-                        self.dungeon_info['weekly'][weekly_key]['rooms'][room_id] = 0
-                        self.dungeon_info['weekly'][weekly_key]['status'] = 0
-                        put_fg = True
-        #room已经失效时
-        for dungeon_type in ['special','weekly']:
-            if dungeon_type == 'special':
-                dungeon_conf = special_conf
-            elif dungeon_type == 'weekly':
-                dungeon_conf = weekly_conf
-            for floor_id in self.dungeon_info[dungeon_type]:
-                if floor_id not in dungeon_conf:
-                    continue
-                for rmid in copy.deepcopy(self.dungeon_info[dungeon_type][floor_id]['rooms']):
-                    if rmid not in dungeon_conf[floor_id]['rooms']:
-                        self.dungeon_info[dungeon_type][floor_id]['rooms'].pop(rmid)
-                        put_fg = True
+        #         self.dungeon_info['weekly'][weekly_key] = week_temp
+        #         put_fg = True
+        #     else:
+        #         #如果有新追加的关卡，加入进去，并设置为未通关状态
+        #         for room_id in weekly_value['rooms']:
+        #             if room_id not in self.dungeon_info['weekly'][weekly_key]['rooms']:
+        #                 self.dungeon_info['weekly'][weekly_key]['rooms'][room_id] = 0
+        #                 self.dungeon_info['weekly'][weekly_key]['status'] = 0
+        #                 put_fg = True
+        # #room已经失效时
+        # for dungeon_type in ['special','weekly']:
+        #     if dungeon_type == 'special':
+        #         dungeon_conf = special_conf
+        #     elif dungeon_type == 'weekly':
+        #         dungeon_conf = weekly_conf
+        #     for floor_id in self.dungeon_info[dungeon_type]:
+        #         if floor_id not in dungeon_conf:
+        #             continue
+        #         for rmid in copy.deepcopy(self.dungeon_info[dungeon_type][floor_id]['rooms']):
+        #             if rmid not in dungeon_conf[floor_id]['rooms']:
+        #                 self.dungeon_info[dungeon_type][floor_id]['rooms'].pop(rmid)
+        #                 put_fg = True
         if put_fg:
             self.put()
             
@@ -698,8 +693,8 @@ class UserDungeon(GameModel):
                         cur_can_in = self.game_config.daily_dungeon_config[floor_id].get('can_make_copy_cn',10)
                     elif dungeon_type == 'weekly':
                         cur_can_in = self.game_config.weekly_dungeon_config[floor_id]['rooms'][room_id].get('can_make_copy_cn',10)
-                    elif dungeon_type == 'special':
-                        cur_can_in = self.game_config.special_dungeon_config[floor_id]['rooms'][room_id].get('can_make_copy_cn',10)
+                    # elif dungeon_type == 'special':
+                    #     cur_can_in = self.game_config.special_dungeon_config[floor_id]['rooms'][room_id].get('can_make_copy_cn',10)
                     else:
                         cur_can_in = 10
                     max_repeat = cur_can_in
@@ -897,13 +892,14 @@ class UserDungeon(GameModel):
         return all_star
 
     def recover_copy(self,dungeon_type,floor_id,room_id):
-        '''
-        * 重置战场信息
-        '''
+        """重置战场已打次数信息
+        若为普通战场，则直接将已打次数置为  0
+        若为每日试炼战场则，将已打次数减一
+        """
         if dungeon_type == 'normal':
             self.dungeon_repeat_info[dungeon_type][floor_id][room_id] = 0
         elif dungeon_type == 'daily':
-            self.dungeon_repeat_info[dungeon_type][floor_id] = 0
+            self.dungeon_repeat_info[dungeon_type][floor_id] -= 1
         self.put()
 
     def add_repeat_cnt(self, dungeon_type, floor_id, room_id, cnt=1):

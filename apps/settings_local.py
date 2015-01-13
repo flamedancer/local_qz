@@ -135,7 +135,6 @@ OC_APP_ID = ''#逆转前线
 OC_PLATFORM_ID = '0'#平台id,1-ioscn,2-iostw
 #OC_PLATFORM_ID = '2'#平台id,1-ioscn,2-iostw
 
-TOPMODELNAME = 'pvp_all_people'
 LV_TOP = 'lv_top'
 #首冲翻倍标志，港台版本是False，国内是True
 FIRST_CHARGE = True
@@ -149,12 +148,6 @@ APP_SECRET_KEY_360 = '98946959c9c124d7c74da1816ebc922e'
 
 APP_ID_91 = '112053'
 APP_KEY_91 = 'a1c38cb0fd0acdd4d954b5b7995ffcd20ea988d9c06e8a61'
-
-BIND_MOBILE_CONF = {
-    'url': 'http://si.800617.com:4400/SendSms.aspx?',
-    'user': 'ctyswse-10',
-    'password': '4e5951',
-}
 
 #####android客户端类型####
 ANDROID_CLIENT_TYPE = ['oc_android','xiaomi','gp','360','wandoujia','17173','91','pp']

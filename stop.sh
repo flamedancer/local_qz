@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR=/data/sites/MaxStrike
+DIR=$(dirname $(readlink -f $0))
 PID=`ps aux |grep $DIR |grep uwsgi |grep -v grep |awk '{print $2}'`
 for i in $PID
 do

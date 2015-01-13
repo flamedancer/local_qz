@@ -57,7 +57,7 @@ def check_start(rk_user,params,user_dungeon_obj):
     """检查是否可以进入战场"""
 
     user_card_obj = UserCards.get(rk_user.uid)
-
+    user_lv = rk_user.user_property.lv
     #获取战场的配置信息
     dungeon_type = params['dungeon_type']
     floor_id = params['floor_id']
@@ -75,13 +75,18 @@ def check_start(rk_user,params,user_dungeon_obj):
             raise GameLogicError('dungeon', 'not_open')
     elif dungeon_type == 'daily':
         #每日活动副本 用户等级
-        user_lv = rk_user.user_property.lv
+        
         #开启战场的最小等级
         start_dungeon_lv = game_config.daily_dungeon_config.get(floor_id,{})['rooms'].get(room_id,{}).get('user_lv',1)
         #判断条件是否达到
         if user_lv < start_dungeon_lv:
             raise GameLogicError('dungeon', 'not_arrived_lv')
     else:
+        # 开启战场的最小等级
+        start_dungeon_lv = game_config.normal_dungeon_config[floor_id]['rooms'][room_id].get('need_lv',1)
+        #判断条件是否达到
+        if user_lv < start_dungeon_lv:
+            raise GameLogicError('dungeon', 'not_arrived_lv')
         #检查是否达到该战场  比如说以前打到11关  现在是15关则不能打
         if int(floor_id) > int(user_dungeon_obj.normal_current['floor_id']):
             raise GameLogicError('dungeon', 'not_arrived')
@@ -123,9 +128,9 @@ def get_conf(params, uid=None, user_dungeon_obj=None):
     if dungeon_type == 'normal':
         #普通战场配置
         floor_conf = game_config.normal_dungeon_config[floor_id]
-    elif dungeon_type == 'special':
-        #特殊活动战场配置
-        floor_conf = game_config.special_dungeon_config[floor_id]
+    # elif dungeon_type == 'special':
+    #     #特殊活动战场配置
+    #     floor_conf = game_config.special_dungeon_config[floor_id]
     else:
         #每日活动战场配置
         floor_conf = game_config.daily_dungeon_config[floor_id]
@@ -473,7 +478,7 @@ def end(rk_user,params):
     data['get_souls'] = {}
     if last_info['all_drop_info'].get('soul'):
         user_souls_obj = UserSouls.get_instance(rk_user.uid)
-        soul =  last_info['all_drop_info']['soul']
+        soul = last_info['all_drop_info']['soul']
         for soul_type in soul:
             data['get_souls'][soul_type] = {}
             if soul_type == 'equip':
@@ -624,49 +629,49 @@ def revive(rk_user,params):
     return 0,{}
 
 
-def open_special_dungeon(rk_user,params):
-    """提前开启限时战场，需要花费元宝
-       params:
-           floor_id:战场id
-    """
-    floor_id = params['floor_id']
-    floor_conf = game_config.special_dungeon_config.get(floor_id,{})
-    if 'loop_gap' in floor_conf and game_config.dungeon_world_config.get('open_special_is_open',False):
-        loop_dungeon_time = __calculate_loopgap_dungeon_time(floor_conf)
-        now_str = utils.datetime_toString(datetime.datetime.now())
-        #已经开启的不用花元宝
-        if (now_str>=loop_dungeon_time[0][0] and now_str<=loop_dungeon_time[0][1]) or\
-        (now_str>=loop_dungeon_time[1][0] and now_str<=loop_dungeon_time[1][1]):
-            return 0,{'msg':utils.get_msg('dungeon','already_open')}
-        user_dungeon_obj = UserDungeon.get(rk_user.uid)
-        if floor_id in user_dungeon_obj.dungeon_info['special'] and 'open_dungeon_info' in user_dungeon_obj.dungeon_info['special'][floor_id]:
-            open_dungeon_info = user_dungeon_obj.dungeon_info['special'][floor_id]['open_dungeon_info']
-            open_coin = open_dungeon_info['open_coin']
-            if not rk_user.user_property.minus_coin(open_coin,
-                'open_special_dungeon_%s' % floor_id):
-                return 11,{'msg':utils.get_msg('user','not_enough_coin')}
-            else:
-                open_dungeon_info['expire_time'] = int(time.time()) + game_config.dungeon_world_config.get('open_special_time',3600)
-                open_dungeon_info['open_cnt'] += 1
-                open_special_coin = game_config.dungeon_world_config.get('open_special_coin',[])
-                if open_special_coin:
-                    if open_dungeon_info['open_cnt']+1<=len(open_special_coin):
-                        next_open_coin = open_special_coin[open_dungeon_info['open_cnt']]
-                    else:
-                        next_open_coin = open_special_coin[-1]
-                    open_dungeon_info['open_coin'] = next_open_coin
-                user_dungeon_obj.put()
-                return 0,{
-                          'dungeon_info':{
-                                'normal_current':user_dungeon_obj.dungeon_info['normal_current'],
-                                'special':user_dungeon_obj.dungeon_info['special'],
-                                'weekly':user_dungeon_obj.dungeon_info.get('weekly',{}),
-                                }
-                          }
-        else:
-            return 11,{'msg':utils.get_msg('dungeon','can_not_open_now')}
-    else:
-        return 11,{'msg':utils.get_msg('dungeon','can_not_open_now')}
+# def open_special_dungeon(rk_user,params):
+#     """提前开启限时战场，需要花费元宝
+#        params:
+#            floor_id:战场id
+#     """
+#     floor_id = params['floor_id']
+#     floor_conf = game_config.special_dungeon_config.get(floor_id,{})
+#     if 'loop_gap' in floor_conf and game_config.dungeon_world_config.get('open_special_is_open',False):
+#         loop_dungeon_time = __calculate_loopgap_dungeon_time(floor_conf)
+#         now_str = utils.datetime_toString(datetime.datetime.now())
+#         #已经开启的不用花元宝
+#         if (now_str>=loop_dungeon_time[0][0] and now_str<=loop_dungeon_time[0][1]) or\
+#         (now_str>=loop_dungeon_time[1][0] and now_str<=loop_dungeon_time[1][1]):
+#             return 0,{'msg':utils.get_msg('dungeon','already_open')}
+#         user_dungeon_obj = UserDungeon.get(rk_user.uid)
+#         if floor_id in user_dungeon_obj.dungeon_info['special'] and 'open_dungeon_info' in user_dungeon_obj.dungeon_info['special'][floor_id]:
+#             open_dungeon_info = user_dungeon_obj.dungeon_info['special'][floor_id]['open_dungeon_info']
+#             open_coin = open_dungeon_info['open_coin']
+#             if not rk_user.user_property.minus_coin(open_coin,
+#                 'open_special_dungeon_%s' % floor_id):
+#                 return 11,{'msg':utils.get_msg('user','not_enough_coin')}
+#             else:
+#                 open_dungeon_info['expire_time'] = int(time.time()) + game_config.dungeon_world_config.get('open_special_time',3600)
+#                 open_dungeon_info['open_cnt'] += 1
+#                 open_special_coin = game_config.dungeon_world_config.get('open_special_coin',[])
+#                 if open_special_coin:
+#                     if open_dungeon_info['open_cnt']+1<=len(open_special_coin):
+#                         next_open_coin = open_special_coin[open_dungeon_info['open_cnt']]
+#                     else:
+#                         next_open_coin = open_special_coin[-1]
+#                     open_dungeon_info['open_coin'] = next_open_coin
+#                 user_dungeon_obj.put()
+#                 return 0,{
+#                           'dungeon_info':{
+#                                 'normal_current':user_dungeon_obj.dungeon_info['normal_current'],
+#                                 'special':user_dungeon_obj.dungeon_info['special'],
+#                                 'weekly':user_dungeon_obj.dungeon_info.get('weekly',{}),
+#                                 }
+#                           }
+#         else:
+#             return 11,{'msg':utils.get_msg('dungeon','can_not_open_now')}
+#     else:
+#         return 11,{'msg':utils.get_msg('dungeon','can_not_open_now')}
     
 def get_box_gift(rk_user,params):
     '''
@@ -929,7 +934,7 @@ def wipe_out(rk_user, params):
             for goods_id in drop_info:
                 if 'soul' in goods_id:
                     goods_id = goods_id[:-5]  # 去掉'_soul'后缀
-                    value_config = drop_info_config['soul'][goods_id]['visible']
+                    value_config = drop_info_config['soul'][goods_id].get('visible', drop_info_config['soul'][goods_id].get('invisible', 0))
                     # 根据配置概率判断是否得到
                     if utils.is_happen(value_config[1]):
                         num = random.randint(value_config[0][0], value_config[0][1])
@@ -946,7 +951,7 @@ def wipe_out(rk_user, params):
                     else:
                         continue
                 else:
-                    value_config = drop_info_config[goods_id]['visible']
+                    value_config = drop_info_config[goods_id].get('visible', drop_info_config[goods_id].get('invisible', 0))
                     # 根据配置概率判断是否得到
                     if utils.is_happen(value_config[1]):
                         num = random.randint(value_config[0][0], value_config[0][1])

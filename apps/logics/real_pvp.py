@@ -55,7 +55,9 @@ def result_fight(win_uid, lose_uid):
 
     win_pt = win_real_pvp_obj.add_pt(win_add_pt)
     #  运营活动  特定时间内收益翻倍
-    multiply_income_conf = win_real_pvp_obj.game_config.operat_config.get("multiply_income", {}).get("pk", {})
+    game_config = win_real_pvp_obj.game_config
+    game_config.reload_config()
+    multiply_income_conf = game_config.operat_config.get("multiply_income", {}).get("pk", {})
     win_pt = win_pt * multiply_income(multiply_income_conf)
     win_real_pvp_obj.pvp_info['total_win'] += 1
     win_real_pvp_obj.pvp_info['total_join'] += 1

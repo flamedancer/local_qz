@@ -6,11 +6,14 @@ from apps.common.utils import send_exception_mail,print_err
 
 class StorageMiddleware(object):
     def process_request(self, request):
-        subarea = request.REQUEST.get('subarea', '1')
-        game_config.set_subarea(subarea)
-        game_config.reload_config()
-
-        app.pier.clear()
+        try:
+            subarea = request.REQUEST.get('subarea', '1') or '1'
+            game_config.set_subarea(subarea)
+            game_config.reload_config()
+            app.pier.clear()
+        except:
+            print_err()
+            send_exception_mail(request)
 
     def process_response(self, request, response):
         try:

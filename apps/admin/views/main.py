@@ -82,6 +82,7 @@ def registration(request):
     注册帐号
     """
     username = request.POST.get("username")
+    realname = request.POST.get("realname")
     password = request.POST.get("password")
     password2 = request.POST.get("password2")
     email = request.POST.get("email")
@@ -89,6 +90,9 @@ def registration(request):
 
     if not username or not password:
         return render_to_response("admin/registration.html",{"appname":'a'},RequestContext(request))
+
+    elif not realname:
+        return HttpResponse(u"真实姓名必填")
 
     elif not email:
         return HttpResponse(u"email必填")
@@ -112,6 +116,7 @@ def registration(request):
 
             moderator = Moderator.get_instance(username)
             moderator.username = username
+            moderator.realname = realname
             moderator.email = email
             moderator.is_staff = 0
             moderator.set_password(hashlib.md5(password).hexdigest())
@@ -649,7 +654,7 @@ def game_setting(request,request_info=None, return_dict=False):
 
         if old_conf_data in ('', None): #never backed up yet
             data['backup_diff_from_now'] = ''
-        else:
+        elif Config.get(config_name + '_' + subarea):
             if old_conf_data == Config.get(config_name + '_' + subarea).data:
                 data['backup_diff_from_now'] = ''
             else:
@@ -678,17 +683,17 @@ def game_setting(request,request_info=None, return_dict=False):
 def verify_game_config(config_name, value):
     #用于验证配置是否正确
     verify_dict = {
-        'system_config': ['maintenance'],#key为配置名称，value为该配置名称必须存在的key
-        'loginbonus_config': ['bonus'],
-        'shop_config': ['sale'],
-        'user_level_config': ['1'],
-        'gacha_config': ['charge_rate',],
-        'card_config': ['1_card', ],
-        'card_level_config': ['exp_type', ],
-        'card_update_config': ['cost_gold', ],
-        'monster_config': [],
-        'dungeon_config': ['1', ],
-        'normal_dungeon_effect_config': ['rule', ],
+        # 'system_config': ['maintenance'],#key为配置名称，value为该配置名称必须存在的key
+        # 'loginbonus_config': ['bonus'],
+        # 'shop_config': [],
+        # 'user_level_config': ['1'],
+        # 'gacha_config': ['charge_rate',],
+        # 'card_config': ['1_card', ],
+        # 'card_level_config': ['exp_type', ],
+        # 'card_update_config': ['cost_gold', ],
+        # 'monster_config': [],
+        # 'dungeon_config': ['1', ],
+        # 'normal_dungeon_effect_config': ['rule', ],
     }
     verify_info = ''
     if config_name in verify_dict:

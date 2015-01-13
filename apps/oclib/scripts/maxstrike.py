@@ -16,10 +16,6 @@
             'index': 'pid',
             'unique': True
         },
-        'accountoneclick': {
-            'index': 'pid',
-            'unique': True
-        },
         'usercollection': {
             'index': 'uid',
             'unique': True
@@ -36,19 +32,11 @@
             'index': 'lv',
             'unique': True
         },
-        'ptusers': {
-            'index': 'pt_lv',
-            'unique': True
-        },
         'userbase': {
             'index': 'uid',
             'unique': True
         },
         'usercards': {
-            'index': 'uid',
-            'unique': True
-        },
-        'usercity': {
             'index': 'uid',
             'unique': True
         },
@@ -64,10 +52,6 @@
             'index': 'uid',
             'unique': True
         },
-        'userlend': {
-            'index': 'uid',
-            'unique': True
-        },
         'userlogin': {
             'index': 'uid',
             'unique': True
@@ -76,7 +60,7 @@
             'index': 'uid',
             'unique': True
         },
-        'userpvp': {
+        'userrealpvp': {
             'index': 'uid',
             'unique': True
         },
@@ -98,6 +82,18 @@
             'unique': True
         },
         'usermysterystore': {
+            'index': 'uid',
+            'unique': True
+        },
+        'useractivity': {
+            'index': 'uid',
+            'unique': True
+        },
+        'usermarquee': {
+            'index': 'uid',
+            'unique': True
+        },
+        'userpkstore': {
             'index': 'uid',
             'unique': True
         },

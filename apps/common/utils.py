@@ -400,36 +400,6 @@ def check_openid(openid):
             return False
     return True
 
-def format_award(award, user_model=None):
-    """
-    生成奖励描述
-    """
-    res = []
-    from apps.models.virtual.card import Card as CardMod
-    if 'coin' in award:
-        res.append(u'元宝%d个' % award['coin'])
-    if 'gacha_pt' in award:
-        res.append(u'援军点数%d点' % award['gacha_pt'])
-    if 'gold' in award:
-        res.append(u'铜钱%d枚' % award['gold'])
-    if 'card' in award:
-        card_res = []
-        for cid in award['card']:
-            this_card = CardMod.get(cid)
-            clv = min(award['card'][cid].get('lv',1),this_card.max_lv)
-            if user_model:
-                global game_config
-                game_config = user_model.game_config
-            card_name = game_config.card_config[cid]['name']
-            card_star = u'★' * int(this_card.star)
-            card_lv = u'Lv.最大' if clv == this_card.max_lv else u'Lv.%d' % clv
-            card_str = card_star + card_lv + card_name
-            card_res.append(card_str)
-        res.append(u'獲得%s' % (u'、'.join(card_res)))
-    res_str = u'，'.join(res)
-    res_str += u'!'
-    return res_str
-
 def create_sig(timestamp, user_model=None):
     """生成服务器端签名
     """

@@ -29,13 +29,13 @@ game_config_name_list = [
 ('monster_config',u'敌将配置'),
 ('normal_dungeon_config',u'普通战场配置'),
 ('normal_dungeon_effect_config',u'普通战场效果配置'),
-('special_dungeon_config',u'限时活动战场配置'),
+# ('special_dungeon_config',u'限时活动战场配置'),
 ('weekly_dungeon_config',u'每周活动战场配置'),
 #('msg_config',u'提示语配置'),
 #('language_config',u'语言包配置'),
 ('equip_config',u'装备配置'),
 ('city_config',u'城镇配置'),
-('item_config',u'药品配置'),
+# ('item_config',u'药品配置'),
 ('props_config',u'道具配置'),
 ('material_config',u'材料配置'),
 ('material_desc_config',u'材料描述配置'),
@@ -44,7 +44,7 @@ game_config_name_list = [
 ('card_desc_config',u'武将描述配置'),
 ('equip_desc_config',u'装备描述配置'),
 ('skill_desc_config',u'技能描述配置'),
-('dungeon_desc_config',u'战场描述配置'),
+# ('dungeon_desc_config',u'战场描述配置'),
 ('fate_config',u'缘分配置'),
 ('user_vip_config',u'VIP参数配置'),
 ('equip_exp_config',u'装备等级'),
@@ -53,12 +53,12 @@ game_config_name_list = [
 config_list = [
 'normal_dungeon_config',
 'card_config',
-'special_dungeon_config',
+# 'special_dungeon_config',
 'monster_config',
 'user_level_config',
 'compgacha_config',
 'equip_config',
-'item_config',
+# 'item_config',
 'city_config',
 'material_config',
 'material_desc_config',
@@ -66,7 +66,7 @@ config_list = [
 'card_desc_config',
 'equip_desc_config',
 'skill_desc_config',
-'dungeon_desc_config',
+# 'dungeon_desc_config',
 'gacha_config',
 'card_level_config',
 'weekly_dungeon_config',
@@ -269,12 +269,12 @@ def skill_desc_config(sheet):
     skill_config_string = "{\n" + print_dict(skill_desc_config, indented,sort_keys_skill) + "\n}"
     return skill_config_string
 
-def dungeon_desc_config(sheet):
-    indented = ''
-    dungeon_desc_config = make_dict(sheet)
-    #sort_keys = [ '%s' % tag for tag in sorted([int(i) for i in dungeon_desc_config])]
-    dun_config_string = "{\n" + print_dict(dungeon_desc_config, indented) + "\n}"
-    return dun_config_string
+# def dungeon_desc_config(sheet):
+#     indented = ''
+#     dungeon_desc_config = make_dict(sheet)
+#     #sort_keys = [ '%s' % tag for tag in sorted([int(i) for i in dungeon_desc_config])]
+#     dun_config_string = "{\n" + print_dict(dungeon_desc_config, indented) + "\n}"
+#     return dun_config_string
 
 def special_dungeon_config(sheet):
     indented = ''

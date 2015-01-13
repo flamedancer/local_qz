@@ -18,7 +18,7 @@ def get_config_version(subarea, config_name):
 def set_config_version(subarea='1', config_name=''):
     subarea = str(subarea)
     redis_config_name = config_version_key(subarea, config_name)
-    set_time = time.time()
+    set_time = int(time.time())
     RedisTool.set(redis_config_name, set_time, 72*60*60)
     return set_time
 

@@ -26,7 +26,7 @@ urlpatterns += patterns('apps.views.main',
     url(r'^get_card_desc_config/$', 'get_card_desc_config', name='get_card_desc_config'),
     url(r'^get_equip_desc_config/$', 'get_equip_desc_config', name='get_equip_desc_config'),
     url(r'^get_skill_desc_config/$', 'get_skill_desc_config', name='get_skill_desc_config'),
-    url(r'^get_dungeon_desc_config/$', 'get_dungeon_desc_config', name='get_dungeon_desc_config'),
+    # url(r'^get_dungeon_desc_config/$', 'get_dungeon_desc_config', name='get_dungeon_desc_config'),
     url(r'^get_material_item_desc_config/$', 'get_material_item_desc_config', name='get_material_item_desc_config'),
 
     url(r'^crossdomain.xml$', 'crossdomain', name='crossdomain'),

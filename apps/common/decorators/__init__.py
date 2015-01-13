@@ -125,10 +125,6 @@ def platform_auth(func):
             if platform != '360':
                 Session.set(platform, pid)
 
-            #更新版本号
-#            if request.rk_user.current_version<float(version):
-#                request.rk_user.baseinfo["current_version"] = float(version)
-#                request.rk_user.put()
         result = func(request, *args, **argw)
         return result
     return new_func
@@ -769,7 +765,7 @@ def auth_token_for_oc(request,access_token,openid,uuid,mktid,version,client_type
     fg = False
     pid = ''
     msg = ''
-    subarea = request.REQUEST.get("subarea", "1")
+    subarea = request.REQUEST.get("subarea", "1") or '1'
     #没有openid时，检查后控制自动分配id的开头是否开启，如果已经关闭，返回提示
 #    if not openid:
 #        if game_config.system_config.get('account_assign_switch'):

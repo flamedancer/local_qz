@@ -62,60 +62,60 @@ g_lConfig = [
         'use_subarea': True,
         'category': u'武将/敌将'
     },
-    {
-        'name': 'gacha_timing_config',
-        'description':  u'招募定时',
-        'use_subarea': True,
-        'category': u'武将/敌将'
-    },
+    # {
+    #     'name': 'gacha_timing_config',
+    #     'description':  u'招募定时',
+    #     'use_subarea': True,
+    #     'category': u'武将/敌将'
+    # },
     {
         'name': 'card_config',
         'description':  u'武将设置',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'武将/敌将'
     },
     {
         'name': 'card_desc_config',
         'description': u'武将描述',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'武将/敌将'
     },
     {
         'name': 'talent_skill_config',
         'description':  u'武将天赋技能',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'武将/敌将'
     },
     {
         'name': 'talent_value_config',
         'description':  u'武将天赋数值',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'武将/敌将'
     },
     {
         'name': 'card_level_config',
         'description':  u'武将等级',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'武将/敌将'
     },
     {
         'name': 'card_update_config',
         'description':  u'武将强化',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'武将/敌将'
     },
-    {
-        'name': 'skill_config',
-        'description':  u'武将技',
-        'use_subarea': True,
-        'category': u'武将/敌将'
-    },
-    {
-        'name': 'leader_skill_config',
-        'description': u'主将技',
-        'use_subarea': True,
-        'category': u'武将/敌将'
-    },
+    # {
+    #     'name': 'skill_config',
+    #     'description':  u'武将技',
+    #     'use_subarea': False,
+    #     'category': u'武将/敌将'
+    # },
+    # {
+    #     'name': 'leader_skill_config',
+    #     'description': u'主将技',
+    #     'use_subarea': False,
+    #     'category': u'武将/敌将'
+    # },
     {
         'name': 'dungeon_world_config',
         'description': u'战场世界',
@@ -128,34 +128,52 @@ g_lConfig = [
         'use_subarea': True,
         'category': u'战场'
     },
-	{
+    {
         'name': 'drop_info_config',
         'description': u'战场掉落',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'战场'
     },
     {
         'name': 'normal_dungeon_effect_config',
         'description': u'普通战场效果',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'战场'
     },
-    {
-        'name': 'special_dungeon_config',
-        'description': u'限时活动战场',
-        'use_subarea': True,
-        'category': u'战场'
-    },
-    {
-        'name': 'weekly_dungeon_config',
-        'description': u'每周活动战场',
-        'use_subarea': True,
-        'category': u'战场'
-    },
+    # {
+    #     'name': 'special_dungeon_config',
+    #     'description': u'限时活动战场',
+    #     'use_subarea': False,
+    #     'category': u'战场'
+    # },
+    # {
+    #     'name': 'weekly_dungeon_config',
+    #     'description': u'每周活动战场',
+    #     'use_subarea': False,
+    #     'category': u'战场'
+    # },
     {
         'name': 'daily_dungeon_config',
-        'description': u'每日活动战场',
-        'use_subarea': True,
+        'description': u'每日试炼战场',
+        'use_subarea': False,
+        'category': u'战场'
+    },
+    # {
+    #     'name': 'dungeon_desc_config',
+    #     'description': u'战场描述',
+    #     'use_subarea': False,
+    #     'category': u'战场'
+    # },
+    {
+        'name': 'pk_config',
+        'description': u'PK(实时PvP)配置',
+        'use_subarea': False,
+        'category': u'战场'
+    },
+    {
+        'name': 'bead_config',
+        'description': u'珠子掉落配置',
+        'use_subarea': False,
         'category': u'战场'
     },
     {
@@ -198,92 +216,80 @@ g_lConfig = [
     {
         'name': 'equip_config',
         'description': u'装备',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
     {
         'name': 'equip_desc_config',
         'description': u'装备描述',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
     {
         'name': 'equip_exp_config',
         'description': u'装备等级',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
-    {
-        'name': 'equip_update_config',
-        'description': u'装备强化',
-        'use_subarea': True,
-        'category': u'装备/技能'
-    },
+    # {
+    #     'name': 'equip_update_config',
+    #     'description': u'装备强化',
+    #     'use_subarea': False,
+    #     'category': u'装备/技能'
+    # },
     {
         'name': 'equip_upgrade_config',
         'description': u'装备升品',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
     {
         'name': 'suit_type_config',
         'description': u'装备套装',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
-    {
-        'name': 'item_config',
-        'description': u'药品',
-        'use_subarea': True,
-        'category': u'装备/技能'
-    },
-    {
-        'name': 'item_desc_config',
-        'description': u'药品描述',
-        'use_subarea': True,
-        'category': u'装备/技能'
-    },
+    # {
+    #     'name': 'item_config',
+    #     'description': u'药品',
+    #     'use_subarea': False,
+    #     'category': u'装备/技能'
+    # },
+    # {
+    #     'name': 'item_desc_config',
+    #     'description': u'药品描述',
+    #     'use_subarea': False,
+    #     'category': u'装备/技能'
+    # },
     {
         'name': 'props_config',
         'description': u'道具',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
     {
         'name': 'props_desc_config',
         'description': u'道具描述',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
     {
         'name': 'material_config',
         'description': u'材料',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
     {
         'name': 'material_desc_config',
         'description': u'材料描述',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
     {
         'name': 'skill_desc_config',
         'description': u'技能描述',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
-    },
-    {
-        'name': 'dungeon_desc_config',
-        'description': u'战场描述',
-        'use_subarea': True,
-        'category': u'战场'
-    },
-    {
-        'name': 'pk_config',
-        'description': u'PK(实时PvP)配置',
-        'use_subarea': True,
-        'category': u'战场'
     },
     {
         'name': 'gift_config',
@@ -306,13 +312,13 @@ g_lConfig = [
     {
         'name': 'skill_params_config',
         'description': u'技能数值',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
     {
         'name': 'ruby_skill_params_config',
         'description': u'ruby技能数值(会改变技能数值!)',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'装备/技能'
     },
 
@@ -325,13 +331,13 @@ g_lConfig = [
     {
         'name': 'fate_config',
         'description': u'缘分',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'武将/敌将'
     },
     {
         'name': 'monster_config',
         'description': u'敌将',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'武将/敌将'
     },
     {

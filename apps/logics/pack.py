@@ -190,7 +190,6 @@ def add_exp_point(rk_user,params):
     user_pack_obj.minus_props(props_id,num,where='add_exp_point')
     user_property_obj = UserProperty.get(rk_user.uid)
     user_property_obj.add_card_exp_point(add_exp_point, "by_props")
-    print user_property_obj.property_info['vip_charge_info']
     #结果返回
     return 0,{'add_exp_point':add_exp_point}
 

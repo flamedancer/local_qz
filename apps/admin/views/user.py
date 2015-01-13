@@ -28,6 +28,7 @@ from apps.logics import mails
 from apps.models.account_mapping import AccountMapping
 from apps.models import data_log_mod
 from pprint import pformat
+from apps.admin import auth
 
 ChargeRecord = data_log_mod.get_log_model("ChargeRecord")
 
@@ -142,6 +143,9 @@ def edit_user(request):
         pk_store.buy_store_goods(user, params)
 ####################
 
+    moderator = auth.get_moderator_by_request(request)
+    qa_edit = 'qa edited by '+str(moderator.username)
+
     #提交状态
     if request.method == "POST":
         state = int(request.POST.get("state","0"))
@@ -161,27 +165,27 @@ def edit_user(request):
         if request.POST.get('add_gold',''):
             add_gold = int(request.POST.get('add_gold'))
             if add_gold>0:
-                user_property_obj.add_gold(add_gold,where='qa_add')
+                user_property_obj.add_gold(add_gold,where=qa_edit)
             else:
                 user_property_obj.minus_gold(add_gold)
         #增加元宝
         if request.POST.get('add_coin',''):
             add_coin = int(request.POST.get('add_coin'))
             if add_coin>0:
-                user_property_obj.add_coin(add_coin, where='qa_add')
+                user_property_obj.add_coin(add_coin, where=qa_edit)
             else:
-                user_property_obj.minus_coin(add_coin, where='qa_add')
+                user_property_obj.minus_coin(add_coin, where=qa_edit)
         #增加 经验点
         if request.POST.get('add_card_point',''):
             add_card_point = int(request.POST.get('add_card_point'))
             if add_card_point>0:
-                user_property_obj.add_card_exp_point(add_card_point, "qa_add")
+                user_property_obj.add_card_exp_point(add_card_point, qa_edit)
             else:
-                user_property_obj.minus_card_exp_point(add_card_point, "qa_add")
+                user_property_obj.minus_card_exp_point(add_card_point, qa_edit)
         #增加经验
         if request.POST.get('add_exp',''):
             add_exp = int(request.POST.get('add_exp'))
-            user_property_obj.add_exp(add_exp,where='qa_add')
+            user_property_obj.add_exp(add_exp,where=qa_edit)
         # 增加pk 积分
         if request.POST.get('add_pk_pt', 0):
             pvp_pt = int(request.POST.get('add_pk_pt'))
@@ -190,11 +194,11 @@ def edit_user(request):
         if request.POST.get('add_honor',''):
             honor = int(request.POST.get('add_honor'))
             urp = UserRealPvp.get(user.uid)
-            urp.add_honor(honor, where="qa_add")
+            urp.add_honor(honor, where=qa_edit)
         # 加战魂
         if request.POST.get('add_fight_soul',''):
             fight_soul_num = int(request.POST.get('add_fight_soul'))
-            user_property_obj.add_fight_soul(fight_soul_num, where="qa_add")
+            user_property_obj.add_fight_soul(fight_soul_num, where=qa_edit)
         #发邮件
         if request.POST.get('mail_title') or request.POST.get('mail_goods'):
             from apps.models.user_mail import UserMail
@@ -224,7 +228,7 @@ def edit_user(request):
             vip_conf = game_config.user_vip_config.get(str(vip_lv))
             if vip_conf:
                 coin = vip_conf['coin']
-                user_property_obj.property_info["charge_sumcoin"] = coin
+                user_property_obj.property_info["charge_coins"] = coin
                 user_property_obj.put()
 
         #补武将
@@ -238,7 +242,7 @@ def edit_user(request):
                 num = int(strAddCard.split(":")[1])
                 for i in range(num):
                     clv = 1
-                    user_card_obj.add_card(cid,clv,where='qa_add')
+                    user_card_obj.add_card(cid,clv,where=qa_edit)
         #增加武将
         if request.POST.getlist('add_card'):
             add_cids = request.POST.getlist('add_card')
@@ -246,7 +250,7 @@ def edit_user(request):
             for add_cid in add_cids:
                 if add_cid in game_config.card_config:
                     clv = 1
-                    user_card_obj.add_card(add_cid,clv,where='qa_add')
+                    user_card_obj.add_card(add_cid,clv,where=qa_edit)
         #增加武将经验
         if request.POST.get('add_card_exp',''):
             add_exp = int(request.POST.get('add_card_exp'))
@@ -260,9 +264,9 @@ def edit_user(request):
         #卖掉卡片
         if request.POST.get('sell_card',''):
             ucid = request.POST.get('ucid')
-            this_card = Card.get(user_card_obj.cards[ucid]['cid'],user_card_obj.cards[ucid]['lv'])
+            #this_card = Card.get(user_card_obj.cards[ucid]['cid'],user_card_obj.cards[ucid]['lv'])
             user_card_obj.del_card_info([ucid])
-            user.user_property.add_gold(this_card.sell_gold,where='sell_card')
+            #user.user_property.add_gold(this_card.sell_gold,where=qa_edit)
         #踢出队伍
         if request.POST.get('kick_deck',''):
             kick_index = int(request.POST.get('deck_index'))
@@ -295,14 +299,14 @@ def edit_user(request):
         #一键送所有武将碎片
         if request.POST.get('give_all_card_soul',''):
             for cid in game_config.card_config:
-                user_card_obj.add_card(cid,1,where='qa_add')
+                user_card_obj.add_card(cid,1,where=qa_edit)
             user_card_obj.put()
             
         #一键送所有武将
         if request.POST.get('give_all_card',''):
             #一键送所有武将
             for cid in all_cids:
-                ucid = user_card_obj.add_card(cid, 1, where='qa_add')[2]
+                ucid = user_card_obj.add_card(cid, 1, where=qa_edit)[2]
         # if request.POST.get('give_all_card',''):
         #     user_card_obj.cards = {}
         #     user_card_obj.cards_info = {
@@ -316,7 +320,7 @@ def edit_user(request):
         #     card_index = 0
         #     for cid in all_cids:
         #         clv = 1
-        #         ucid = user_card_obj.add_card(cid,clv,where='qa_add')[2]
+        #         ucid = user_card_obj.add_card(cid,clv,where=qa_edit)[2]
         #         if card_index < 5:
         #             user_card_obj.deck[card_index]['ucid'] = ucid
         #         card_index += 1
@@ -355,7 +359,7 @@ def edit_user(request):
                 eid = eid.strip() + '_equip'
                 num = int(strAddEquip.split(":")[1])
                 for i in range(num):
-                    user_equips_obj.add_equip(eid,where='qa_add')
+                    user_equips_obj.add_equip(eid,where=qa_edit)
         #材料
         if request.POST.get("add_mats", ""):
             strItemsInfo = request.POST.get("add_mats")
@@ -364,7 +368,7 @@ def edit_user(request):
                 mid = strAddItem.split(":")[0]
                 mid = mid.strip() + '_mat'
                 num = int(strAddItem.split(":")[1])
-                user_pack_obj.add_material(mid,num,where='qa_add')
+                user_pack_obj.add_material(mid,num,where=qa_edit)
                 
         #道具
         if request.POST.get("add_props", ""):
@@ -374,21 +378,21 @@ def edit_user(request):
                 pid = strAddProps.split(":")[0]
                 pid = pid.strip() + '_props'
                 num = int(strAddProps.split(":")[1])
-                user_pack_obj.add_props(pid,num,where='qa_add')
+                user_pack_obj.add_props(pid,num,where=qa_edit)
 
         if request.POST.get("add_materials_num", 0):
             mid = request.POST.get("mid")
-            user_pack_obj.add_material(mid,int(request.POST.get("add_materials_num", 0)),where='qa_add')
+            user_pack_obj.add_material(mid,int(request.POST.get("add_materials_num", 0)),where=qa_edit)
 
 
         if  request.POST.get("add_props_num", 0):
             pid = request.POST["prop"]
-            user_pack_obj.add_props(pid, int(request.POST.get("add_props_num", 0)),where='qa_add')
+            user_pack_obj.add_props(pid, int(request.POST.get("add_props_num", 0)),where=qa_edit)
 
         if request.POST.get('give_all_props'):
             num = int(request.POST.get('all_props_num'))if request.POST.get('all_props_num') else 99
             for iid in game_config.props_config:
-                user_pack_obj.add_props(iid,num,where='qa_add')
+                user_pack_obj.add_props(iid,num,where=qa_edit)
 
         
         if request.POST.get('del_all_props'):
@@ -399,7 +403,7 @@ def edit_user(request):
         if request.POST.get('give_all_equips'):
             user_equips = UserEquips.get(uid)
             for eid in game_config.equip_config:
-                user_equips.add_equip(eid,where='qa_add')
+                user_equips.add_equip(eid,where=qa_edit)
 
         #一键送所有的装备碎片
         if request.POST.get('give_all_equip_soul'):
@@ -408,9 +412,9 @@ def edit_user(request):
                 if game_config.equip_config[eid].get('need_soul_types_num',0):
                     parts = game_config.equip_config[eid].get('need_soul_types_num',0)
                     for i in xrange(1,parts+1):
-                        user_souls_obj.add_equip_soul(eid+'_'+str(i),100,where='qa_add')
+                        user_souls_obj.add_equip_soul(eid+'_'+str(i),100,where=qa_edit)
                 else:
-                    user_souls_obj.add_equip_soul(eid,1,where='qa_add')
+                    user_souls_obj.add_equip_soul(eid,1,where=qa_edit)
 
         #一键删除所有的装备碎片
         if request.POST.get('del_all_equip_soul'):
@@ -423,7 +427,7 @@ def edit_user(request):
             sid = request.POST.get('sid')
             num = int(request.POST.get('add_single_equip_soul'))
             user_souls_obj = UserSouls.get_instance(uid)
-            user_souls_obj.add_equip_soul(sid, num,where='qa_add')
+            user_souls_obj.add_equip_soul(sid, num,where=qa_edit)
             user_souls_obj.put()
         
         if request.POST.get('del_other_equips'):
@@ -434,7 +438,7 @@ def edit_user(request):
             num = int(request.POST.get('all_materials_num'))if request.POST.get('all_materials_num') else 99
             user_pack_obj = UserPack.get_instance(uid)
             for mid in game_config.material_config:
-                user_pack_obj.add_material(mid,num,where='qa_add')
+                user_pack_obj.add_material(mid,num,where=qa_edit)
         if request.POST.get('del_all_materials'):
             user_pack_obj = UserPack.get_instance(uid)
             user_pack_obj.materials = {}
@@ -487,27 +491,27 @@ def edit_user(request):
     if request.POST.get('add_normal_soul',''):
         add_normal_soul_num = int(request.POST.get('add_normal_soul'))
         sid = request.POST.get('sid')
-        user_souls_obj.add_normal_soul(sid, add_normal_soul_num, where='qa_add')
+        user_souls_obj.add_normal_soul(sid, add_normal_soul_num, where=qa_edit)
     #   批量添加  普通将魂
     if request.POST.get('dump_normal_soul'):
         dump_normal_soul_str = request.POST.get('dump_normal_soul').strip()
         for item in dump_normal_soul_str.split(';'):
             sid, num = item.split(':')
-            user_souls_obj.add_normal_soul(sid + '_card', int(num), where='qa_add')
+            user_souls_obj.add_normal_soul(sid + '_card', int(num), where=qa_edit)
     #   批量添加  装备碎片
     if request.POST.get('add_equip_soul'):
         add_equip_soul_str = request.POST.get('add_equip_soul').strip()
         for equip_info in add_equip_soul_str.split(';'):
             eid, num = equip_info.split(':')
-            user_souls_obj.add_equip_soul(eid, int(num), where='qa_add')
+            user_souls_obj.add_equip_soul(eid, int(num), where=qa_edit)
 
     #   添加  英雄将魂
     if request.POST.get('add_super_soul',''):
         add_super_soul_num = int(request.POST.get('add_super_soul'))
         if add_super_soul_num >= 0:
-            user_souls_obj.add_super_soul(add_super_soul_num, where='qa_add')
+            user_souls_obj.add_super_soul(add_super_soul_num, where=qa_edit)
         else:
-            user_souls_obj.minus_card_soul('super_soul', add_super_soul_num, where='qa_add')
+            user_souls_obj.minus_card_soul('super_soul', add_super_soul_num, where=qa_edit)
 
     # 武将碎片兑换武将
     if request.POST.get('soul_exchange_card'):
@@ -520,7 +524,7 @@ def edit_user(request):
         sid = request.POST.get('sid')
         num = int(request.POST.get('num'))
         user_souls_obj = UserSouls.get_instance(uid)
-        user_souls_obj.minus_card_soul(sid, num,where='qa_add')
+        user_souls_obj.minus_card_soul(sid, num,where=qa_edit)
         user_souls_obj.put()
     data.update(soul.get_all(user, None)[1])
 
@@ -681,12 +685,12 @@ def view_user(request):
     data['all_cards'] = all_cards
     #用户当前战场信息
     user_dungeon_obj = UserDungeon.get_Ex(user.uid)
-    pvp_obj = UserPvp.getEx(user.uid)
+    #pvp_obj = UserPvp.getEx(user.uid)
     #pvp 排名
     top_model = pvp_redis.get_pvp_redis('1')
     rank = top_model.rank(uid)
-    pvp_obj.rank = rank+1 if rank != None else 0
-    data['pvp'] = pvp_obj
+    #pvp_obj.rank = rank+1 if rank != None else 0
+    #data['pvp'] = pvp_obj
     data['current_dungeon'] = user_dungeon_obj.dungeon_info['normal_current']
     #配置中的所有战场
     data['all_dungeon'] = []
@@ -762,5 +766,5 @@ def view_user(request):
     data.update(soul.get_all(user, None)[1])
     for sid, soul_conf in data['normal_souls'].items():
         soul_conf['name'] = game_config.card_config[sid].get('star','') + u'星 ' + game_config.card_config[sid].get('name','') + u' 将魂'
-    data["index_list"] = request.index_list
+    #data["index_list"] = request.index_list
     return render_to_response('user/view.html',data,RequestContext(request))

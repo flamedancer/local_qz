@@ -51,7 +51,7 @@ def vip_gift_sale_list(rk_user):
     data = {}
     user_property_obj = rk_user.user_property
     # 已购买的vip礼包id list
-    has_bought_ids = user_property_obj.property_info['vip_charge_info']
+    has_bought_ids = user_property_obj.property_info['has_bought_vip_package']
     # 读取商店vip礼包配置
     vip_gift_sale_config = game_config.vip_store_config.get('vip_sale',{})
     data = _pack_store_info(vip_gift_sale_config, has_bought_ids)
@@ -67,7 +67,7 @@ def buy_vip_gift(rk_user, params):
     vip_cur_level = user_property_obj.vip_cur_level
 
     # 已购买的vip礼包id list
-    has_bought_ids = user_property_obj.property_info['vip_charge_info']
+    has_bought_ids = user_property_obj.property_info['has_bought_vip_package']
 
     # 判断vip礼包id是否有效
     if not vip_gift_id:
@@ -88,11 +88,12 @@ def buy_vip_gift(rk_user, params):
         raise GameLogicError('user', 'not_enough_coin')
 
     goods_list = vip_gift_sale_config[vip_gift_id]['goods_list']
-    all_get_goods = tools.add_things(rk_user, [{"_id": good_id, "num": num} for good_id, num in goods_list.items()])
+    all_get_goods = tools.add_things(rk_user, [{"_id": good_id, "num": num} 
+        for good_id, num in goods_list.items()], where='buy_vip_gift')
     # 扣除元宝
     user_property_obj.minus_coin(need_coin, where="buy_vip_gift")
 
-    user_property_obj.add_vip_gift_id(vip_gift_id)
+    user_property_obj.add_bought_vip_package(vip_gift_id)
     return {'get_info': all_get_goods}
     
     

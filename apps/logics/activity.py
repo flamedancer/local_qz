@@ -222,7 +222,7 @@ def add_explore_info(explore_type, rk_user, times):
         get_things.append({"_id": get_id, "num": get_num})
         show_things.append(tools.pack_good(get_id, get_num))
 
-    all_get_goods = tools.add_things(rk_user, get_things)
+    all_get_goods = tools.add_things(rk_user, get_things, where='explore')
     return {"get_info": all_get_goods, "show_things": show_things}
 
         

@@ -13,7 +13,7 @@ from apps.admin.decorators import require_permission
 from apps.common import utils
 from apps.config.game_config import game_config
 from apps.logics import dungeon
-from apps.logics.gacha import __select_gacha_card
+from apps.logics.gacha import __select_gacha_thing
 from apps.models.virtual.card import Card
 from apps.admin.bulletin import Bulletin
 import glob, datetime, time
@@ -61,25 +61,17 @@ def gacha(request):
     data['count'] = count
     i = 0
     card_dict = {}
-    new_cards = []
+    new_things = []
     new_cards_ex = []
     while i < count:
-        cid,clv = __select_gacha_card(rate_conf)
-        new_cards.append((cid, clv))
+        thing_id, num = __select_gacha_thing(rate_conf)
+        new_things.append((thing_id, num))
         i += 1
 
-    #如果是10的倍数，认为是10连抽
-#    if count%10 ==0 and gacha_type == "charge_rate":
-#        for i in range(0, len(new_cards), 10):
-#            new_cards_10 = new_cards[i:i+10]
-#            __switch_cards(new_cards_10)
-#            new_cards_ex.extend(new_cards_10)
-#    else:
-    new_cards_ex = new_cards
     card_update_config = game_config.card_update_config
     CARD_CATEGORY = {'0':u'攻击型','1':u'防御型','2':u'血型','3':u'回复型',\
     '4':u'平衡型','5':u'超生命型','6':u'超攻击型','7':u'转生道具','8':u'强化合成','9':u'超防御型','10':u'超回复型'}
-    for cid, clv in new_cards_ex:
+    for cid, clv in new_cards:
         card_obj = Card.get(cid)
         category = card_obj.category
         quality = ''

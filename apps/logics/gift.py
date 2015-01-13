@@ -27,86 +27,6 @@ def new_gift_list(rk_user,params):
     data.update(UserLogin.get(rk_user.uid).get_award_info(rk_user.user_property))
     return 0,data
 
-# def buy_vip_gift(rk_user,params):
-#     '''
-#     购买vip礼品包
-#     '''
-#     vip_gift_id = params.get('vip_gift_id','')
-#     user_property_obj = UserProperty.get_instance(rk_user.uid)
-#     user_pack_obj = UserPack.get_instance(rk_user.uid)
-#     user_equips_obj = UserEquips.get_instance(rk_user.uid)
-#     user_card_obj = UserCards.get_instance(rk_user.uid)
-#     user_soul_obj = UserSouls.get_instance(rk_user.uid)
-#     user_gift_obj = UserGift.get_instance(rk_user.uid)
-#     vip_cur_level = user_property_obj.vip_cur_level
-
-#     vip_charge_info = user_property_obj.property_info['vip_charge_info']
-#     vip_gift_sale_config = game_config.shop_config.get('vip_gift_sale',{})
-#     data = {}
-#     #判断vip礼包id是否有效
-#     if not vip_gift_id:
-#         return 11,{'msg':utils.get_msg('gift','gift_code_error')}
-#     #判断是否存在该vip礼包
-#     if vip_gift_id not in vip_gift_sale_config:
-#         return 11,{'msg':utils.get_msg('gift','gift_code_not_exist')}
-#     #判断玩家的vip等级是否达到
-#     if  vip_cur_level not in [i for i in xrange(int(vip_cur_level) + 1)] or int(vip_gift_id) > int(vip_cur_level):
-#         return 11,{'msg':utils.get_msg('gift','level_not_enough')}
-#     #判断玩家是否已经购买相应的vip礼包
-#     if vip_gift_id in vip_charge_info:
-#         return 11,{'msg':utils.get_msg('gift','gift_already_buy')}
-#     else:
-#         coin = vip_gift_sale_config[vip_gift_id]['coin']
-#         user_cur_coin = user_property_obj.coin
-#         #判断玩家的元宝是否达到
-#         if not user_property_obj.is_coin_enough(coin):
-#             return 11,{'msg':utils.get_msg('user','not_enough_coin')}
-#         else:
-#             user_property_obj.minus_coin(coin, where="buy_vip_gift") #扣除元宝
-#             gift = user_gift_obj.vip_gift_format(vip_gift_sale_config,str(vip_gift_id))
-#            #调用添加vip礼包函数
-#            #data = add_vip_gift(rk_user.uid,gift,str(vip_gift_id))
-#             data = user_gift_obj.add_vip_gift(rk_user.uid,gift,str(vip_gift_id))
-#     return 0,{'vip_gift_info':data}
-        
-# def test_buy_vip_gift(rk_user,params):
-#     '''
-#     购买vip礼品包
-#     '''
-#     #获取购买礼包的 id
-#     vip_gift_id = params.get('vip_gift_id','')
-#     user_property_obj = UserProperty.get_instance(rk_user.uid)
-#     #获取 用户当前 vip 等级
-#     vip_cur_level = user_property_obj.vip_cur_level
-#     # 获取已经购买的 vip 礼包的信息
-#     vip_charge_info = user_property_obj.property_info['vip_charge_info']
-#     #获取商城里面的vip礼包配置
-#     vip_gift_sale_config = game_config.shop_config.get('vip_gift_sale',{})
-#     #判断vip礼包id是否有效
-#     if not vip_gift_id:
-#            return 11,{'msg':utils.get_msg('gift','gift_code_error')}
-#     #判断是否存在该vip礼包
-#     if vip_gift_id not in vip_gift_sale_config:
-#            return 11,{'msg':utils.get_msg('gift','gift_code_not_exist')}
-#     #判断vip等级
-#     if int(vip_cur_level) < int(vip_gift_id):
-#         return 11,{'msg':utils.get_msg('gift','level_not_enough')}
-#     #判断是否已经购买
-#     if vip_gift_id in vip_charge_info:
-#         return 11,{'msg':utils.get_msg('gift','level_not_enough')}
-#     sell_coin = int(vip_gift_sale_config[vip_gift_id].get('coin',0))
-#     if not sell_coin:
-#         return 11,{'msg':utils.get_msg('gift','illegal_config')}
-#     if not user_property_obj.is_coin_enough(sell_coin, where="buy_vip_gift"):
-#         return 11,{'msg':utils.get_msg('user','not_enough_coin')}
-#     #扣出元宝添加物品
-#     user_property_obj.minus_coin(sell_coin)
-#     data = {}
-#     vip_gift_sale_conf = game_config.shop_config.get('vip_gift_sale',{})
-#     #格式化礼包信息
-#     gift_info = vip.format_vip_gift(data,str(vip_gift_id),vip_gift_sale_conf,vip_charge_info)
-#     #添加礼包内容
-    
 
 def get_gift(rk_user,params):
     gift_ids = params.get('gift_ids','')
@@ -316,34 +236,24 @@ def show_open_server_gift(rk_user, params):
         for day in range(1, 32):
             ug.open_server_record['gifts'].setdefault(str(day), {})['has_got'] = False
         ug.put()
+    data = {'gifts': {}}
     # 账号注册已达45天（包括注册当天），或者全部领取了，则清空全部开服礼包
     if (now - add_time).days + 1 > 45 or ug.has_got_all_open_server_gifts():
-        ug.clear_open_server_gift()
-        return 11, {'msg': utils.get_msg('gift','clear_open_server')}
+        return 0, data
     awards = game_config.loginbonus_config['open_server_gift'].get('awards', {})
-    data = {'gifts': {}}
+    
     for days, award in awards.items():
         data['gifts'].setdefault(days, {})['awards'] = award
-        #data['gifts'][days]['has_got'] = ug.open_server_record.setdefault(days, {}).setdefault('has_got', False)
         data['gifts'][days]['has_got'] = ug.open_server_record['gifts'][days]['has_got']
         # 给前端现实能否领取，不需存在model中
-        #data['gifts'][days]['can_get'] = True if ul.total_login_num >= int(days) else False
-        if int(days) == _got_days(ug)+1 and not ug.open_server_record['date_info'].get(today, False):
+
+        if int(days) == ug.total_open_days+1 and not ug.open_server_record['date_info'].get(today, False):
             data['gifts'][days]['can_get'] = True
         else:
             data['gifts'][days]['can_get'] = False
 
-    #data['has_got_today_gift'] = ug.has_got_today_open_server_gift()
-    #data['total_login_num'] = ul.total_login_num
     return 0, data
 
-def _got_days(ug):
-    '''已领取开服奖励的天数'''
-    days = 0
-    for info in ug.open_server_record['gifts'].values():
-        if info['has_got']:
-            days += 1
-    return days
 
 def get_open_server_gift(rk_user, params):
     '''
@@ -365,11 +275,12 @@ def get_open_server_gift(rk_user, params):
     if ug.open_server_record['date_info'].get(today, False):
         return 11, {'msg': utils.get_msg('gift', 'today_has_signed_in')}
     # 按顺序领取
-    if int(day) != _got_days(ug)+1:
+    if int(day) != ug.total_open_days+1:
         return 11, {'msg': utils.get_msg('gift', 'signin_in_turn')}
+    this_award = awards[day]
     data = tools.add_things(
         rk_user, 
-        [{"_id": goods, "num": awards[goods]} for goods in awards if goods],
+        [{"_id": goods, "num": this_award[goods]} for goods in this_award if goods],
         where="open_server_gift"
     )
     
@@ -387,44 +298,38 @@ def show_sign_in_gift(rk_user, params):
     now = datetime.datetime.now()
     month = str(now.month)
     today = str(now.day)
-    awards = game_config.loginbonus_config['sign_in_bonus'].get(month, {})
+    conf = game_config.loginbonus_config['sign_in_bonus']
+    awards = conf.get(month, conf[conf.keys()[0]]) # 容错处理，没配置当月的话取配置里的第一个
 
     if not awards:
         return 11, {'msg': utils.get_msg('gift', 'no_sign_in_gift')}
     data = {'gifts': {}}
     ug = rk_user.user_gift
-    # 当月总签到天数
-    sign_in_days = _get_total_sign_in_days(ug)
+
     # 当月总登陆天数
     month_login_days = rk_user.user_login.month_total_login
-    # 新的月份，领取信息重置，全部置False
-    if today == '1':
-        for n in range(31):
-            ug.sign_in_record[str(n)]['has_got'] = False
+    # 下一个月，签到信息重置
+    if str(now.month) != str(ug.sign_month):
+        for n in range(1, 32):
+            ug.sign_in_record.setdefault(str(n), {})['has_got'] = False
             ug.sign_in_record[str(n)]['today_has_signed_in'] = False
+        ug.sign_month = month
         ug.put()
+
     for day, award in awards.items():
         data['gifts'].setdefault(day, {})['awards'] = award
-        data['gifts'][day]['has_got'] = ug.sign_in_record.setdefault(day, {}).setdefault('has_got', False)
-        #data['gifts'][day]['can_get'] = True if int(day) == sign_in_days+1 else False
+        data['gifts'][day]['has_got'] = ug.sign_in_record[day].setdefault('has_got', False)
+
         #  每天只能签到一次
-        if int(day) == sign_in_days+1 and not ug.sign_in_record.setdefault(today, {}).setdefault('today_has_signed_in', False):
+        if int(day) == ug.total_sign_days+1 and not ug.sign_in_record[today].setdefault('today_has_signed_in', False):
             data['gifts'][day]['can_get'] = True
         else:
             data['gifts'][day]['can_get'] = False
     ug.put()
 
-    data['total_sign_in_days'] = sign_in_days
+    data['total_sign_in_days'] = ug.total_sign_days
     data['month_login_days'] = month_login_days
     return 0, data
-
-
-def _get_total_sign_in_days(ug):
-    days = 0
-    for info in ug.sign_in_record.values():
-        if info['has_got']:
-            days += 1
-    return days
 
 
 def get_sign_in_gift(rk_user, params):
@@ -437,19 +342,22 @@ def get_sign_in_gift(rk_user, params):
     now = datetime.datetime.now()
     month = str(now.month)
     today = str(now.day)
+    
     if ug.sign_in_record[day]['has_got']:
         return 11, {'msg': utils.get_msg('gift', 'gift_has_got')}
     # 一天只能领一次
     if ug.sign_in_record[today].get('today_has_signed_in', False):
         return 11, {'msg': utils.get_msg('gift', 'today_has_signed_in')}
     # 不能跳领，必须一天一个按顺序领
-    if day != str(_get_total_sign_in_days(ug) + 1):
+    if day != str(ug.total_sign_days + 1):
         return 11, {'msg': utils.get_msg('gift', 'signin_in_turn')}
     # 添加奖励
-    awards = game_config.loginbonus_config['sign_in_bonus'].get(month, {}).get(day, {})
+    conf = game_config.loginbonus_config['sign_in_bonus']
+    award = conf.get(month, conf[conf.keys()[0]]).get(day, {})  # 容错处理，没配置当月的话取配置里的第一个
+
     data = tools.add_things(
         rk_user, 
-        [{"_id": goods, "num": awards[goods]} for goods in awards if goods],
+        [{"_id": goods, "num": award[goods]} for goods in award if goods],
         where="sign_in_gift"
     )
     #  用来给前端显示是否已领取,这时sign_in_record的下一层字段代表签到天数

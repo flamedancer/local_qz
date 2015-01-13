@@ -22,8 +22,9 @@ def add_things(user, thing_infos, where=""):
                 ]
     Returns:
         {
-            "gpld": 300,
+            "gold": 300,
             "equip": [ {...equip_info...}, {...equip_info...}],
+            "cardSoul": {"1_card": 4, "2_card": 5}
             ....
         }
     """
@@ -189,7 +190,7 @@ def del_things(user, things, where=""):
         num = thing_info
         if thing_type in ['coin', 'gold', 'stamina']:
             delete = "minus_" + thing_type
-            getattr(user_property_obj, delete)(num)
+            getattr(user_property_obj, delete)(num, where=where)
 
         elif thing_type in ['mat', 'props']:
             if thing_type == "mat":
@@ -197,7 +198,7 @@ def del_things(user, things, where=""):
             else:
                 delete = "minus_props"
             for thing_id, num in  thing_info.items():
-                getattr(user_pack_obj, delete)(thing_id, num)
+                getattr(user_pack_obj, delete)(thing_id, num, where=where)
 
 
 def pack_good(good, num=0):

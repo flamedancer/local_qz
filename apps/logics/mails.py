@@ -80,7 +80,8 @@ def receive(rk_user, params):
             if can_get is False:
                 break
             awards = all_info[m]['mail_info']['awards']
-            return_info = tools.add_things(rk_user, [{"_id": goods, "num": awards[goods]} for goods in awards if goods], "receive_mail")
+            where = 'mail_' + all_info[m]['mail_info']['title']
+            return_info = tools.add_things(rk_user, [{"_id": goods, "num": awards[goods]} for goods in awards if goods], where)
 
             umobj = UserMail.hget(rk_user.uid, m)
             umobj.mail_info['can_get'] = False

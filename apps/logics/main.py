@@ -23,6 +23,7 @@ from apps.common.exceptions import GameLogicError
 from apps.models.names import Names
 
 
+
 def index(rk_user,params):
     data = {}
     # 登录奖励
@@ -44,8 +45,18 @@ def index(rk_user,params):
     user_dungeon_obj = rk_user.user_dungeon
     data['daily_info'] = user_dungeon_obj.get_daily_info()
     data['user_dungeon_info'] = user_dungeon_obj.get_dungeon_info()
+
+    data['gacha'] = __gacha_info(rk_user)
+    data['today_can_sign'] = rk_user.user_gift.today_can_sign()
     return 0,data
 
+def __gacha_info(rk_user):
+    data = {}
+    gacha_conf = game_config.gacha_config
+    data['one_need_coin'] = gacha_conf['cost_coin']
+    data['ten_need_coin'] = int(gacha_conf['cost_coin'] * 10 * gacha_conf['multi_discount'])
+    data['gacha_cnt'] = rk_user.user_gacha.gacha_cnt
+    return data
 
 def get_config(rk_user, params):
     config_info = {}
@@ -106,6 +117,7 @@ def get_config(rk_user, params):
         # 'mycard_is_open':game_config.shop_config.get('mycard_is_open', False),#mycard 开关
         # 'mystery_store_is_open':game_config.mystery_store_config.get('mystery_store_is_open', True),# 神秘商店开关
         'mystery_store_refresh_coin': game_config.mystery_store_config.get('store_refresh_cost', True),# 神秘商店刷新所需元宝
+        'pvp_server_close': game_config.system_config.get('pvp_server_close', True),# pvp开关
     }
 
     version = float(params['version'])
@@ -162,15 +174,6 @@ def get_config(rk_user, params):
                 if now_str>k[0] and now_str<k[1]:
                     config_info['common'][notice_type] = notice_conf[k]
                     break
-        #gacha_card_up取定时求将
-        gacha_timing_config = game_config.gacha_timing_config
-        for time_tuple in gacha_timing_config:
-            if isinstance(time_tuple, (list,tuple)) is True and len(time_tuple) == 2:
-                start = time_tuple[0]
-                end = time_tuple[1]
-                if now_str > start and now_str < end and gacha_timing_config[time_tuple].get('gacha_card_up'):
-                    config_info['gacha_card_up'] = gacha_timing_config[time_tuple]['gacha_card_up']
-                    break
 
     #武将等级配置
     config_info['card_level'] = game_config.card_level_config
@@ -185,12 +188,13 @@ def get_config(rk_user, params):
     # mycard 商品配置
     config_info['mycard_sale'] = game_config.shop_config.get('mycard_sale', {})
     
-    # sale 商品配置
-    shop_config = copy.deepcopy(game_config.shop_config)
-    sale_conf = shop_config.get('sale', {})
-    sale_conf.update(shop_config.get('google_sale',{}))
+    # sale 元宝商品配置   要减去已经特惠次数
+    sale_conf = copy.deepcopy(game_config.shop_config.get('sale', {}))
+    each_item_bought_times = rk_user.user_property.property_info['charge_item_bought_times']
+    for item in each_item_bought_times:
+        if item in sale_conf:
+            sale_conf['extreme_cheap_time'] = max(sale_conf[item]['extreme_cheap_time'] - each_item_bought_times[item], 0)
     config_info['sale_conf'] = sale_conf
-
     config_info['vip_gift_sale'] = vip.vip_gift_sale_list(rk_user)
 
     #指定floor里面的内容信息
@@ -207,9 +211,12 @@ def get_config(rk_user, params):
     explore_show_can_get = game_config.explore_config.get('show_can_get', {})
     for explore_type, goods_info in explore_show_can_get.items():
         config_info['explore_show'][explore_type] = [tools.pack_good(goods_id, num) for goods_id, num in goods_info.items()]
+    # 珠子掉落配置
+    config_info['bead_config'] = game_config.bead_config
     # 各功能开放的等级
     config_info["open_lv"] = game_config.user_init_config['open_lv']
-
+    # VIP玩家每天福利
+    config_info['vip_daily_bonus'] = game_config.loginbonus_config['vip_daily_bonus']
     # 道具商店   在道具商店配置中多添加字段 玩家当前已购买次数
     user_pack_obj = rk_user.user_pack
     props_sale = copy.deepcopy(game_config.props_store_config.get('props_sale', {}))
@@ -239,8 +246,6 @@ def get_equip_config(rk_user, params):
     data['equip_conf'] = equip_config
     #获取装备等级经验配置信息
     data['equip_exp_conf'] = game_config.equip_exp_config
-    #获取装备强化配置信息
-    data['equip_update_config'] = game_config.equip_update_config
     #获取套装配置信息
     data['suit_type_conf'] = game_config.suit_type_config
     #获取武器和碎片的掉落来源信息
@@ -256,12 +261,16 @@ def get_yuan_fen(rk_user,params):
     return 0,{'fate_conf':game_config.fate_config}
 
 
+#  需要和前端协商  转成  get_skill_params_config
 def get_item_config(rk_user, params):
-    """获得药品的配置
+    """获得技能的配置
     """
-    data = {'item_conf':game_config.item_config}
-    data.update(game_config.skill_params_config)
-    return 0, data
+    return get_skill_params_config(rk_user, params)
+
+def get_skill_params_config(rk_user, params):
+    """获得技能的配置
+    """
+    return 0, game_config.skill_params_config
 
 def get_material_config(rk_user, params):
     """获得材料的配置
@@ -355,8 +364,8 @@ def get_dungeon_config(rk_user,params):
     #获得玉玺等循环副本的打法
     lstcycle_floor_id = []
     #给前端的配置需要处理
-    for conf_type in ['normal','special','daily','weekly']:
-
+    # for conf_type in ['normal','special','daily','weekly']:
+    for conf_type in ['normal', 'daily']:
         local_conf = getattr(game_config, conf_type + "_dungeon_config")
         local_copy = copy.deepcopy(local_conf)
 

@@ -23,6 +23,7 @@
         <tr>
             <th>标识</th>
             <th>帐号</th>
+            <th>真名</th>
             <th>邮箱</th>
             <th>最后登录IP</th>
             <th>最后登录时间</th>
@@ -34,22 +35,25 @@
             <td>
                 {{ moderator.mid }}
             </td>
-             <td>
-                 {{ moderator.username }}
-             </td>
-             <td>
-                 {{ moderator.email }}
-             </td>
-             <td>
-                 {{ moderator.last_ip }}
-             </td>
-             <td>
-                 {{ moderator.last_login|date:"Y-m-d H:i:s" }}
-             </td>
-             <td>
-                 <a href='javascript:view({{ moderator.mid }})'>权限</a>
-             </td>
-             <td>
+            <td>
+                {{ moderator.username }}
+            </td>
+            <td>
+                {{ moderator.realname }}
+            </td>
+            <td>
+                {{ moderator.email }}
+            </td>
+            <td>
+                {{ moderator.last_ip }}
+            </td>
+            <td>
+                {{ moderator.last_login|date:"Y-m-d H:i:s" }}
+            </td>
+            <td>
+                <a href='javascript:view({{ moderator.mid }})'>权限</a>
+            </td>
+            <td>
             {% if message%}
                 <a href="/admin/moderator/manage_moderator/?mid={{ moderator.mid }}">管理(等待审核)</a>&nbsp;
             {% else %}

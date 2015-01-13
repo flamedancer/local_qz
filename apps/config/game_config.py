@@ -57,18 +57,14 @@ class GameConfig(object):
         #config_name, 配置名; subarea, 分区号
         if not subarea:
             subarea = '1'
-
         subarea_config_name = self._get_subarea_config_name(config_name, subarea)        
         if subarea_config_name not in self.configs:
-            config_obj = Config.get(subarea_config_name)
-            if not config_obj:
-                config_obj = Config.create(subarea_config_name)
-                #raise Exception, "config name '{}' is empty in subarea '{}'".format(config_name, subarea)
-            try:
-                self.configs[subarea_config_name] = eval(config_obj.data)
-            except SyntaxError: #something wrong
-                self.configs[subarea_config_name] = {}
-
+            config_obj = Config.get(subarea_config_name) or Config.create(subarea_config_name)
+            config_dict = eval(config_obj.data)
+            if not config_dict and subarea != '1':
+                # 若此分区当前配置为空， 尝试读取 1 区 配置
+                return self.get_game_config(config_name, '1')
+            self.configs[subarea_config_name] = config_dict
         return self.configs[subarea_config_name]
 
     def __getattr__(self, config_name):

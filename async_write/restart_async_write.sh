@@ -1,3 +1,4 @@
-DIR=/alidata/sites/stg/MaxStrike/async_write
-$DIR/stop_async_write.sh && $DIR/start_async_write.sh
+#!/bin/bash
+BASEDIR=$(dirname $(readlink -f $0))
+$BASEDIR/stop_async_write.sh && $BASEDIR/start_async_write.sh
 

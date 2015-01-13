@@ -1,4 +1,5 @@
 # log files
+.DS_Store
 logs/
 *.pid
 # Byte-compiled / optimized / DLL files

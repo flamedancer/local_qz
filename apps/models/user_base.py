@@ -261,7 +261,7 @@ class UserBase(GameModel):
             'vip_next_lv_need_money': self.user_property.next_lv_need_coin,
             'uid': self.uid,
             'signature': self.baseinfo.get('signature', ''),
-            'max_friend_num': self.user_property.max_friend_num,
+            # 'max_friend_num': self.user_property.max_friend_num,
         }
 
         data.update(self.user_property.property_info)
@@ -281,8 +281,6 @@ class UserBase(GameModel):
             data.pop('update_award')
         if 'charge_sum_money' in data:
             data.pop('charge_sum_money')
-        if 'double_charge_date' in data:
-            data.pop('double_charge_date')
 
         #data['cost'] = self.user_property.cost
         data['this_lv_now_exp'] = self.user_property.this_lv_now_exp

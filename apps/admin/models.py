@@ -43,11 +43,12 @@ class Moderator(MongoModel):
     管理员
     """
     pk = 'username'
-    fields = ['mid','username','password','email','last_ip','last_login','is_staff','permissions', 'in_review']
+    fields = ['mid','username','password','realname','email','last_ip','last_login','is_staff','permissions', 'in_review']
     ex = 3600 * 24
     def __init__(self):
         self.mid = 0 # 管理员标志
         self.username = "" # 管理员账号
+        self.realname = '' # 管理员真实姓名
         self.password = "" # 管理员密码
         self.email = "" # 邮件
         self.last_ip = "0.0.0.0"
@@ -80,6 +81,7 @@ class Moderator(MongoModel):
         M.mid = 0
         M.username = username
         M.password = ''
+        M.realname = ''
         M.email = "" # 邮件
         M.last_ip = "0.0.0.0"
         M.last_login = datetime.datetime.now()

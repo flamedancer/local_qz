@@ -52,7 +52,6 @@ def check_missing_card():
 
     card_related_configs = ['gacha_config', \
          'monster_config', 'user_init_config', 
-         'weekly_dungeon_config', 'special_dungeon_config'
          ] 
 
     good_card_numbers = [cid[:-5] for cid in eval(Config.get('card_config_1').data)]
@@ -114,7 +113,6 @@ def check_missing_monster():
     #check '1' for now, do other subarea later
 
     monster_related_configs = [ 'normal_dungeon_config', 
-            'weekly_dungeon_config', 'special_dungeon_config'
             ]
 
     good_monster_numbers = [mid[:-8] for mid in eval(Config.get('monster_config_1').data)]

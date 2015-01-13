@@ -85,7 +85,7 @@ class UserLogin(GameModel):
         """
         user_base_obj = self.user_base
         user_property_obj = self.user_property
-        game_config = self.game_config
+        # game_config = self.game_config
         # 获取当天的字符串
         now = datetime.datetime.now()
         # 获取注册时间
@@ -114,16 +114,16 @@ class UserLogin(GameModel):
                 self.login_info['continuous_login_num'] = 1
             
             # 每日登录奖励
-            mail_awards.update(self.get_daily_login_award())
+            # mail_awards.update(self.get_daily_login_award())
 
-            # 判断有无系统奖励
-            mail_awards.update(self.get_system_bonus())
+            # # 判断有无系统奖励
+            # mail_awards.update(self.get_system_bonus())
 
             #临时的一个系统补偿
             mail_awards.update(self.get_system_compensates())
             
-            #临时补偿
-            mail_awards.update(self.get_temp_bonus())
+            # #临时补偿
+            # mail_awards.update(self.get_temp_bonus())
 
             # # 特定日期首次充值双倍再开放
             # if not user_property_obj.double_charge and (
@@ -138,11 +138,11 @@ class UserLogin(GameModel):
             
             user_gift_obj = UserGift.get_instance(self.uid)
 
-            #连续登录奖励
-            mail_awards.update(self.get_continuous_login_award())
+            # #连续登录奖励
+            # mail_awards.update(self.get_continuous_login_award())
 
-            #累积登录奖励
-            mail_awards.update(self.get_login_award())
+            # #累积登录奖励
+            # mail_awards.update(self.get_login_award())
 
             # 领取以前未领取的等级奖励
             user_gift_obj.get_lv_gift()
@@ -156,6 +156,10 @@ class UserLogin(GameModel):
 
             # vip 玩家 每日奖励  通过邮件发放
             mail_awards.update(self.get_vip_daily_bonus())
+
+            # 回复战场次数重置
+            user_property_obj.reset_recover_times()
+
 
         # 如果玩家没有成功通过新手引导- 战场1-1 则reset武将编队以便继续新手引导
         if user_property_obj.property_info.get('newbie_steps', 0) == 15 and user_property_obj.newbie:
@@ -334,6 +338,9 @@ class UserLogin(GameModel):
         login_days = str(self.login_info['total_login_num'])
         conf = self.game_config.loginbonus_config['bonus']
 
+        if not conf['awards']:
+            return {}
+
         title = conf.get('title', '')
         content = conf.get('content', '') % login_days
         data = {
@@ -369,6 +376,9 @@ class UserLogin(GameModel):
         #     }
         continuous_days = str(self.login_info['continuous_login_num'])
         conf = self.game_config.loginbonus_config['continuous_bonus']
+
+        if not conf['awards']:
+            return {}
 
         title = conf.get('title', '')
         content = conf.get('content', '') % continuous_days
@@ -515,6 +525,9 @@ class UserLogin(GameModel):
         data = {}
         now = datetime.datetime.now()
         system_bonus_conf = self.game_config.loginbonus_config.get('system_bonus', {})
+        if not system_bonus_conf:
+            return data
+
         title = system_bonus_conf.get('title', '')
 
         for k in system_bonus_conf['awards']:

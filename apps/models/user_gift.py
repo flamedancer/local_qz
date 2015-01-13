@@ -21,7 +21,7 @@ class UserGift(GameModel):
     """
     pk = 'uid'
     fields = ['uid','gift_list','today','gift_code_type','gift_code_info', 'has_got_lv_gift', 'has_got_gift_code',
-        'sign_in_record', 'open_server_record']
+        'sign_in_record', 'open_server_record', 'sign_month']
 
     def __init__(self):
         """初始化用户游戏内部基本信息
@@ -38,6 +38,7 @@ class UserGift(GameModel):
         self.has_got_lv_gift = []   # 精确记录已经领取的等级奖励，eg.  ['1', '10',..]
         self.has_got_gift_code = {}
         self.sign_in_record = {}   # 记录签到奖励的信息
+        self.sign_month = ''       # 签到的月份
         self.open_server_record = {} # 记录开服奖励的信息
 
     @classmethod
@@ -234,9 +235,9 @@ class UserGift(GameModel):
                     elif k == 'card':
                         name = self.game_config.card_config[kk].get('name','')
                         num = vv.get('num',1)
-                    elif k == 'item':
-                        name = self.game_config.item_config[kk].get('name','')
-                        num = vv
+                    # elif k == 'item':
+                    #     name = self.game_config.item_config[kk].get('name','')
+                    #     num = vv
                     elif k == 'material':
                         name = self.game_config.material_config[kk].get('name','')
                         num = vv
@@ -560,22 +561,32 @@ class UserGift(GameModel):
 
 # ----------------------------------- new version ⥥ -----------------------------------
 
-    def clear_open_server_gift(self):
-        self.open_server_record.clear()
-        self.put()
-
     def has_got_all_open_server_gifts(self):
         for info in self.open_server_record['gifts'].values():
             if not info['has_got']:
                 return False
         return True
 
-    def has_got_today_open_server_gift(self):
-        '''
-        当日的开服礼包是否领取
-        '''
-        ul = self.user_login
-        for days, info in self.open_server_record.items():
-            if ul.total_login_num == int(days):
-                return info['has_got']
-        return False
+    def today_can_sign(self):
+        '''独立字段 判断今天是否可以签到'''
+        now = datetime.datetime.now()
+        today = str(now.day)
+        return not self.sign_in_record.setdefault(today, {}).setdefault('today_has_signed_in', False)
+ 
+    @property
+    def total_sign_days(self):
+        '''已签到的天数'''
+        days = 0
+        for info in self.sign_in_record.values():
+            if info.get('has_got', False):
+                days += 1
+        return days
+
+    @property
+    def total_open_days(self):
+        '''已领取开服奖励的天数'''
+        days = 0
+        for info in self.open_server_record['gifts'].values():
+            if info['has_got']:
+                days += 1
+        return days

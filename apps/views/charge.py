@@ -36,6 +36,9 @@ from apps.common.utils import get_msg
 from apps.common.utils import transtr2datetime
 from apps.common.utils import datetime_toString
 from apps.common.utils import string_toDatetime
+from apps.models.user_mail import UserMail
+from apps.common import utils
+from apps.common import tools
 
 ChargeRecord = data_log_mod.get_log_model("ChargeRecord")
 OrderRecord = data_log_mod.get_log_model("OrderRecord")
@@ -64,30 +67,34 @@ google_publicKey = 'MIIBIjANBgkqhkiG9w0BA\
             C9gY+Pag+ipWwIDAQAB'
 
 
+def charge_api(user_base_obj, oid, item_id, platform='', res_dict={},
+               request=None, charge_way='', more_msg={}, charge_money=None):
+    """充值通用函数
 
-def charge_api(user_base_obj, oid, item_id,platform = '',res_dict={},request=None,charge_way = '', more_msg={},charge_money=None):
-    #oid:订单号，唯一标示
-    #item_id虚拟产品ID
-    #user_base_obj,UserBase对象
-    #platform为平台表示
-    data = {'rc': 0}#成功的信息，rc:1为失败
-    data['data'] = {'msg': get_msg('charge','success')}
+
+    Args:
+        oid:   订单号，唯一标示
+        tem_id:   虚拟产品ID
+        user_base_obj:  UserBase对象
+        platform:   平台  例如：  qq, 360 , sina
+    """
+    data = {
+        'rc': 0,
+        'result': '',
+        'data': {
+            'msg': get_msg('charge','success'),
+        }
+    }
 
     if ChargeRecord.find({'oid':oid}):
         data['result'] = u'fail_订单重复' 
         return data
 
     rk_user = user_base_obj
-    special_items = ['com.nega.fenglinhuoshan.coinaa','com.nega.fenglinhuoshangl.coinaa', 'com.nega.fenglinhuoshanmycard.coinaa']
-    #月卡商品item
-    month_items = ['com.nega.fenglinhuoshan.libao.coin00','com.nega.fenglinhuoshangl.libao.coin00',\
-                   'com.nega.fenglinhuoshan.libao.coin001','com.nega.fenglinhuoshangl.libao.coin001',
-                   '360.coin00','360.coin001']
-    vip_items = ['com.nega.fenglinhuoshanvip.coin01','com.nega.fenglinhuoshanvip.coin02',\
-                'com.nega.fenglinhuoshanvip.coin03','com.nega.fenglinhuoshanvip.coin04'\
-                'com.nega.fenglinhuoshanvip.coin05','com.nega.fenglinhuoshanvip.coin06',\
-                'com.nega.fenglinhuoshanvip.coin07','com.nega.fenglinhuoshanvip.coin08',\
-                'com.nega.fenglinhuoshanvip.coin09','com.nega.fenglinhuoshanvip.coin10']
+    user_property_obj = rk_user.user_property
+    property_info = user_property_obj.property_info
+    # 月卡商品item
+    month_items = []
     try:
         #检查月卡是否可以买
         if item_id in month_items and not __check_can_buy_month_item(rk_user,item_id):
@@ -96,123 +103,69 @@ def charge_api(user_base_obj, oid, item_id,platform = '',res_dict={},request=Non
             data['data']['msg'] = get_msg('charge','month_item_once_only')
             return data
             
-        if item_id in special_items:
-            if not rk_user.user_property.special_first_charge:
-                data['rc'] = 12
-                data['result'] = u'fail_特殊礼包只能买一次' 
-                data['data']['msg'] = get_msg('charge','once_only')
-                return data
-            else:
-                rk_user.user_property.property_info['special_first_charge'] = False
-        else:
-            if not rk_user.user_property.charged_fg:
-                rk_user.user_property.property_info['charged_fg'] = True
-        '''
-        * vip 礼包的购买
-        * miaoyichao start
-        * 检查vip特殊商品的购买
-        '''
-        if item_id in vip_items:
-            if rk_user.user_property.vip_this_lv_charge_info:
-                data['rc'] = 12
-                data['result'] = u'fail_当前VIP等级只能买一次该礼包' 
-                data['data']['msg'] = get_msg('charge','once_only')
-                return data
-            else:
-                vip_lv = str(rk_user.user_property.vip_cur_level)
-                rk_user.user_property.property_info['vip_charge_info'][vip_lv] = True
+        shop_config = game_config.shop_config
+        sale_items = shop_config['sale']
+        # all_sale_type = ['sale']
+        # for sale_type in all_sale_type:
+        #     sale_items.update(shop_config.get(sale_type, {}))
 
-        # miaoyichao end
-
-        #是否付费用户，包含充值6元大礼包
-        if not rk_user.user_property.charged_user:
-            rk_user.user_property.property_info['charged_user'] = True
-        shop_config = copy.deepcopy(game_config.shop_config)
-        new_sale = shop_config.get('new_sale',{})
-        new_sale.update(shop_config.get('sale',{}))
-        new_sale.update(shop_config.get('google_sale',{}))
-        new_sale.update(shop_config.get('mycard_sale',{}))
-        item_info = new_sale[item_id]
-        #检查金额是否对
+        item_info = sale_items[item_id]
+        # 检查金额是否对
         if charge_money and not settings.DEBUG and float(charge_money) != float(item_info['price']):
             data['rc'] = 12
-            data['result'] = u'充值金额不正确:%f' % float(charge_money)
+            data['result'] = u"充值金额不正确:%f" % float(charge_money)
             data['data']['msg'] = get_msg('charge','charge_money_invalid')
             return data
-        before_coin = rk_user.user_property.coin
-        data['rc'] = 0
-        data['result'] = 'success'
-        data['data']['msg'] = get_msg('charge','success')
+        before_coin = user_property_obj.coin
 
-        #根据apple的订单时间来获得交易时间,解决购买时候是双倍，但是apple确认是第二天的问题
-        is_double_charge = False
-        charge_double_date = shop_config.get('charge_double_date','')
-        if charge_double_date and charge_double_date not in rk_user.user_property.double_charge_date:
-            original_purchase_date = res_dict.get("original_purchase_date", None)
-            apple_charge_date = transtr2datetime(original_purchase_date)
-            if apple_charge_date is not None:
-                apple_charge_date_cn = apple_charge_date + datetime.timedelta(hours = 8)
-                if charge_double_date == apple_charge_date_cn.strftime('%Y-%m-%d'):
-                    is_double_charge = True
-
-        #发物品
-        if (rk_user.user_property.first_charge or rk_user.user_property.double_charge or is_double_charge is True ) \
-           and item_id not in special_items \
-           and item_id not in month_items:
-            rk_user.user_property.property_info["charge_sumcoin"] += item_info['num'] * 2
-            rk_user.user_property.property_info["charge_sum_money"] += item_info['price']
-            rk_user.user_property.property_info["coin"] += item_info['num'] * 2
-            if rk_user.user_property.double_charge or is_double_charge:
-                rk_user.user_property.property_info['double_charge'] = False
-            elif rk_user.user_property.first_charge:
-                rk_user.user_property.property_info['first_charge'] = False
-            rk_user.user_property.property_info["double_charge_date"].append(charge_double_date)
-#            rk_user.user_property.put()
-            data['result'] = 'success_double'
-            data['data']['msg'] += u'。首次购买，得到双倍奖励！'
+        this_item_has_bought_times = property_info["charge_item_bought_times"].get(item_id, 0)
+        if this_item_has_bought_times < item_info['extreme_cheap_time']:
+            free_coin = item_info['extreme_free_coin']
         else:
-            rk_user.user_property.property_info["charge_sumcoin"] += item_info['num']
-            rk_user.user_property.property_info["charge_sum_money"] += item_info['price']
-            rk_user.user_property.property_info["coin"] += item_info['num']
-#            rk_user.user_property.add_charge_sumcoin(item_info['num'])
-#            rk_user.user_property.add_charge_sum_money(item_info['price'])
-#            rk_user.user_property.add_coin(item_info['num'])
+            free_coin = item_info['free_coin']
 
-        #如果没有充次充值的日期，写入
-        if not rk_user.user_property.first_charge_date:
-            rk_user.user_property.property_info['first_charge_date'] = str(datetime.date.today())
-#            rk_user.user_property.put()
-        after_coin = rk_user.user_property.coin
+        all_get_coin = item_info['sale_coin'] + free_coin
+        # 记录总充值金额和元宝数
+        user_property_obj.property_info["charge_coins"] += all_get_coin
+        user_property_obj.property_info["charge_money"] += item_info['price']
+        # 加元宝
+        user_property_obj.property_info["coin"] += all_get_coin
+
+        after_coin = user_property_obj.coin
 
         #作记录
         record_data = {
-                        "oid":oid,
-                        "platform":rk_user.platform,
-                        "lv":rk_user.user_property.lv,
-                        "price":item_info['price'],
-                        "item_id":item_id,
-                        "item_num":item_info['num'],
-                        "createtime":datetime_toString(datetime.datetime.now()),
-                        "before_coin":before_coin,
-                        "after_coin":after_coin,
-                        "client_type":rk_user.client_type,
-                        "charge_way":charge_way,
+                        'oid': oid,
+                        'platform': rk_user.platform,
+                        'lv': user_property_obj.lv,
+                        'price': item_info['price'],
+                        'item_id': item_id,
+                        'sale_coin': item_info['sale_coin'],
+                        'free_coin': free_coin,
+                        'createtime': datetime_toString(datetime.datetime.now()),
+                        'before_coin': before_coin,
+                        'after_coin': after_coin,
+                        'client_type':rk_user.client_type,
+                        'charge_way': charge_way,
                       }
         if more_msg:
             record_data.update(more_msg)
         ChargeRecord.set_log(rk_user, record_data)
-        rk_user.user_property.put()
-        #充值奖励
-        try:
-            __get_charge_award(rk_user,item_info['num'],shop_config)
-        except:
-            send_exception_mail(request)
-        #月卡处理
-        try:
-            if item_id in month_items:
-                __record_month_item(rk_user, item_id, item_info)
-        except:
-            send_exception_mail(request)
+
+        data['result'] = 'success'
+        # 判断是否首次充值，若是，给首充奖励
+        if not user_property_obj.property_info['charge_item_bought_times']:
+            __give_first_charge_award(rk_user)
+
+        # 记录此商品已购买次数
+        user_property_obj.property_info['charge_item_bought_times'].setdefault(item_id, 0)
+        user_property_obj.property_info['charge_item_bought_times'][item_id] += 1
+        user_property_obj.put()
+        # （运营活动）充值满多少原价元宝给奖励
+        __give_charge_award(rk_user, item_info['sale_coin'])        
+        # 月卡处理
+        if item_id in month_items:
+            __record_month_item(rk_user, item_id, item_info)
     except:
         print_err()
         send_exception_mail(request)
@@ -224,66 +177,53 @@ def charge_api(user_base_obj, oid, item_id,platform = '',res_dict={},request=Non
     return data
 
 
-
-
-def __get_charge_award(rk_user, coin, shop_config):
+def __give_first_charge_award(rk_user):
+    """首次充值奖励
     """
-    充值奖励
+    first_charge_award = rk_user.game_config.operat_config.get('first_charge_award', {})
+    tools.add_things(rk_user, [{'_id': thing_id, 'num': num}
+                     for thing_id, num in first_charge_award.items()], where='first_charge_award')
+
+def __give_charge_award(rk_user, coin):
+    """运营活动）充值奖励
     """
-    pt_fg = False
     if rk_user.client_type in settings.ANDROID_CLIENT_TYPE and 'charge_award' in game_config.android_config:
-        charge_award = game_config.android_config['charge_award']
+        charge_award = rk_user.game_config.android_config['charge_award']
     else:
-        charge_award = shop_config.get('charge_award',{})
+        charge_award = rk_user.game_config.operat_config.get('charge_award',{})
     if not charge_award:
         return
     charge_award_info = rk_user.user_property.charge_award_info
-    user_gift_obj = rk_user.user_gift
 
     for gift_id in charge_award:
         gift_conf = charge_award[gift_id]
         start_time = gift_conf.get('start_time')
         end_time = gift_conf.get('end_time','2111-11-11 11:11:11')
         now_str = datetime_toString(datetime.datetime.now())
-        #未开放或已过期的礼包
-        if now_str>end_time or now_str<start_time:
+        # 未开放或已过期的礼包
+        if now_str > end_time or now_str < start_time:
             continue
         
         if gift_id not in charge_award_info:
-            charge_award_info[gift_id] = {
-                                          'charge_coin':coin,
-                                          }
+            charge_award_info[gift_id] = {'charge_coin': coin}
         else:
-            #已经领取过的礼包
-            if charge_award_info[gift_id].get('has_got',False):
+            # 已经领取过的礼包
+            if charge_award_info[gift_id].get('has_got', False):
                 continue
             charge_award_info[gift_id]['charge_coin'] += coin
-        pt_fg = True
-        #金额未达到
+        # 金额未达到
         if charge_award_info[gift_id]['charge_coin'] < gift_conf.get('charge_coin',0):
             continue
-        #满足条件，发奖励
-        if gift_conf.get('award',[]):
-            charge_award_info[gift_id]['has_got'] = True
-            # msg = get_msg('charge','charge_award')
-            # for award in gift_conf['award']:
-            #     k = award.keys()[0]
-            #     if k in ['gold','gacha_pt','coin','stone']:
-            #         user_gift_obj.add_gift(award,content=msg % gift_conf.get('charge_coin',0))
-            #     elif 'card' in k:
-            #         user_gift_obj.add_gift({'card':award},content=msg % gift_conf.get('charge_coin',0))
-            #     elif 'equip' in k:
-            #         user_gift_obj.add_gift({'equip':award},content=msg % gift_conf.get('charge_coin',0))
-            #     elif 'item' in k:
-            #         user_gift_obj.add_gift({'item':award},content=msg % gift_conf.get('charge_coin',0))
-            #     elif 'mat' in k:
-            #         user_gift_obj.add_gift({'material':award},content=msg % gift_conf.get('charge_coin',0))
-            msg = get_msg('charge', 'charge_award') % gift_conf.get('charge_coin',0)
-            for award in gift_conf['award']:
-                user_gift_obj.add_gift_by_dict(award, msg)
+        # 满足条件，发奖励
+        charge_award_info[gift_id]['has_got'] = True
+        msg = get_msg('charge', 'charge_award') % gift_conf.get('charge_coin',0)
+        sid = 'system_%s' % (utils.create_gen_id())
+        mail_title = msg
+        mail_content = gift_conf.get('desc', '')
+        user_mail_obj = UserMail.hget(rk_user.uid, sid)
+        user_mail_obj.set_mail(mailtype='system', title=mail_title, content=mail_content, award=gift_conf['award'])
 
-    if pt_fg:
-        rk_user.user_property.put()
+    rk_user.user_property.put()
 
 
 
@@ -342,7 +282,7 @@ def __record_month_item(rk_user,item_id,item_info):
 @session_auth
 @set_user
 def charge_result(request):
-    """充值回调
+    """ 苹果AppStore充值回调
     """
     
     #审核期间用沙箱url

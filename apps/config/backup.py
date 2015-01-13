@@ -40,11 +40,10 @@ def generate_backup():
 #   print '#### in backup, subarea_config.data=', subarea_conf
 #   print '#### in backup, subarea_ids=', subarea_ids
 
-    subarea_ids.remove('1') #put 1 as first
-    subarea_ids = ['1'] + subarea_ids
+    subarea_ids.sort() #put 1 as first
 
     for area_id in subarea_ids:    
-        all_config_name_list=get_game_config_name_list(area_id)
+        all_config_name_list = get_game_config_name_list(area_id)
         for conf_name in all_config_name_list:
             full_conf_name = conf_name + '_' + area_id
             print '##### in config backup,', full_conf_name, '@', datetime.datetime.now()
@@ -76,7 +75,6 @@ def show_config_backup(config_name='', subarea='1', date_str=''):
     conf= Config.get(config_name + '_' + subarea + '_' + date_str)
     if not conf or not conf.data:
         return ''
-        
     return conf.data
  
 

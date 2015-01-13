@@ -77,7 +77,7 @@ def buy_store_goods(rk_user, params):
     # 发放兑换物品
     all_get_goods = tools.add_things(rk_user,
                              [goods_info['goods']],
-                             where="buy_mystery_store_goods")
+                             where="buy_pk_store_goods")
 
 
     # 记录log
