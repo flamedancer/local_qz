@@ -2,7 +2,6 @@
 # encoding: utf-8
 """
 user_activity.py
-miaoyichao
 """
 import copy
 import math
@@ -21,7 +20,7 @@ class UserActivity(GameModel):
         banquet: 回体活动（美味大餐） dic
     """
     pk = 'uid'
-    fields = ['uid', 'explore', 'banquet_info']
+    fields = ['uid', 'explore', 'banquet_info', 'growup_info']
     def __init__(self):
         """初始化用户活动信息
 
@@ -31,6 +30,7 @@ class UserActivity(GameModel):
         self.uid = None
         self.explore = {}
         self.banquet_info = {}
+        self.growup_info = {}
 
     @classmethod
     def get_instance(cls,uid):

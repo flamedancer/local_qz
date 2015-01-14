@@ -1,7 +1,6 @@
 #-*- coding: utf-8 -*-
 """ 
 filename:activity.py
-miaoyichao
 该文件主要有的函数功能
 1  美味大餐
 2  探索活动的内容
@@ -9,21 +8,41 @@ miaoyichao
 
 import datetime
 from apps.models.user_pack import UserPack
-from apps.models.user_cards import UserCards
-from apps.models.user_equips import UserEquips
-from apps.models.user_souls import UserSouls
 from apps.common import utils
 from apps.common import tools
 from apps.config.game_config import game_config
 from apps.models import data_log_mod
 from apps.common.utils import datetime_toString
+from apps.common.exceptions import GameLogicError
+
+
+def get_growup_info(rk_user, params):
+    """ 获得成长礼包的信息 
+
+    Returns:
+        has_bought  玩家是否购买过成长计划
+        need_coin   购买成长计划需要元宝数
+        growup_award   各成长礼包信息以及玩家领取情况
+    """
+    operat_config = game_config.operat_config
+    need_coin = operat_config.get('growup_award_need_coin', 0)
+    growup_award = operat_config.get('growup_award', {}).copy()
+    # 已领取的等级奖励
+    ua_growup_info = rk_user.user_activity.growup_info
+    has_got_award_lvs = ua_growup_info.get('has_got_lvs', [])
+    has_bought = ua_growup_info.get('has_bought', False)
+    for lv in growup_award:
+        growup_award[lv]['has_got'] = (lv in has_got_award_lvs)
+    return {'need_coin': need_coin, 'growup_award': growup_award, 'has_bought': has_bought}
 
 
 def banquet_info(rk_user, params):
-    '''
+    """
     * 获取美味大餐的相关内容
     * 获取探索的相关内容
-    '''
+    * 获得成长礼包的信息
+    """
+
     ua = rk_user.user_activity
     user_banquet_info = ua.banquet_info
     now = datetime.datetime.now()
@@ -58,14 +77,20 @@ def banquet_info(rk_user, params):
     banquet_info.pop('banquet_interval')
     banquet_info['am_flag'] = user_banquet_info.get(banquet_info['am_start'],False)
     banquet_info['pm_flag'] = user_banquet_info.get(banquet_info['pm_start'],False)
-    #获取探索的相关内容
+    # 获取探索的相关内容
     explore_info = get_explore_info(rk_user)
-
+    # 获取成长礼包相关内容
+    growup_info = get_growup_info(rk_user, params)
     # 判断新手引导
     newbie_step = int(params.get('newbie_step', 0))
     if newbie_step:
         rk_user.user_property.set_newbie_steps(newbie_step, "banquet_info")
-    return 0, {'banquet_info': banquet_info,'explore_info':explore_info}
+    return {
+        'banquet_info': banquet_info, 
+        'explore_info': explore_info,
+        'growup_info': growup_info,
+    }
+
 
 def get_banquet_stamina(rk_user, params):
     """
@@ -190,7 +215,6 @@ def explore(rk_user,params):
     data_log_mod.set_log('Explore', rk_user, **log_data)
     explore_info = add_explore_info(shovel, rk_user, times)
 
-
     return 0,{'explore_info':explore_info}
 
 
@@ -199,7 +223,6 @@ def add_explore_info(explore_type, rk_user, times):
     根据探索类型获取探索的内容 并且添加
     '''
     explore_config = game_config.explore_config.get('get_explore_info',{}).get(explore_type,{})
-
 
     get_things = []
     show_things = []
@@ -224,6 +247,68 @@ def add_explore_info(explore_type, rk_user, times):
 
     all_get_goods = tools.add_things(rk_user, get_things, where='explore')
     return {"get_info": all_get_goods, "show_things": show_things}
+
+
+def buy_growup_plan(rk_user, params):
+    """购买成长计划"""
+    ua = rk_user.user_activity
+    ua_growup_info = ua.growup_info
+    has_bought = ua_growup_info.get('has_bought', False)
+
+    # 是否已购买 成长计划
+    if has_bought:
+        raise GameLogicError('has bought')
+    operat_config = game_config.operat_config
+    need_coin = operat_config.get('growup_award_need_coin', 0)
+    if not rk_user.user_property.is_coin_enough(need_coin):
+        raise GameLogicError('user', 'not_enough_coin')
+    # vip 等级限制
+    user_property_obj = rk_user.user_property
+    vip_cur_level = user_property_obj.vip_cur_level
+    need_vip_lv = operat_config.get('growup_award_need_vip_lv', 0)
+    if vip_cur_level < need_vip_lv:
+        raise GameLogicError('vip lv not reached')
+
+    ua_growup_info['has_bought'] = True
+    # 扣元宝
+    rk_user.user_property.minus_coin(need_coin, 'buy_growup_plan')
+    ua.put()
+    return {}
+
+
+def get_growup_awards(rk_user, params):
+    """ 领取等级成长奖励
+
+    Args:
+        award_lv:  领取是第几等级的奖励
+    """
+    award_lv = params.get('award_lv', '0')
+    ua = rk_user.user_activity
+    ua_growup_info = ua.growup_info
+    all_growup_awards = game_config.operat_config.get('growup_award', {})
+
+    # 没有购买成长计划
+    if not ua_growup_info.get('has_bought', False):
+        raise GameLogicError('has not bought')
+    # 不存在该等级奖励
+    if award_lv not in all_growup_awards:
+        raise GameLogicError('lv award no exist')
+    # 等级未到达
+    user_property_obj = rk_user.user_property
+    if int(user_property_obj.lv) < int(award_lv):
+        raise GameLogicError('lv not reached')
+    # 已领取的等级奖励 不能再领
+    has_got_award_lvs = ua_growup_info.get('has_got_lvs', [])
+    if award_lv in has_got_award_lvs:
+        raise GameLogicError('has got this award')
+    has_got_award_lvs.append(award_lv)
+    ua_growup_info['has_got_lvs'] = has_got_award_lvs
+    ua.put()
+    # 加物品
+    get_things = [{'_id': thing_id, 'num': num}  for thing_id, num in 
+            all_growup_awards[award_lv].get('awards', {}).items()]
+    all_get_goods = tools.add_things(rk_user, get_things, where='get_growup_awards_%s' %award_lv)
+    return {"get_info": all_get_goods}
 
         
 def multiply_income(multiply_income_conf):

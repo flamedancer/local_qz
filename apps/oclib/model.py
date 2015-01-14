@@ -47,7 +47,7 @@ class BaseModel(object):
     def to_dict(self):
         obj_dict = {}
         for field in self.fields:
-            obj_dict[field] = getattr(self,field)
+            obj_dict[field] = getattr(self,field, None)
         return obj_dict
 
 

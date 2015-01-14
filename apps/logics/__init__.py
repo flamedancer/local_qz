@@ -80,6 +80,9 @@ def process_api(request):
             func_data = rc_func_data
         else:
             rc, func_data = rc_func_data
+            if rc != 0:
+                #rc异常时,清空storage
+                app.pier.clear()
         data.update(func_data)
     except exceptions.Error, e:
         rc = e.rc
