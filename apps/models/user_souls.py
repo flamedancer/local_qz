@@ -3,7 +3,6 @@
 """
 user_souls.py
 """
-import copy
 
 from apps.models import data_log_mod
 from apps.models import GameModel
@@ -155,10 +154,6 @@ class UserSouls(GameModel):
                 'num': num,
             }
             data_log_mod.set_log('SoulProduct', self, **log_data)
-        #结果返回
-        if soul_id_split_len == 3:
-            from apps.models.equip_soul_user import EquipSoulUser
-            EquipSoulUser.get_instance(check_id, soul_id.split('_')[2]).add_user(self.uid)
         return True, soul_id, num
 
     def is_normal_soul_enough(self, soul_id, num):

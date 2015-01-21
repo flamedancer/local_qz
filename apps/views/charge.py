@@ -74,7 +74,7 @@ def charge_api(user_base_obj, oid, item_id, platform='', res_dict={},
 
     Args:
         oid:   订单号，唯一标示
-        tem_id:   虚拟产品ID
+        item_id:   虚拟产品ID
         user_base_obj:  UserBase对象
         platform:   平台  例如：  qq, 360 , sina
     """
@@ -93,23 +93,24 @@ def charge_api(user_base_obj, oid, item_id, platform='', res_dict={},
     rk_user = user_base_obj
     user_property_obj = rk_user.user_property
     property_info = user_property_obj.property_info
-    # 月卡商品item
-    month_items = []
+            
     try:
-        #检查月卡是否可以买
-        if item_id in month_items and not __check_can_buy_month_item(rk_user,item_id):
+        shop_config = game_config.shop_config
+        sale_conf = shop_config['sale']
+        monthCard_sale_conf = shop_config.get('monthCard', {})
+        item_info = sale_conf.get(item_id) or monthCard_sale_conf.get(item_id)
+        if not item_info:
             data['rc'] = 12
-            data['result'] = u'fail_月卡每月只能买一次' 
-            data['data']['msg'] = get_msg('charge','month_item_once_only')
+            data['result'] = u'fail_无此商品' 
+            data['data']['msg'] = 'item_id not exist:  ' + item_id
             return data
             
-        shop_config = game_config.shop_config
-        sale_items = shop_config['sale']
+
         # all_sale_type = ['sale']
         # for sale_type in all_sale_type:
         #     sale_items.update(shop_config.get(sale_type, {}))
 
-        item_info = sale_items[item_id]
+        
         # 检查金额是否对
         if charge_money and not settings.DEBUG and float(charge_money) != float(item_info['price']):
             data['rc'] = 12
@@ -117,17 +118,30 @@ def charge_api(user_base_obj, oid, item_id, platform='', res_dict={},
             data['data']['msg'] = get_msg('charge','charge_money_invalid')
             return data
         before_coin = user_property_obj.coin
+        # 分为月卡购买和  普通元宝购买
+        free_coin = 0
+        if item_id in sale_conf:
+            # 计算此次购买可以买到的sale_coin 和额外赠送的 free_coin
+            this_item_has_bought_times = property_info["charge_item_bought_times"].get(item_id, 0)
+            if this_item_has_bought_times < item_info['extreme_cheap_time']:
+                free_coin = item_info['extreme_free_coin']
+            else:
+                free_coin = item_info['free_coin']
+            all_get_coin = item_info['sale_coin'] + free_coin
+            # 记录此商品已购买次数
+            property_info['charge_item_bought_times'].setdefault(item_id, 0)
+            property_info['charge_item_bought_times'][item_id] += 1
 
-        this_item_has_bought_times = property_info["charge_item_bought_times"].get(item_id, 0)
-        if this_item_has_bought_times < item_info['extreme_cheap_time']:
-            free_coin = item_info['extreme_free_coin']
         else:
-            free_coin = item_info['free_coin']
+            monthCard_remain_days = property_info.get('monthCard_remain_days', {})
+            monthCard_remain_days.setdefault(item_id, 0)
+            monthCard_remain_days[item_id] += 29
+            property_info['monthCard_remain_days'] = monthCard_remain_days
+            all_get_coin = item_info['sale_coin']
 
-        all_get_coin = item_info['sale_coin'] + free_coin
         # 记录总充值金额和元宝数
-        user_property_obj.property_info["charge_coins"] += all_get_coin
-        user_property_obj.property_info["charge_money"] += item_info['price']
+        property_info["charge_coins"] += all_get_coin
+        property_info["charge_money"] += item_info['price']
         # 加元宝
         user_property_obj.property_info["coin"] += all_get_coin
 
@@ -154,18 +168,16 @@ def charge_api(user_base_obj, oid, item_id, platform='', res_dict={},
 
         data['result'] = 'success'
         # 判断是否首次充值，若是，给首充奖励
-        if not user_property_obj.property_info['charge_item_bought_times']:
+        if (property_info["charge_money"] - item_info['price']) <= 0:
             __give_first_charge_award(rk_user)
 
-        # 记录此商品已购买次数
-        user_property_obj.property_info['charge_item_bought_times'].setdefault(item_id, 0)
-        user_property_obj.property_info['charge_item_bought_times'][item_id] += 1
-        user_property_obj.put()
         # （运营活动）充值满多少原价元宝给奖励
         __give_charge_award(rk_user, item_info['sale_coin'])        
         # 月卡处理
-        if item_id in month_items:
-            __record_month_item(rk_user, item_id, item_info)
+        # if item_id in month_items:
+        #     __record_month_item(rk_user, item_id, item_info)
+        user_property_obj.property_info = property_info
+        user_property_obj.put()
     except:
         print_err()
         send_exception_mail(request)
@@ -227,7 +239,7 @@ def __give_charge_award(rk_user, coin):
 
 
 
-def __check_can_buy_month_item(rk_user,item_id):
+def __check_can_buy_month_item(rk_user, item_id):
     """
     检查是否能买月卡
     """

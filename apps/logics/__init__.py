@@ -6,8 +6,9 @@ from apps.common import utils
 from apps.config.game_config import game_config
 from apps.oclib import app
 from apps.logics.mails import send_op_mail
+from apps.logics.task import do_daily_task
 
-
+@do_daily_task
 def process_api(request):
     """ 
     功能描述:分发处理请求

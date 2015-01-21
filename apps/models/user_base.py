@@ -303,15 +303,6 @@ class UserBase(GameModel):
 
         #首冲标志
         data['first_charge'] = self.user_property.double_charge or self.user_property.first_charge
-        #月卡信息
-        data['month_item_info'] = copy.deepcopy(self.user_property.month_item_info)
-        for product_id in data['month_item_info']:
-            if 'charge_date' in data['month_item_info'][product_id]:
-                data['month_item_info'][product_id].pop('charge_date')
-            if data['month_item_info'][product_id]['start_time']:
-                data['month_item_info'][product_id]['start_time'] += ' 00:00:00'
-            if data['month_item_info'][product_id]['end_time']:
-                data['month_item_info'][product_id]['end_time'] += ' 00:00:00'
 
         #倒计时求将时间
         data['next_free_gacha_time'] = UserGacha.get_instance(self.uid).next_free_gacha_time

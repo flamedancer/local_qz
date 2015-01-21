@@ -213,6 +213,7 @@ def update(rk_user,params):
             #自动强化装备
             crit_time, data = user_equips_obj.auto_update_equip(rk_user,base_ueid,vip_lv,user_lv,where='common_equip_auto_update')
         data['crit_time'] = crit_time
+
         return 0, data
     elif 5<=uetype<=6:
         #该部分需要特定的道具进行升级

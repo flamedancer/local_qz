@@ -1,4 +1,4 @@
-﻿1:修改 settings 	  正式版	  测试版
+1:修改 settings 	  正式版	  测试版
 	ENVIRONMENT_TYPE  prd         stg
 	BASE_ROOT         运维提供    一般为我们自己部署的目录
 	BASE_URL          运维提供    http://sangoioscn.newsnsgame.com   ＃test2 

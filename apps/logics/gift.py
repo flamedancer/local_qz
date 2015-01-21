@@ -12,9 +12,11 @@ from apps.models.user_equips import UserEquips
 from apps.models.user_cards import UserCards
 from apps.models.user_souls import UserSouls
 from apps.models.user_pack import UserPack
+from apps.models.user_task import UserTask
 from apps.logics import vip
 import datetime
 import time
+
 user_gift_record = {}
 
 def new_gift_list(rk_user,params):
@@ -172,50 +174,50 @@ def new_get_gift(rk_user,params):
     return 0,{'get_info':data}
 
 
-def get_month_card_award(rk_user, params):
-        """
-        领取月卡元宝
-        """
-        card_type = params['type']
-        user_property_obj = rk_user.user_property
+# def get_month_card_award(rk_user, params):
+#         """
+#         领取月卡元宝
+#         """
+#         card_type = params['type']
+#         user_property_obj = rk_user.user_property
 
-        sale_conf = copy.deepcopy(game_config.shop_config).get('sale',{})
-        sale_conf.update(game_config.shop_config.get('new_sale',{}))
-        sale_conf.update(game_config.shop_config.get('google_sale',{}))
+#         sale_conf = copy.deepcopy(game_config.shop_config).get('sale',{})
+#         sale_conf.update(game_config.shop_config.get('new_sale',{}))
+#         sale_conf.update(game_config.shop_config.get('google_sale',{}))
 
-        today = datetime.date.today()
-        today_str = utils.datetime_toString(today,'%Y-%m-%d')
+#         today = datetime.date.today()
+#         today_str = utils.datetime_toString(today,'%Y-%m-%d')
 
-        this_month_item_info = user_property_obj.month_item_info.get(card_type)
+#         this_month_item_info = user_property_obj.month_item_info.get(card_type)
 
-        item_info = {}
-        for item_id in sale_conf:
-            if card_type == item_id.split('.')[-1]:
-                item_info = sale_conf[item_id]
-                break
-        if not item_info or not item_info.get('daily_bonus',{}):
-            return 0, {}
+#         item_info = {}
+#         for item_id in sale_conf:
+#             if card_type == item_id.split('.')[-1]:
+#                 item_info = sale_conf[item_id]
+#                 break
+#         if not item_info or not item_info.get('daily_bonus',{}):
+#             return 0, {}
 
-        start_time = this_month_item_info.get('start_time')
-        last_got_date = this_month_item_info.get('last_got_date')
-        end_time = this_month_item_info.get('end_time')
+#         start_time = this_month_item_info.get('start_time')
+#         last_got_date = this_month_item_info.get('last_got_date')
+#         end_time = this_month_item_info.get('end_time')
 
-        if this_month_item_info and this_month_item_info['can_get_today'] \
-        and today_str>last_got_date and today_str<=end_time:
-            card_award = {}
+#         if this_month_item_info and this_month_item_info['can_get_today'] \
+#         and today_str>last_got_date and today_str<=end_time:
+#             card_award = {}
 
-            if card_type == "coin001":
-                start_date = utils.string_toDatetime(start_time,'%Y-%m-%d') + datetime.timedelta(days=1)
-                award_index = (utils.string_toDatetime(today_str,'%Y-%m-%d') - start_date).days % len(item_info['daily_bonus']['card'])
-                card_award['card'] = item_info['daily_bonus']['card'][award_index]
-            else:
-                card_award = item_info['daily_bonus']
-            user_property_obj.give_award(card_award, where='month_card_award {}'.format(card_type))
-            this_month_item_info['can_get_today'] = False
-            user_property_obj.month_item_info[card_type] = this_month_item_info
-            user_property_obj.put()
-            return 0, {}
-        return 11,{'msg': utils.get_msg('gift','gift_not_exist')}
+#             if card_type == "coin001":
+#                 start_date = utils.string_toDatetime(start_time,'%Y-%m-%d') + datetime.timedelta(days=1)
+#                 award_index = (utils.string_toDatetime(today_str,'%Y-%m-%d') - start_date).days % len(item_info['daily_bonus']['card'])
+#                 card_award['card'] = item_info['daily_bonus']['card'][award_index]
+#             else:
+#                 card_award = item_info['daily_bonus']
+#             user_property_obj.give_award(card_award, where='month_card_award {}'.format(card_type))
+#             this_month_item_info['can_get_today'] = False
+#             user_property_obj.month_item_info[card_type] = this_month_item_info
+#             user_property_obj.put()
+#             return 0, {}
+#         return 11,{'msg': utils.get_msg('gift','gift_not_exist')}
 
 # ----------------------------------- new version ⥥ -----------------------------------
 

@@ -21,7 +21,7 @@ g_lConfig = [
     {
         'name': 'system_config',
         'description': u'系统',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'系统/用户',
     },
 
@@ -47,7 +47,7 @@ g_lConfig = [
     {
         'name': 'user_vip_config',
         'description': u'VIP用户',
-        'use_subarea': True,
+        'use_subarea': False,
         'category': u'系统/用户'
     },
     {
@@ -325,6 +325,12 @@ g_lConfig = [
     {
         'name': 'marquee_config',
         'description': u'跑马灯',
+        'use_subarea': True,
+        'category': u'系统/用户'
+    },
+    {
+        'name': 'task_config',
+        'description': u'任务',
         'use_subarea': True,
         'category': u'系统/用户'
     },

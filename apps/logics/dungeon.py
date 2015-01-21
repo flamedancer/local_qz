@@ -26,7 +26,7 @@ from apps.logics import vip
 from apps.common.exceptions import GameLogicError
 from apps.logics import card
 from apps.logics.activity import multiply_income
-
+from apps.models.user_task import UserTask
 
 def start(rk_user, params):
     """战场入口"""
@@ -611,6 +611,7 @@ def end(rk_user,params):
 
     user_dungeon_obj.put()
     data_log_mod.set_log('DungeonRecord', rk_user, **log_data)
+
     return 0,data
             
 def revive(rk_user,params):

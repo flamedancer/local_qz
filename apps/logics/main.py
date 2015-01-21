@@ -98,7 +98,7 @@ def get_config(rk_user, params):
         # "charge_url": game_config.shop_config.get("charge_award", {}).get("charge_url", ''),
         # # 微信分享类型1:到个人,2:朋友圈
         # "weixin_share_type": game_config.weibo_config.get('weixin_share_type', 1),
-        'notice': game_config.system_config['notice'],
+        # 'notice': game_config.system_config['notice'],
         'notice':this_subarea_notice,
         'multi_gacha_cnt': game_config.gacha_config.get('multi_gacha_cnt', 0), #连抽次数
         'gift_code_fg': game_config.gift_config.get('is_open', False),
@@ -110,7 +110,7 @@ def get_config(rk_user, params):
         # 'weixin_fg': game_config.weibo_config.get('weixin_fg',False),
 
         # 'auto_fight_is_open':game_config.system_config.get('auto_fight_is_open', False),#自动战斗总开关
-        'month_item_is_open': game_config.shop_config.get('month_item_is_open',False),#月卡开关
+        'monthCard_is_open': game_config.system_config.get('monthCard_is_open',False),#月卡开关
         # 'stamina_conf': game_config.operat_config.get('stamina_conf', {}),#领取体力配置
         # 'stamina_award_is_open':game_config.operat_config.get('stamina_award_is_open',False),#领取体力配置开关
         'open_special_is_open':game_config.dungeon_world_config.get('open_special_is_open',False),#花费元宝开启loopgap战场开关
@@ -154,7 +154,7 @@ def get_config(rk_user, params):
             # config_info['common']['auto_fight_is_open'] = False
             # config_info['common']['stamina_award_is_open'] = False
             config_info['common']['open_special_is_open'] = False
-            config_info['common']['month_item_is_open'] = False
+            config_info['common']['monthCard_is_open'] = False
             config_info['common']['mystery_store_is_open'] = False
             if 'gacha_card_up_in_review' in game_config.gacha_config:
                 config_info['gacha_card_up'] = game_config.gacha_config['gacha_card_up_in_review']
@@ -185,8 +185,8 @@ def get_config(rk_user, params):
     rc,config_info['dungeon'] = get_dungeon_config(rk_user,params)
     config_info['dungeon_world'] = game_config.dungeon_world_config['world']
 
-    # mycard 商品配置
-    config_info['mycard_sale'] = game_config.shop_config.get('mycard_sale', {})
+    # # mycard 商品配置
+    # config_info['mycard_sale'] = game_config.shop_config.get('mycard_sale', {})
     
     # sale 元宝商品配置   要减去已经特惠次数
     sale_conf = copy.deepcopy(game_config.shop_config.get('sale', {}))
@@ -195,6 +195,19 @@ def get_config(rk_user, params):
         if item in sale_conf:
             sale_conf['extreme_cheap_time'] = max(sale_conf[item]['extreme_cheap_time'] - each_item_bought_times[item], 0)
     config_info['sale_conf'] = sale_conf
+
+    # 月卡商品配置  要添加是否购买此月卡 和  剩余返还天数
+    monthCard_sale_conf = copy.deepcopy(game_config.shop_config.get('monthCard', {}))
+    monthCard_remain_days = rk_user.user_property.property_info.get('monthCard_remain_days', {})
+    for item in monthCard_sale_conf:
+        if item in monthCard_remain_days:
+            monthCard_sale_conf[item]['remain_days'] = monthCard_remain_days[item]
+            monthCard_sale_conf[item]['has_bought'] = True
+        else:
+            monthCard_sale_conf[item]['remain_days'] = 29
+            monthCard_sale_conf[item]['has_bought'] = False
+    config_info['monthCard_sale_conf'] = monthCard_sale_conf
+
     config_info['vip_gift_sale'] = vip.vip_gift_sale_list(rk_user)
 
     #指定floor里面的内容信息

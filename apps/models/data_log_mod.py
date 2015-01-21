@@ -32,6 +32,8 @@ ALL_LOG_NAMES = [
     "DungeonRecord",        # 打副本记录  'exp_point' 获得经验, 'statament' (start开始/ end结束), 'dungeon_id', 'dungeon_type' 普通/日常/周/特殊, 'card_deck', 'lv'
     "SoulProduct",          # 碎片  'user_lv', 'where','soul_id','num'
     "SoulConsume",          # 碎片  'user_lv', 'where','soul_id','num'
+    "HonorProduct",          # 功勋点  'where','before', 'after', 'num'
+    "HonorConsume",          # 功勋点  'where','before', 'after', 'num'
 
     "PvpRecord",            # 实时pvp的结算记录  'winner'  胜者uid,  'loser' 负者uid   end_reason 结束原因
     "Explore",              # 探索   'type' 探索类型 （gold/silver/copper），'cost' 消耗的物品类型， 'cost_num' 消耗的物品数量  'num' 次数

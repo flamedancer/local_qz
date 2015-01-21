@@ -116,10 +116,12 @@ def card_update(rk_user, params):
     data = {'new_card_info':{}}
     data['new_card_info']['ucid'] = base_ucid
     data['new_card_info'].update(user_card_obj.cards[base_ucid])
+    data['up_lv'] = next_lv - card_lv #  升过几级 做任务用
     #判断新手引导
     newbie_step = int(params.get('newbie_step',0))
     if newbie_step:
         rk_user.user_property.set_newbie_steps(newbie_step, "card_update")
+
     return 0,data
 
 def advanced_talent(rk_user,params):

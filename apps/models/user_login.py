@@ -147,9 +147,10 @@ class UserLogin(GameModel):
             # 领取以前未领取的等级奖励
             user_gift_obj.get_lv_gift()
 
-            # 月卡返还,当天注册的不返还
-            if str(add_date) != str(now.date()):
-                self.__refresh_month_card_info(user_property_obj)
+            # 月卡返还
+            mail_awards.update(self.get_monthCard_bonus())
+            # if str(add_date) != str(now.date()):
+            #     self.__refresh_month_card_info(user_property_obj)
 
             # 重置道具商店购买次数
             self.user_pack.reset_store_has_bought_cnt()
@@ -239,58 +240,83 @@ class UserLogin(GameModel):
         data['hh'] = hh
         return data
 
-    def __refresh_month_card_info(self,user_property_obj):
-        """
-        刷新 月卡信息
-        """
-        today = datetime.date.today()
-
-        month_item_info = user_property_obj.month_item_info
-
-        for product_id in month_item_info:
-            #月卡标志重新判断
-            charge_date = month_item_info[product_id]['charge_date']
-            if charge_date and not month_item_info[product_id]['can_buy']:
-                last_charge_month = utils.string_toDatetime(charge_date[0],'%Y-%m-%d').month
-                if today.month != last_charge_month:
-                    month_item_info[product_id]['can_buy'] = True
+    def get_monthCard_bonus(self):
+        user_property_obj = self.user_property
+        property_info = user_property_obj.property_info
+        monthCard_remain_days = property_info.get('monthCard_remain_days', {})
+        if not monthCard_remain_days:
+            return {}
+        monthCard_bonus = {}
+        title = utils.get_msg('charge', 'monthCard_mail_title')
+        content = utils.get_msg('charge', 'monthCard_mail_content')
+        monthCard_sale_conf = self.game_config.shop_config['monthCard']
+        for monthCard in monthCard_remain_days:
+            if monthCard in monthCard_sale_conf and monthCard_remain_days[monthCard] > 0:
+                monthCard_remain_days[monthCard] -= 1
+                award = {'coin': monthCard_sale_conf[monthCard]['eachday_return_coin']}
+                monthCard_bonus[monthCard] = {
+                    'title': title,
+                    'content': content % monthCard_remain_days[monthCard],
+                    'award': award
+                }
+                if monthCard_remain_days[monthCard] == 0:
+                    monthCard_remain_days.pop(monthCard)
+        user_property_obj.property_info['monthCard_remain_days'] = monthCard_remain_days  
         user_property_obj.put()
+        return monthCard_bonus
 
-    def __get_month_daily_coin(self,user_property_obj):
-        """
-        领取月卡元宝
-        """
-        #检查本月是否可以购买月卡
-        today = datetime.date.today()
-        today_str = utils.datetime_toString(today,'%Y-%m-%d')
-        data = {'month_daily_bonus':{}}
-        month_item_info = user_property_obj.month_item_info
-        pt_fg = False
-        shop_config = copy.deepcopy(self.game_config.shop_config)
-        sale_conf = shop_config.get('sale',{})
-        sale_conf.update(shop_config.get('new_sale',{}))
-        sale_conf.update(shop_config.get('google_sale',{}))
-        # month_item_is_open = shop_config.get('month_item_is_open',False)
-        # month_card_award = utils.get_msg('operat', 'month_card_award', self)
-        for product_id in month_item_info:
+    # def __refresh_month_card_info(self,user_property_obj):
+    #     """
+    #     刷新 月卡信息
+    #     """
+    #     today = datetime.date.today()
+
+    #     month_item_info = user_property_obj.month_item_info
+
+    #     for product_id in month_item_info:
+    #         #月卡标志重新判断
+    #         charge_date = month_item_info[product_id]['charge_date']
+    #         if charge_date and not month_item_info[product_id]['can_buy']:
+    #             last_charge_month = utils.string_toDatetime(charge_date[0],'%Y-%m-%d').month
+    #             if today.month != last_charge_month:
+    #                 month_item_info[product_id]['can_buy'] = True
+    #     user_property_obj.put()
+
+    # def __get_month_daily_coin(self,user_property_obj):
+    #     """
+    #     领取月卡元宝
+    #     """
+    #     #检查本月是否可以购买月卡
+    #     today = datetime.date.today()
+    #     today_str = utils.datetime_toString(today,'%Y-%m-%d')
+    #     data = {'month_daily_bonus':{}}
+    #     month_item_info = user_property_obj.month_item_info
+    #     pt_fg = False
+    #     shop_config = copy.deepcopy(self.game_config.shop_config)
+    #     sale_conf = shop_config.get('sale',{})
+    #     sale_conf.update(shop_config.get('new_sale',{}))
+    #     sale_conf.update(shop_config.get('google_sale',{}))
+    #     # month_item_is_open = shop_config.get('month_item_is_open',False)
+    #     # month_card_award = utils.get_msg('operat', 'month_card_award', self)
+    #     for product_id in month_item_info:
             
-            start_time = month_item_info[product_id]['start_time']
-            end_time = month_item_info[product_id]['end_time']
-            if start_time and end_time and today_str>=start_time and today_str<=end_time:
-                month_item_info[product_id]['can_get_today'] = True
+    #         start_time = month_item_info[product_id]['start_time']
+    #         end_time = month_item_info[product_id]['end_time']
+    #         if start_time and end_time and today_str>=start_time and today_str<=end_time:
+    #             month_item_info[product_id]['can_get_today'] = True
 
-            #月卡标志重新判断
-            charge_date = month_item_info[product_id]['charge_date']
-            if charge_date and not month_item_info[product_id]['can_buy']:
-                last_charge_month = utils.string_toDatetime(charge_date[0],'%Y-%m-%d').month
-                if today.month != last_charge_month:
-                    month_item_info[product_id]['can_buy'] = True
-                    pt_fg = True
-        if pt_fg:
-            user_property_obj.put()
-        if not data['month_daily_bonus']:
-            data.pop('month_daily_bonus')
-        return data
+    #         #月卡标志重新判断
+    #         charge_date = month_item_info[product_id]['charge_date']
+    #         if charge_date and not month_item_info[product_id]['can_buy']:
+    #             last_charge_month = utils.string_toDatetime(charge_date[0],'%Y-%m-%d').month
+    #             if today.month != last_charge_month:
+    #                 month_item_info[product_id]['can_buy'] = True
+    #                 pt_fg = True
+    #     if pt_fg:
+    #         user_property_obj.put()
+    #     if not data['month_daily_bonus']:
+    #         data.pop('month_daily_bonus')
+    #     return data
             
     def send_mails(self, awards):
         """将奖励于邮件形式发送"""

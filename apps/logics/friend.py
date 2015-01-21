@@ -6,12 +6,12 @@ from apps.models.user_property import UserProperty
 from apps.models.user_base import UserBase
 from apps.models.user_login import UserLogin
 from apps.models.user_dungeon import UserDungeon
-from apps.models.friend import Friend
+# from apps.models.friend import Friend
 from apps.models.level_user import LevelUser
 from apps.common import utils
 from apps.config.game_config import game_config
 from apps.models.user_gift import UserGift
-from apps.models.user_pvp import UserPvp
+# from apps.models.user_pvp import UserPvp
 from apps.models import data_log_mod
 
 

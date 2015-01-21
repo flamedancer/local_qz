@@ -112,14 +112,10 @@ def send_op_mail(rk_user):
     发运营邮件
     判断运营是否有新配邮件,这里邮件特指mail_config['mail_list']里的邮件,需要一些实时性，非一些登陆奖励类邮件
     '''
-    mail_conf = game_config.mail_config.get('mail_list')
-    if not mail_conf:
-        return
+    mail_conf = game_config.mail_config.get('mail_list', {})
+
     for mail_info in mail_conf:
         mid = mail_info['mail_id']
-        if not rk_user.baseinfo.get('received_mails'):
-            rk_user.baseinfo['received_mails'] = []
-            rk_user.put()
         received_mails = rk_user.baseinfo['received_mails']
         # 没收过这封邮件,并且邮件在时间段内，发邮件
         if mid not in received_mails:

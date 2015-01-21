@@ -64,15 +64,6 @@
             'index': 'uid',
             'unique': True
         },
-        'username': [
-            {
-                'index': 'name',
-                'unique': True
-            },
-            {
-                'index': 'uid',
-            },
-        ],
         'usergacha': {
             'index': 'uid',
             'unique': True

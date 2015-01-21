@@ -3,6 +3,7 @@
 
 from apps.models import pvp_redis
 from apps.models import GameModel
+from apps.models import data_log_mod
 
 
 class UserRealPvp(GameModel):
@@ -77,7 +78,7 @@ class UserRealPvp(GameModel):
     def pt(self):
         return self.pvp_info['pt']
 
-    def add_pt(self, num):
+    def add_pt(self, num, where=''):
         # 返回实际的pt变化值
         # pt_user
         old_pt = self.pvp_info['pt']
@@ -94,18 +95,23 @@ class UserRealPvp(GameModel):
         # 返回实际的honor变化值
         old_honor = self.pvp_info['honor']
         new_honor = old_honor + num
-        self.pvp_info['honor'] = new_honor if new_honor > 0 else 0
+        self.pvp_info['honor'] = new_honor
         self.put()
+        log_data = {'where': where, 'num': num, 'before': old_honor, 'after': new_honor}
+        data_log_mod.set_log('HonorProduct', self, **log_data)
         return self.pvp_info['honor'] - old_honor
 
     def is_honor_enough(self,honor):
         return self.pvp_info['honor'] >= abs(honor)
         
-    def minus_honor(self, num):
+    def minus_honor(self, num, where=''):
         if self.pvp_info['honor'] >= num:
+            old_honor = self.pvp_info['honor']
             new_honor = self.pvp_info['honor'] - num
             self.pvp_info['honor'] = new_honor
             self.put()
+            log_data = {'where': where, 'num': num, 'before': old_honor, 'after': new_honor}
+            data_log_mod.set_log('HonorConsume', self, **log_data)
             return True
         return False
 

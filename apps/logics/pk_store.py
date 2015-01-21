@@ -36,7 +36,7 @@ def refresh_store_by_self(rk_user, params):
     if not user_real_pvp.is_honor_enough(refresh_need_honor):
         return 11, {'msg': utils.get_msg('pk_store', 'not_enough_honor')}
 
-    user_real_pvp.minus_honor(refresh_need_honor)
+    user_real_pvp.minus_honor(refresh_need_honor, where='refresh_PkStore')
     user_pk_store.add_refresh_time()
     user_pk_store.refresh_store_goods()
     return 0, _pack_store_info(user_pk_store.store_info())
@@ -70,7 +70,7 @@ def buy_store_goods(rk_user, params):
     if not user_real_pvp.is_honor_enough(need_honor):
         raise GameLogicError('pk_store', 'not_enough_honor')
     # 扣除功勋
-    user_real_pvp.minus_honor(need_honor)
+    user_real_pvp.minus_honor(need_honor, where='buy_PkStore_goods')
     # 兑换物品
     user_pk_store.goods_has_bought(goods_index)
 

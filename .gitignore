@@ -1,4 +1,5 @@
 # log files
+*.rdb
 .DS_Store
 logs/
 *.pid

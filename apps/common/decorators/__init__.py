@@ -733,7 +733,7 @@ def auth_token_for_fb(request,access_token,openid,uuid,mktid,version,client_type
     """
     fg = False
     pid = ''
-    subarea = request.REQUEST.get("subarea", "1")
+    subarea = request.REQUEST.get("subarea", "1") or '1'
     user_info_url = 'https://graph.facebook.com/me?access_token=%s' % str(access_token)
     res = urllib2.urlopen(user_info_url, timeout=12).read()
     res = res.strip()
@@ -743,6 +743,7 @@ def auth_token_for_fb(request,access_token,openid,uuid,mktid,version,client_type
     exec('result = %s' % res)
     if 'error' not in result:
         get_openid = str(result.get('id'))
+        openid = get_openid
         if get_openid == openid:
             fg = True
             pid = md5.md5('fb' + str(openid)).hexdigest()
@@ -755,7 +756,7 @@ def auth_token_for_fb(request,access_token,openid,uuid,mktid,version,client_type
             if not request.rk_user.frozen:
                 #更新用户的openid和access_token
                 request.rk_user.account.update_info(openid,access_token)
-                request.rk_user.update_user_from_fb(result)
+                # request.rk_user.update_user_from_fb(result)
     return fg,pid
 
 def auth_token_for_oc(request,access_token,openid,uuid,mktid,version,client_type,macaddr,idfa,ios_ver):

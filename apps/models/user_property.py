@@ -25,7 +25,7 @@ class UserProperty(GameModel):
     用户游戏内部基本信息
     """
     pk = 'uid'
-    fields = ['uid', 'property_info', 'charge_award_info', 'consume_award_info', 'month_item_info']
+    fields = ['uid', 'property_info', 'charge_award_info', 'consume_award_info']
     def __init__(self):
         """初始化用户游戏内部基本信息
 
@@ -37,8 +37,6 @@ class UserProperty(GameModel):
         self.property_info = {}
         self.charge_award_info = {}
         self.consume_award_info = {}
-        #月卡信息
-        self.month_item_info = {}
 
     @classmethod
     def get_instance(cls,uid):
@@ -46,7 +44,6 @@ class UserProperty(GameModel):
 
         if obj is None:
             obj = cls.create(uid)
-
         return obj
 
 
@@ -65,22 +62,6 @@ class UserProperty(GameModel):
         up.uid = uid
         up.charge_award_info = {}
         up.consume_award_info = {}
-        up.month_item_info = {
-                                'coin00':{
-                                    'can_buy':True,#可以购买
-                                    'charge_date':[],#购买日期
-                                    'can_get_today': False,#当天可以领取返还为True
-                                    'start_time':'',#领奖开始时间
-                                    'end_time':'',#领奖结束时间
-                                },
-                                'coin001':{
-                                    'can_buy':True,#可以购买
-                                    'charge_date':[],#购买日期
-                                    'can_get_today': False,#当天可以领取返还为True
-                                    'start_time':'',#领奖开始时间
-                                    'end_time':'',#领奖结束时间
-                                },
-                            }
 
         up.property_info = {
                             'exp':0,#经验值
@@ -101,6 +82,7 @@ class UserProperty(GameModel):
                             'charge_coins': 0,       # 总共充值的人民币
                             'charge_money': 0,      #  总共购买过元宝数
                             'charge_item_bought_times': {},    #  每种充值商品已购买次数
+                            'monthCard_remain_days': {},       # 每种月卡剩余使用天数   'monthCard30': 29
                             "update_award":[], #版本更新奖励
 
                             'charged_user':False,#是否付费用户，包含大礼包
@@ -123,10 +105,10 @@ class UserProperty(GameModel):
         daily_floods = up.game_config.daily_dungeon_config.keys()
         for daily_flood in daily_floods:
             up.property_info['recover_times']['recover_copy']['daily'][daily_flood] = 0
-
+        # 用户初始化 体力值
         userLevelMod = UserLevelMod.get(str(up.property_info['lv']), game_config=up.game_config)
         up.property_info['stamina'] = userLevelMod.stamina
-
+        # 用户初始化 铜钱 元宝等
         user_info_init = up.game_config.user_init_config["init_user_info"]
         up.property_info.update(user_info_init)
         up.put()

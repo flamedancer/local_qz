@@ -409,7 +409,8 @@ def get_skill_desc_config(request):
 def get_res_url(res_version, game_config):
     #获得资源链接列表地址，及资源的版本号
     res_url_online = game_config.system_config.get("res_url_online", {})
-    if res_url_online and str(int(res_version)) in res_url_online:
+    res_version = str(float(res_version))
+    if res_url_online and res_version in res_url_online:
         res_url = res_url_online.get(res_version, {}).get('url', '')
         res_ver = res_url_online.get(res_version, {}).get('res_version', '')
     else:

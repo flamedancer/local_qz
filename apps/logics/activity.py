@@ -26,6 +26,7 @@ def get_growup_info(rk_user, params):
     """
     operat_config = game_config.operat_config
     need_coin = operat_config.get('growup_award_need_coin', 0)
+    need_vip_lv = operat_config.get('growup_award_need_vip_lv', 0)
     growup_award = operat_config.get('growup_award', {}).copy()
     # 已领取的等级奖励
     ua_growup_info = rk_user.user_activity.growup_info
@@ -33,7 +34,11 @@ def get_growup_info(rk_user, params):
     has_bought = ua_growup_info.get('has_bought', False)
     for lv in growup_award:
         growup_award[lv]['has_got'] = (lv in has_got_award_lvs)
-    return {'need_coin': need_coin, 'growup_award': growup_award, 'has_bought': has_bought}
+    return {'need_coin': need_coin,
+            'growup_award': growup_award,
+            'has_bought': has_bought,
+            'need_vip_lv': need_vip_lv,
+    }
 
 
 def banquet_info(rk_user, params):
@@ -248,7 +253,7 @@ def add_explore_info(explore_type, rk_user, times):
     all_get_goods = tools.add_things(rk_user, get_things, where='explore')
     return {"get_info": all_get_goods, "show_things": show_things}
 
-
+        
 def buy_growup_plan(rk_user, params):
     """购买成长计划"""
     ua = rk_user.user_activity
