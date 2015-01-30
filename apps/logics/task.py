@@ -2,13 +2,11 @@
 """
 file: apps/logics/task.py
 """
-import sys
+#import sys
 
 import copy
-from apps.common import utils
 from apps.common import tools
 from apps.config.game_config import game_config
-from apps.models import data_log_mod
 from apps.common.exceptions import GameLogicError
 
 
@@ -19,12 +17,12 @@ def show_daily_task(rk_user, params):
     task_conf = game_config.task_config['daily_task']
     ut = rk_user.user_task
     user_daily_info = ut.reset_daily_info()
-    reload(sys)
-    sys.setdefaultencoding('utf-8')
+    #reload(sys)
+    #sys.setdefaultencoding('utf-8')
     data = {'tasks': {}}
     for task_id, task_info in task_conf.items():
         if task_info['open']:
-            data['tasks'][task_id] = task_info.copy()
+            data['tasks'][task_id] = copy.deepcopy(task_info)
             data['tasks'][task_id].update(user_daily_info[task_id])
             data['tasks'][task_id]['desc'] = task_info['desc'] % task_info['count']
             data['tasks'][task_id].pop('open')
@@ -95,9 +93,12 @@ def do_daily_task(func):
         if method in method_list:
             ut = request.rk_user.user_task
             if method == 'dungeon.end':
+                if data.get('dungeon_fail'):  # 战斗失败
+                    return rc, data
                 if request.REQUEST.get('dungeon_type', '') == 'daily':
                     ut.do_daily_task(method_list[method][1])
-                ut.do_daily_task(method_list[method][0])
+                elif request.REQUEST.get('dungeon_type', '') == 'normal':
+                    ut.do_daily_task(method_list[method][0])
             elif method == 'equip.update':
                 equip_type = request.REQUEST.get('base_type', '')
                 # 装备升级

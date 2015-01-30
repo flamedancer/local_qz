@@ -197,15 +197,18 @@ def get_config(rk_user, params):
     config_info['sale_conf'] = sale_conf
 
     # 月卡商品配置  要添加是否购买此月卡 和  剩余返还天数
-    monthCard_sale_conf = copy.deepcopy(game_config.shop_config.get('monthCard', {}))
-    monthCard_remain_days = rk_user.user_property.property_info.get('monthCard_remain_days', {})
-    for item in monthCard_sale_conf:
-        if item in monthCard_remain_days:
-            monthCard_sale_conf[item]['remain_days'] = monthCard_remain_days[item]
-            monthCard_sale_conf[item]['has_bought'] = True
-        else:
-            monthCard_sale_conf[item]['remain_days'] = 29
-            monthCard_sale_conf[item]['has_bought'] = False
+    if config_info['common']['monthCard_is_open']:
+        monthCard_sale_conf = copy.deepcopy(game_config.shop_config.get('monthCard', {}))
+        monthCard_remain_days = rk_user.user_property.property_info.get('monthCard_remain_days', {})
+        for item in monthCard_sale_conf:
+            if item in monthCard_remain_days:
+                monthCard_sale_conf[item]['remain_days'] = monthCard_remain_days[item]
+                monthCard_sale_conf[item]['has_bought'] = True
+            else:
+                monthCard_sale_conf[item]['remain_days'] = 29
+                monthCard_sale_conf[item]['has_bought'] = False
+    else:
+        monthCard_sale_conf = {}
     config_info['monthCard_sale_conf'] = monthCard_sale_conf
 
     config_info['vip_gift_sale'] = vip.vip_gift_sale_list(rk_user)

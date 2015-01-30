@@ -103,6 +103,9 @@ def check_start(rk_user,params,user_dungeon_obj):
     if not has_needed_cards(conf, user_card_obj):
         raise GameLogicError('dungeon','needed_special_cards')
 
+    # 进入战场要扣一点体力
+    rk_user.user_property.minus_stamina(1 if need_stamina > 0 else 0)
+
     return conf
 
 def has_needed_cards(conf, user_card_obj):
@@ -417,7 +420,7 @@ def end(rk_user,params):
         return 11,{'msg':utils.get_msg('dungeon','unsame_dungeon')}
     #判断战场是否是完成的
     if params.get('result','1') == '0':
-        data = {}#__resolve_fail(rk_user,user_dungeon_obj,ver=float(params['version']))
+        data = {'dungeon_fail': True}#__resolve_fail(rk_user,user_dungeon_obj,ver=float(params['version']))
         return 0,data
     #获取获得的金币
     user_gold = int(params['user_gold'])
@@ -471,8 +474,8 @@ def end(rk_user,params):
     #     last_info['need_stamina'] = need_stamina
     #     user_dungeon_obj.add_free_stamina_cnt()
     # else:
-    #其余情况需要扣除体力
-    rk_user.user_property.minus_stamina(need_stamina)
+    # 需要扣除体力  进战场时已经扣一点  这里只扣剩下的
+    rk_user.user_property.minus_stamina(max(need_stamina - 1, 0))
 
     #加碎片
     data['get_souls'] = {}

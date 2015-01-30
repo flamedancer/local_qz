@@ -156,6 +156,7 @@ class UserTask(GameModel):
         '''
         判断当天是否有能领的每日任务宝箱
         '''
+        self.reset_daily_info()
         for box_type, flag in self.daily_info['has_got'].items():
             box_conf = game_config.task_config['daily_task_box'][box_type]
             if flag == False and self.daily_info['points'] >= box_conf['need_point']:

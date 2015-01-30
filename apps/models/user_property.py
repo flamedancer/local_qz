@@ -124,13 +124,15 @@ class UserProperty(GameModel):
         """
         return self.property_info['lv']
 
+    def reach_max_lv(self):
+        return str(self.lv + 1) not in self.game_config.user_level_config
+
     @property
     def next_lv(self):
         """
         用户下一lv
-        miaoyichao
         """
-        if str(self.lv + 1) in self.game_config.user_level_config:
+        if not self.reach_max_lv():
             #如果配置中有下一等级的时候 返回+1
             return self.lv + 1
         else:
@@ -165,8 +167,10 @@ class UserProperty(GameModel):
     def this_lv_now_exp(self):
         """
         当前级别内，现在积累的经验值
-        miaoyichao
+        如果达到最大等级，返回最后两等级的差
         """
+        if self.reach_max_lv():
+            return UserLevelMod.get(self.lv).exp - UserLevelMod.get(self.lv - 1).exp
         return self.exp - self.this_lv_exp
 
     @property
@@ -241,11 +245,11 @@ class UserProperty(GameModel):
     def next_lv_need_exp(self):
         """
         到下一级别需要的经验值
+        如果达到最大等级，返回最后两等级的差
         """
-        need_exp = self.next_lv_exp - self.exp
-        if need_exp < 0:
-            need_exp = 0
-        return need_exp
+        if self.reach_max_lv():
+            return 0
+        return self.next_lv_exp - self.exp
 
     @property
     def lv_region(self):
@@ -289,7 +293,6 @@ class UserProperty(GameModel):
         用户新手引导的步骤
         """
         return self.property_info['newbie_steps']
-
 
     @property
     def first_charge(self):

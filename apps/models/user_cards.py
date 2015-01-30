@@ -247,9 +247,6 @@ class UserCards(GameModel):
         else:
             return False
 
-    def arrive_max_cost(self):
-        return self.get_now_cost() > UserPropertyMod.get(self.uid).cost
-
     def add_card(self, cid, lv=1, where=""):
         """将得到的卡加入背包中
         args
