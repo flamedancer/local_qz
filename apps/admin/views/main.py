@@ -97,11 +97,11 @@ def registration(request):
     elif not email:
         return HttpResponse(u"email必填")
 
-    elif not email_verify_code:
-        return HttpResponse(u"Email确认码必填")
+    # elif not email_verify_code:
+    #     return HttpResponse(u"Email确认码必填")
 
-    elif not verify_email_code (email, email_verify_code.strip()):
-        return HttpResponse(u"Email确认码不对")
+    # elif not verify_email_code (email, email_verify_code.strip()):
+    #     return HttpResponse(u"Email确认码不对")
 
     elif not password or password != password2:
         return HttpResponse(u"密码为空，　或两次密码不同")
@@ -125,15 +125,15 @@ def registration(request):
             msg = "username: " + username + '\n'
             msg += str(request)
 
-            error_ml = [ settings.EMAIL_ACCOUNT ]
+            # error_ml = [ settings.EMAIL_ACCOUNT ]
 
 
 
-            #测试期间，暂不发送
-            send_mail('[%s]: registration: ' % (request.path), msg, 
-                    settings.EMAIL_ACCOUNT, error_ml, fail_silently=False,
-                    auth_user=settings.EMAIL_ACCOUNT.split('@')[0],
-                    auth_password=settings.EMAIL_PASSWORD )
+            # #测试期间，暂不发送
+            # send_mail('[%s]: registration: ' % (request.path), msg, 
+            #         settings.EMAIL_ACCOUNT, error_ml, fail_silently=False,
+            #         auth_user=settings.EMAIL_ACCOUNT.split('@')[0],
+            #         auth_password=settings.EMAIL_PASSWORD )
         return HttpResponse(u"谢谢注册, 请耐心等待我们管理员的人工审核.")
 
 
@@ -256,12 +256,8 @@ def main(request):
     #获取当前用户
     moderator = apps.admin.auth.get_moderator_by_request(request)
     # index_list = admin_configuration.view_perm_mappings.get_allow_index_paths(moderator)
-    message = False
-    if moderator.permissions == 'super':
-        in_review_list = Moderator.find({'in_review' : True}) 
-        if in_review_list:
-            message = True
-    return "admin/main.html", {'message': message}
+
+    return "admin/main.html", {}
 
 
 @require_permission
@@ -275,7 +271,7 @@ def moderator_list(request):
     mod_list.sort(key=lambda mod: mod.last_login, reverse=True)   #sort according to data
     return "admin/moderator_list.html", {"moderator_list":mod_list}
 
-
+@require_permission
 def agree_inreview(request):
     """
     带审核的帐号列表列表
@@ -283,7 +279,7 @@ def agree_inreview(request):
     # 取数据库
     from apps.admin.models import Moderator
     mod_list = Moderator.find({'in_review':True})
-    return render_to_response("admin/moderator_list.html",{"moderator_list":mod_list},RequestContext(request))
+    return "admin/moderator_list.html", {"moderator_list":mod_list}
 
 
 @require_permission
@@ -383,9 +379,9 @@ def add_moderator(request):
         form = ModeratorCreationForm()
     return "admin/add_moderator.html", {'form':form}
 
-
+@require_permission
 def add_moderator_done(request):
-    return render_to_response("admin/add_moderator_done.html")
+    return "admin/add_moderator_done.html", {}
 
 
 @require_permission
@@ -465,12 +461,12 @@ def delete_moderator(request):
     else:
         return "admin/delete_moderator.html", {}
 
-
+@require_permission
 def delete_moderator_done(request):
     """
     删除管理员成功
     """
-    return render_to_response("admin/delete_moderator_done.html",{},RequestContext(request))
+    return "admin/delete_moderator_done.html", {}
 
 
 def _config_skill_params_by_ruby(config_value, request):

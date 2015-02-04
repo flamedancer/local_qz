@@ -25,6 +25,7 @@ from apps.logics.main import __calculate_loopgap_dungeon_time
 from apps.logics import vip
 from apps.common.exceptions import GameLogicError
 from apps.logics import card
+from apps.logics import activity
 from apps.logics.activity import multiply_income
 from apps.models.user_task import UserTask
 
@@ -153,12 +154,13 @@ def enter_dungeon(rk_user, params, user_dungeon_obj, conf):
     #增加进入战场打印
     print 'start_dun_%s:%s_%s_%s' % (str(rk_user.uid),dungeon_type,floor_id,room_id)
 
-    #  运营活动  特定时间内收益翻倍
+    ########  运营活动  特定时间内收益翻倍
     multiply = 1
     if dungeon_type == 'daily':
         multiply_income_conf = rk_user.game_config.operat_config.get("multiply_income", {}
         ).get("daily_dungeon", {}).get(floor_id)
         multiply = multiply_income(multiply_income_conf)
+    ########  
 
     last_info = {}
 
@@ -170,9 +172,30 @@ def enter_dungeon(rk_user, params, user_dungeon_obj, conf):
     #新用户前7天失败不扣体力 付费用户失败不扣体力
     need_stamina = int(conf['stamina'])
     last_info['dungeon_stamina'] = need_stamina
-
     #计算每一个小节的敌将和掉落信息
     steps_res = calculate_steps(params, conf, rk_user, multiply)
+
+    ########  运营活动 特定时间额外掉落物品 扫荡时也有类似逻辑  万恶的代码
+    more_drop = activity.more_dungeon_drop(dungeon_type, floor_id, room_id, times=1)
+    if more_drop:
+        all_drop_info = steps_res['all_drop_info']
+        for thing_type, things_id_num in more_drop.items():
+            if thing_type == 'gold':
+                steps_res['dungeon_gold'] = steps_res['dungeon_gold'] + more_drop['gold']['num']
+                continue
+            all_drop_info.setdefault(thing_type, {})
+            for thing_id, num in things_id_num.items():
+                if thing_type == 'soul':
+                    if 'card' in thing_id:
+                        soul_type = 'card'
+                    elif 'equip' in thing_id:
+                        soul_type = 'equip'
+                    all_drop_info[thing_type].setdefault(soul_type, {})
+                    all_drop_info[thing_type][soul_type][thing_id] = all_drop_info[thing_type][soul_type].get(thing_id, 0) + num
+                else:
+                    all_drop_info[thing_type][thing_id] = all_drop_info[thing_type].get(thing_id, 0) + num
+    ###################  
+
     #格式化返回的数据
     data['all_drop_info'] = steps_res['all_drop_info']
     data['steps_info'] = steps_res['steps_info']
@@ -312,6 +335,7 @@ def calculate_steps(params, conf, rk_user, multiply=1):
     data['all_drop_info'] = all_drop_info
     data['total_gold'] = max_gold * multiply
     data['exp_point'] = conf.get('exp_point',0) * multiply
+
     return data
 
 def random_monster_info(boss_id,return_step,all_drop_info):
@@ -916,6 +940,24 @@ def wipe_out(rk_user, params):
     get_goods['exp'] += room_config.get('exp', 0) * do_times
     get_goods['exp_point'] += room_config.get('exp_point', 0) * do_times
     get_goods['gold'] += room_config.get('gold', 0) * do_times
+    
+    ########  运营活动 特定时间额外掉落物品   万恶的代码
+    more_drop = activity.more_dungeon_drop(d_type, floor_id, room_id, times=do_times)
+    if more_drop:
+        for thing_type, things_id_num in more_drop.items():
+            if thing_type == 'gold':
+                get_goods['gold'] += more_drop['gold']['num']
+                continue
+            for thing_id, num in things_id_num.items():
+                if thing_type == 'soul':
+                    if 'card' in thing_id:
+                        soul_type = 'card'
+                    elif 'equip' in thing_id:
+                        soul_type = 'equip'
+                    get_goods[thing_type][soul_type][thing_id] = get_goods[thing_type][soul_type].get(thing_id, 0) + num
+                else:
+                    get_goods[thing_type][thing_id] = get_goods[thing_type].get(thing_id, 0) + num
+    ################### ############
     
     # 扫荡能够得到的物品
     drop_info = _pack_drop_info(room_config.get('drop_info', {}))

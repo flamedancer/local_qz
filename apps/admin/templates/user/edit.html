@@ -38,6 +38,10 @@
         <tr>
             <td><label>等级</label>
                 <span style="color:red;">{{ user_property_obj.lv }}</span>
+                <form method="post">
+                    <input type="text" size="5" maxlength="10" id="modify_lv" name="modify_lv"/>
+                    <input type="submit" value="更改等级"/>
+                </form>
             </td>
             <td>
                 <form method="post">

@@ -25,31 +25,10 @@
                 <td>
                   <input type="text" id='email' name="email" />
 
-                  <script type='text/javascript'>
 
-function send_verify_email_code() {
-    var email = document.getElementById('email').value;
-    if ( email == '' || email == '@') {
-      alert('Email不能为空, 或不正确');
-      return;
-    }
-
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", "/admin/registration/send_verify_email_code/?reason=registration&email=" + email.replace('@', '%40'),   true);
-    xmlhttp.send();
-    alert('确认码已发至' + email + ', 请去查收');
-    return False;
-}
-                  </script>
-                  <button onclick="javascript:send_verify_email_code();">发送Email确认码</button>
+<!--                   <button onclick="javascript:send_verify_email_code();">发送Email确认码</button> -->
 
                 </td>
-            </tr>
-            <tr>
-                <td>Email的确认码:
-
-                </td>
-                <td><input type="text" name="email_verify_code" side=32></td>
             </tr>
 
             <tr>

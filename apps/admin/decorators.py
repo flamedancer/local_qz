@@ -3,6 +3,7 @@ import urllib
 from django.http import HttpResponseRedirect
 
 import apps.admin.auth
+from apps.admin.models import Moderator
 from django.conf import settings
 from apps.admin import admin_configuration
 from django.template import RequestContext
@@ -30,6 +31,12 @@ def require_permission(view_func):
                 template, data = return_inf
                 data["appname"] = settings.APP_NAME
                 data["index_list"] = index_list
+
+                # 新账号提醒
+                if moderator.permissions == 'super':
+                    in_review_list = Moderator.find({'in_review' : True}) 
+                    if in_review_list:
+                        data["message"] = True
                 return render_to_response(template, data ,RequestContext(request))
             else:
                 return return_inf

@@ -186,6 +186,12 @@ def edit_user(request):
         if request.POST.get('add_exp',''):
             add_exp = int(request.POST.get('add_exp'))
             user_property_obj.add_exp(add_exp,where=qa_edit)
+        #更改等级
+        if request.POST.get('modify_lv',''):
+            lv = request.POST.get('modify_lv')
+            lv_exp = game_config.user_level_config[lv]['exp']
+            now_exp = user_property_obj.property_info['exp']
+            user_property_obj.add_exp(lv_exp-now_exp,where=qa_edit)
         # 增加pk 积分
         if request.POST.get('add_pk_pt', 0):
             pvp_pt = int(request.POST.get('add_pk_pt'))

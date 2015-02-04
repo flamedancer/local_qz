@@ -13,7 +13,7 @@ from apps.models.user_collection import UserCollection
 from apps.common import utils
 import time
 from apps.models import data_log_mod
-
+from apps.config.game_config import game_config
 from apps.models import GameModel
 
 class UserCards(GameModel):
@@ -50,6 +50,8 @@ class UserCards(GameModel):
         uc.cards = {}
         uc.cards_info = {
             "cur_deck_index":0,
+            'yuanjun_decks': [[], [], [], [], []],  # []代表每个编队，[]里直接存武将的ucid，
+            'yuanjun_slot': 0  # 共有几个开启了的援军槽
         }
         uc.cards_info['decks'] = [[{}] * 5] * 5
 
@@ -107,6 +109,69 @@ class UserCards(GameModel):
         if is_put is True:
             self.put()
         return self.cards_info['decks']
+
+    @property
+    def yuanjun_decks(self):
+        rtn = [[],[],[],[],[]]
+        yj_decks = self.cards_info['yuanjun_decks']
+        for i, deck in enumerate(yj_decks):
+            if len(deck) == 0:
+                [rtn[i].append({'ucid': ""}) for n in range(self.slot_num)]
+            else:
+                [rtn[i].append({'ucid': ucid}) for ucid in deck]
+        #return self.cards_info['yuanjun_decks']
+        return rtn
+
+    def set_yuanjun_decks(self, decks):
+        """设置援军编队
+        """
+        self.cards_info['yuanjun_decks'] = decks
+        self.put()
+
+    @property
+    def slot_num(self):
+        return self.cards_info['yuanjun_slot']
+
+    def set_slot_num(self, new_lv):
+        '''在达到配置的等级时增加援军槽
+        '''
+        slot_conf = game_config.card_update_config['yuanjun_slot']
+        if str(new_lv) not in slot_conf:
+            return
+        slot_num = slot_conf[str(new_lv)]
+        
+        self.cards_info['yuanjun_slot'] = slot_num
+
+        # 援军编队增加空槽
+        for deck in self.cards_info['yuanjun_decks']:
+            #if not deck:
+            #    for n in range(slot_num):
+            #       deck.append('')
+            #else:
+            #    deck.append('')
+            add_range = range(slot_num - len(deck))
+            
+            [deck.append('') for n in add_range]
+        self.put()
+
+    def can_add_yuanjun(self):
+        '''判断当前编队的援军编队里是否有空位
+        '''
+        #yuanjun_decks = self.cards_info['yuanjun_decks']
+        #for deck in yuanjun_decks:
+        #    if not deck:
+        #        return True
+        #    for ucid in deck:
+        #        if not ucid:
+        #            return True
+        #return False
+        deck = self.cards_info['yuanjun_decks'][self.cur_deck_index]
+        if not deck:
+            return False
+        for ucid in deck:
+            if not ucid:
+                return True
+        return False
 
     def get_leader(self,deck_index):
         """

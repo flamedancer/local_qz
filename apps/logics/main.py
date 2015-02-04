@@ -36,6 +36,7 @@ def index(rk_user,params):
     user_card_obj = rk_user.user_cards
     data['user_cards'] = user_card_obj.cards
     data['user_decks'] = user_card_obj.decks
+    data['yuanjun_decks'] = user_card_obj.yuanjun_decks
     data['deck_index'] = user_card_obj.cur_deck_index
     # 获取用户的装备信息
     user_equips_obj = rk_user.user_equips

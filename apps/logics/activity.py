@@ -336,3 +336,59 @@ def multiply_income(multiply_income_conf):
     if now_str > end_time or now_str < start_time:
         return 1
     return multiply_income_conf.get("multiply", 1)
+
+
+def more_dungeon_drop(dungeon_type, floor_id, room_id, times=1):
+    """  运营活动 特定时间   指定战场 额外掉落物品
+
+    Args:
+        dungeon_type   战场类型 
+        floor_id
+        room_id
+        times          需要随机掉落几次
+
+    Retruns:
+        {
+            'card':{
+                '1_card': 4,
+                '2_card': 5,
+            },
+            'soul':{
+                '1_card': 10,
+                '2_equip_1': 1,
+            },
+            'gold':{
+                'gold': 50,
+            }
+            .....
+
+        }
+    """
+    more_drop_conf = game_config.operat_config.get('more_drop_conf')
+    if not more_drop_conf:
+        return {}
+    drop_info = {}
+    for each_conf in more_drop_conf.values():
+        now_str = datetime_toString(datetime.datetime.now())
+        start_time = each_conf.get("start_time", 0)
+        end_time = each_conf.get("end_time", 0)
+        # 开发时间
+        if now_str > end_time or now_str < start_time:
+            continue
+        # 指定战场类型开放
+        if not dungeon_type in each_conf.get('dungeon', {}):
+            continue
+        # 指定战场开放
+        if each_conf['dungeon'][dungeon_type] != 'all' and '-'.join([floor_id, room_id]) not in each_conf['dungeon'][dungeon_type]:
+            continue
+        for thing_id, thing_drop_conf in each_conf.get('drop_things', {}).items():
+            num = 0
+            for cnt in range(times):
+                if not utils.is_happen(thing_drop_conf.get('drop_rate', 0)):
+                    continue
+                num += utils.get_item_by_random_simple(thing_drop_conf['num'])
+            thing_type = thing_drop_conf['type']
+            drop_info.setdefault(thing_type, {})
+            thing_id = thing_id.replace('Soul', '')
+            drop_info[thing_type][thing_id] = drop_info[thing_type].get(thing_id, 0) + num
+    return drop_info

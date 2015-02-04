@@ -36,8 +36,8 @@ class ModeratorManageForm(forms.Form):
     """
     管理员管理表单
     """
-    password1 = forms.CharField(label=u"密码", required=False, widget=forms.PasswordInput)
-    password2 = forms.CharField(label=u"确认密码", required=False, widget=forms.PasswordInput,
+    password1 = forms.CharField(label=u"新密码", required=False, widget=forms.PasswordInput)
+    password2 = forms.CharField(label=u"确认新密码", required=False, widget=forms.PasswordInput,
             help_text = u"请输入与上面密码一致的密码。")
 
     permissions = forms.MultipleChoiceField(choices = [(perm["code"],perm["description"]) for key,perm in admin_configuration.all_permissions.items()])
@@ -54,8 +54,8 @@ class ModeratorResetPasswordForm(forms.Form):
     """
         管理员自己修改密码表单
     """
-    password1 = forms.CharField(label=u"密码", widget=forms.PasswordInput)
-    password2 = forms.CharField(label=u"确认密码", widget=forms.PasswordInput,
+    password1 = forms.CharField(label=u"新密码", widget=forms.PasswordInput)
+    password2 = forms.CharField(label=u"确认新密码", widget=forms.PasswordInput,
             help_text = u"请输入与上面密码一致的密码。")
 
     def clean_password2(self):

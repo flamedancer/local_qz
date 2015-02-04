@@ -271,6 +271,53 @@ def get_all(rk_user,params):
     data['user_cards'] = UserCards.get_instance(rk_user.uid).cards
     return 0,data
 
+def set_yuanjun_decks(rk_user,params):
+    """设置援军编队
+    params:
+        yuanjun_deck:  'ucid,ucid,ucid_ucid,,ucid'
+    """
+    new_deck = params['yuanjun_deck']
+    # 没有援军槽时前端传的是 '____'
+    if new_deck == '____':
+        return 0, {}
+    new_decks = new_deck.split('_')
+    new_decks_lst = []
+    uc = rk_user.user_cards
+    if len(new_decks) != 5:
+        raise GameLogicError('card','invalid_deck')
+    for i, deck in enumerate(new_decks):
+
+        ucids = deck.split(',')#[:uc.slot_num]
+        if len(ucids) != uc.slot_num:
+            raise GameLogicError('card','invalid_deck')
+        ucid_repeat_check = []
+        cid_repeat_check = []
+        for ucid in ucids:
+            # check :  ucid是否存在，ucid是否重复，cid是否重复
+            #if ucid and ucid not in rk_user.user_cards.cards:
+            #    raise GameLogicError('card', 'no_card')
+            if ucid:
+                if ucid not in rk_user.user_cards.cards:
+                    raise GameLogicError('card', 'no_card')
+                ucid_repeat_check.append(ucid)
+                cid_repeat_check.append(uc.cards[ucid]['cid'])
+
+        for item in uc.decks[i]:
+            if item.get('ucid'):
+                ucid_repeat_check.append(item['ucid'])
+                cid_repeat_check.append(uc.cards[item['ucid']]['cid'])
+        if len(ucid_repeat_check) != len(set(ucid_repeat_check)):
+            raise GameLogicError('card', 'repeated_ucid')
+        if len(cid_repeat_check ) != len(set(cid_repeat_check)):
+            raise GameLogicError('card', 'repeated_cid')
+
+        new_decks_lst.append(ucids)
+    #print new_decks_lst, 'new_decks_lst ---------*************------------'
+
+    uc.set_yuanjun_decks(new_decks_lst)
+    
+    return 0, {}
+
 def set_decks(rk_user,params):
     """设置编队
     params:
@@ -279,60 +326,63 @@ def set_decks(rk_user,params):
             ucid:0,ucid:1,ucid:0,,ucid:0_ucid:0,ucid:1,ucid:0,,ucid:0
     """
     #获取参数
-    new_decks = params['new_deck']
-
+    #new_decks = params['new_deck']
+    new_deck = params.get('new_deck')
     cur_deck_index = int(params["deck_index"])
     #判断编队是否符合要求
     if cur_deck_index < 0 or cur_deck_index > 4:
         raise GameLogicError('card','invalid_deck')
+    if new_deck:
+        new_decks = new_deck.split('_')
+        user_card_obj = UserCards.get_instance(rk_user.uid)
+    
+        decks = user_card_obj.decks
+        if len(decks)==5:
+            new_decks_lst = [[{}] * 5] * 5
+        else:
+            raise GameLogicError('card','invalid_deck')
+        for i, new_deck in enumerate(new_decks):
+            new_new_deck = new_deck.split(',')
+            #检查队伍长度是否合法
+            if len(new_new_deck) == 0:
+                continue
+            if len(new_new_deck) < game_config.system_config['deck_length']:
+                new_new_deck.extend([':0']*(game_config.system_config['deck_length'] - len(new_new_deck)))
+                # return 11,{'msg':utils.get_msg('card','invalid_deck')}
+            #检查这些武将是否存在
+            new_deck_copy = []
+            for card_info in new_new_deck:
+                card_info_ls = card_info.split(':')
+                if card_info_ls:
+                    ucid,is_leader = card_info_ls
+                else:
+                    ucid = ''
+                    is_leader = 0
+                if ucid and not user_card_obj.has_card(ucid):
+                    raise GameLogicError('card', 'no_card')
+                #判断升级和强化素材不能上阵
+                if ucid:
+                    tmp_dict = {'ucid':ucid}
+                    if int(is_leader) == 1:
+                        tmp_dict['leader'] = 1
+                    new_deck_copy.append(tmp_dict)
+                else:
+                    new_deck_copy.append({})
+            #队伍中不能出现重复的ucid和重复的ueid和多个leader
+            no_repeat_deck = utils.remove_null(new_deck_copy)
+            ucids = [card['ucid'] for card in no_repeat_deck if card.get('ucid','')]
+            leader_cnt = len([card['leader'] for card in no_repeat_deck if card.get('leader',0)])
+            if len(ucids) != len(set(ucids)) or leader_cnt != 1:
+                raise GameLogicError('card', 'invalid_deck')
+            new_decks_lst[i] = copy.deepcopy(new_deck_copy)
 
-    new_decks = new_decks.split('_')
-    user_card_obj = UserCards.get_instance(rk_user.uid)
-
-    decks = user_card_obj.decks
-    if len(decks)==5:
-        new_decks_lst = [[{}] * 5] * 5
-    else:
-        raise GameLogicError('card','invalid_deck')
-    for i, new_deck in enumerate(new_decks):
-        new_new_deck = new_deck.split(',')
-        #检查队伍长度是否合法
-        if len(new_new_deck) == 0:
-            continue
-        if len(new_new_deck) < game_config.system_config['deck_length']:
-            new_new_deck.extend([':0']*(game_config.system_config['deck_length'] - len(new_new_deck)))
-            # return 11,{'msg':utils.get_msg('card','invalid_deck')}
-        #检查这些武将是否存在
-        new_deck_copy = []
-        for card_info in new_new_deck:
-            card_info_ls = card_info.split(':')
-            if card_info_ls:
-                ucid,is_leader = card_info_ls
-            else:
-                ucid = ''
-                is_leader = 0
-            if ucid and not user_card_obj.has_card(ucid):
-                raise GameLogicError('card', 'no_card')
-            #判断升级和强化素材不能上阵
-            if ucid:
-                tmp_dict = {'ucid':ucid}
-                if int(is_leader) == 1:
-                    tmp_dict['leader'] = 1
-                new_deck_copy.append(tmp_dict)
-            else:
-                new_deck_copy.append({})
-        #队伍中不能出现重复的ucid和重复的ueid和多个leader
-        no_repeat_deck = utils.remove_null(new_deck_copy)
-        ucids = [card['ucid'] for card in no_repeat_deck if card.get('ucid','')]
-        leader_cnt = len([card['leader'] for card in no_repeat_deck if card.get('leader',0)])
-        if len(ucids) != len(set(ucids)) or leader_cnt != 1:
-            raise GameLogicError('card', 'invalid_deck')
-        new_decks_lst[i] = copy.deepcopy(new_deck_copy)
-
-    #设置最新队伍
-    user_card_obj.set_decks(new_decks_lst)
-    #设置当前编队索引
-    user_card_obj.set_cur_deck_index(cur_deck_index)
+        #设置最新队伍
+        user_card_obj.set_decks(new_decks_lst)
+        #设置当前编队索引
+        user_card_obj.set_cur_deck_index(cur_deck_index)
+    
+    if params.get('yuanjun_deck'):
+        set_yuanjun_decks(rk_user,params)
     return {}
 
 def lock(rk_user,params):

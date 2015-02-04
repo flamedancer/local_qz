@@ -315,6 +315,10 @@ class UserBase(GameModel):
         data['push_info'] = utils.get_push_info(self)
         data['push_open'] = self.game_config.system_config.get('push_open',False)
 
+        # 援军槽数
+        data['yuanjun_slot_num'] = self.user_cards.slot_num
+        # 能否添加援军
+        data['can_add_yuanjun'] = self.user_cards.can_add_yuanjun()
         return data
 
     def set_name(self,name):

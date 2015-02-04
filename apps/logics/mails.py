@@ -115,7 +115,7 @@ def send_op_mail(rk_user):
     # 过一定时间再检查是否有新配邮件，而不是每次都检查
     now_stamp = int(time.time())
     last_check_stamp = rk_user.user_base.baseinfo.setdefault('last_check_stamp', 1420041600)
-    if now_stamp - last_check_stamp < 7200:
+    if now_stamp - last_check_stamp < 3600:
         return
     rk_user.baseinfo['last_check_stamp'] = now_stamp
     rk_user.put()
@@ -154,3 +154,13 @@ def _is_between_times(mail):
         return True
     else:
         return False
+
+
+def delete(rk_user, params):
+    '''一键删除不带奖励的邮件'''
+    mails = UserMail.hgetall(rk_user.uid)
+    for mail_id in mails:
+        if not mails[mail_id]['mail_info'].get('awards'):
+            mail = UserMail.hget(rk_user.uid, mail_id)
+            mail.delete()
+    return 0, {}

@@ -420,7 +420,7 @@ class UserProperty(GameModel):
                 #用户升级后，将自己信息写入邀请者
                 if inviter_friend:
                     inviter_friend.record_invited_user(self.uid, lv)
-
+            self.user_cards.set_slot_num(new_lv)
         self.put()
         return new_lv > old_lv, {}
 

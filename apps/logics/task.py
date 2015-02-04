@@ -21,7 +21,7 @@ def show_daily_task(rk_user, params):
     #sys.setdefaultencoding('utf-8')
     data = {'tasks': {}}
     for task_id, task_info in task_conf.items():
-        if task_info['open']:
+        if task_info['open'] and task_id in user_daily_info:
             data['tasks'][task_id] = copy.deepcopy(task_info)
             data['tasks'][task_id].update(user_daily_info[task_id])
             data['tasks'][task_id]['desc'] = task_info['desc'] % task_info['count']
@@ -76,16 +76,18 @@ def do_daily_task(func):
         # 任务调用的接口，
         # value为任务id，对应task_config['daily_task']的key
         method_list = {
-            'dungeon.end': ['task_1', 'task_4'],  # 完成普通副本， 完成试炼
-            'gift.get_sign_in_gift': 'task_2',
+            'dungeon.end': ['task_1', 'task_4', 'task_13'],   # 完成普通副本， 完成试炼, 大扫荡
+            #'gift.get_sign_in_gift': 'task_2',
             'mystery_store.buy_store_goods': 'task_3',
             'equip.update': ['task_5', 'task_7'],   # 装备升级  宝物升级
             'card.card_update': 'task_6',
             'activity.explore': 'task_9',
-            'pack.buy_props': 'task_10',   # 商城购买物品（道具）
+            'pack.buy_props': 'task_10',    # 商城购买物品（道具）
             #'vip.buy_vip_gift': 'task_10', # 商城购买物品（礼包）
-            #'gacha.charge': 'task_10',     # 商城购买物品（武将）
-            #'gacha.multi_charge': 'task_10',     # 商城购买物品（武将）
+            'activity.get_banquet_stamina': 'task_11', # 吃包子
+            'gacha.charge': 'task_12',          # 招募
+            'gacha.multi_charge': 'task_12',    # 招募
+            'dungeon.wipe_out': 'task13',       # 扫荡
         }
 
         method = request.REQUEST.get('method', '')
@@ -99,6 +101,7 @@ def do_daily_task(func):
                     ut.do_daily_task(method_list[method][1])
                 elif request.REQUEST.get('dungeon_type', '') == 'normal':
                     ut.do_daily_task(method_list[method][0])
+                    ut.do_daily_task(method_list[method][2])
             elif method == 'equip.update':
                 equip_type = request.REQUEST.get('base_type', '')
                 # 装备升级

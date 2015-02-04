@@ -198,13 +198,23 @@ def stove(rk_user,params):
         return_gold = 0
         #返回道具
         return_props = {}
-        #不同等级的经验马/经验书数量
-        exp_book4=exp_book3=exp_book2=exp_book1=exp_horse4=exp_horse3=exp_horse2=exp_horse1 = 0
+        #返还的 不同等级的经验马/经验书数量
+        num_book4=num_book3=num_book2=num_book1=num_horse4=num_horse3=num_horse2=num_horse1 = 0
+        # 不同等级的经验马/经验书提供的经验
+        props_conf = game_config.props_config
+        exp_horse1 = props_conf['15_props']['exp']
+        exp_horse2 = props_conf['16_props']['exp']
+        exp_horse3 = props_conf['17_props']['exp']
+        exp_horse4 = props_conf['18_props']['exp']
+        exp_book1 = props_conf['19_props']['exp']
+        exp_book2 = props_conf['20_props']['exp']
+        exp_book3 = props_conf['21_props']['exp']
+        exp_book4 = props_conf['22_props']['exp']
+
         for equip_info in msg['equips_info']:
             eid = equip_info['eid']
             #宝物装备升级所消耗铜钱
-            cost_update_gold = equip_info['cur_experience'] * \
-                game_config.equip_exp_config['gold_exp_transform_coe'].get('treasure_update_coe',1)
+            cost_update_gold = equip_info['cur_experience'] * treasure_stove_gold_coe
             #获取装备的星级
             star = str(game_config.equip_config[eid].get('star',1))
             #宝物装备炼化基础值
@@ -212,18 +222,18 @@ def stove(rk_user,params):
             eqtype = game_config.equip_config[eid]['eqtype']
             #计算返还经验书的数量。经验书有不同等级，分别计算个数。5000 3000 1000 500为相应等级的经验书所提供的经验
             if eqtype == 5:
-                exp_book4 += cost_update_gold // 5000
-                exp_book3 += cost_update_gold % 5000 // 3000
-                exp_book2 += cost_update_gold % 5000 % 3000 // 1000
-                exp_book1 += cost_update_gold % 5000 % 3000 % 1000 // 500
-                return_props.update({'22_props':exp_book4,'21_props':exp_book3,'20_props':exp_book2,'19_props':exp_book1})
+                num_book4 += cost_update_gold // exp_book4
+                num_book3 += cost_update_gold % exp_book4 // exp_book3
+                num_book2 += cost_update_gold % exp_book4 % exp_book3 // exp_book2
+                num_book1 += cost_update_gold % exp_book4 % exp_book3 % exp_book2 // exp_book1
+                return_props.update({'22_props':num_book4,'21_props':num_book3,'20_props':num_book2,'19_props':num_book1})
             #计算返还经验马  逻辑同经验书
             elif eqtype == 6:
-                exp_horse4 += cost_update_gold // 5000
-                exp_horse3 += cost_update_gold % 5000 // 3000
-                exp_horse2 += cost_update_gold % 5000 % 3000 // 1000
-                exp_horse1 += cost_update_gold % 5000 % 3000 % 1000 // 500
-                return_props.update({'18_props':exp_horse4,'17_props':exp_horse3,'16_props':exp_horse2,'15_props':exp_horse1})
+                num_horse4 += cost_update_gold // exp_horse4
+                num_horse3 += cost_update_gold % exp_horse4 // exp_horse3
+                num_horse2 += cost_update_gold % exp_horse4 % exp_horse3 // exp_horse2
+                num_horse1 += cost_update_gold % exp_horse4 % exp_horse3 % exp_horse2 // exp_horse1
+                return_props.update({'18_props':num_horse4,'17_props':num_horse3,'16_props':num_horse2,'15_props':num_horse1})
             return_gold += int(base_gold + (cost_update_gold * treasure_stove_gold_coe))
         #返还道具
         for props_id in return_props:

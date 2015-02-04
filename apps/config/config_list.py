@@ -172,7 +172,7 @@ g_lConfig = [
     },
     {
         'name': 'bead_config',
-        'description': u'珠子掉落配置',
+        'description': u'珠盘配置',
         'use_subarea': False,
         'category': u'战场'
     },
