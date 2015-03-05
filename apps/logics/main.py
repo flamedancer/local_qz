@@ -49,6 +49,7 @@ def index(rk_user,params):
 
     data['gacha'] = __gacha_info(rk_user)
     data['today_can_sign'] = rk_user.user_gift.today_can_sign()
+
     return 0,data
 
 def __gacha_info(rk_user):
@@ -553,69 +554,70 @@ def show_vedio(rk_user,params):
         return 11,{'msg':utils.get_msg('card','params_wrong')}
 
 
-def get_gift(rk_user,params):
-    #"""兑换礼品码
-    #"""
-    gift_keys = game_config.gift_config.get("gift_config", {})
+def get_gift(rk_user, params):
+    """兑换礼品码
+    """
+    gift_keys = game_config.gift_config.get('gift_config', {})
     if rk_user.client_type in settings.ANDROID_CLIENT_TYPE and 'is_open' in game_config.android_config:
-        is_open = game_config.android_config.get('is_open',True)
+        is_open = game_config.android_config.get('is_open', True)
     else:
-        is_open = game_config.gift_config.get('is_open',True)
+        is_open = game_config.gift_config.get('is_open', True)
     if not is_open:
-        msg = utils.get_msg("gift", "gift_not_open")
-        return 11, {"msg":msg}
-    #校验礼品码
-    gift_code = params["gift_code"]
+        msg = utils.get_msg('gift', 'gift_not_open')
+        return 11, {'msg': msg}
+    # 校验礼品码
+    gift_code = params['gift_code']
     gift_code = gift_code.strip()
     gift_id = gift_code[:-5]
     if gift_id not in gift_keys:
-        msg = utils.get_msg("gift", "gift_code_not_exist")
-        return 11, {"msg":msg}
-    gift = game_config.gift_config['gift_config'][gift_id]
-    start_time = utils.string_toDatetime(gift.get('start_time','2013-05-29 00:00:00'))
-    end_time = utils.string_toDatetime(gift.get('end_time','2913-05-29 00:00:00'))
+        msg = utils.get_msg('gift', 'gift_code_not_exist')
+        return 11, {'msg': msg}
+    gift_conf = game_config.gift_config['gift_config'][gift_id]
+    start_time = utils.string_toDatetime(gift_conf.get('start_time', '2013-05-29 00:00:00'))
+    end_time = utils.string_toDatetime(gift_conf.get('end_time', '2020-05-29 00:00:00'))
     now_time = datetime.datetime.now()
     if now_time < start_time or now_time > end_time:
-        return 11 ,{'msg':utils.get_msg('gift',"gift_not_in_right_time")}
+        return 11, {'msg': utils.get_msg('gift', 'gift_not_in_right_time')}
 
     gift_code_obj = GiftCode.get(gift_id)
     user_gift_obj = UserGift.get_instance(rk_user.uid)
 
-    gift_platform_list = gift.get('platform_list',[])
+    # 平台限制判断
+    gift_platform_list = gift_conf.get('platform_list', [])
     if gift_platform_list and rk_user.platform not in gift_platform_list:
-        return 11, {'msg':utils.get_msg('gift','platform_not_allowed')}
-
-    gift_subarea_list = gift.get('subarea_list',[])
+        return 11, {'msg': utils.get_msg('gift', 'platform_not_allowed')}
+    # 分区限制判断
+    gift_subarea_list = gift_conf.get('subarea_list', [])
     if gift_subarea_list and rk_user.subarea not in gift_subarea_list:
-        return 11, {'msg':utils.get_msg('gift','subarea_not_allowed')}
+        return 11, {'msg': utils.get_msg('gift', 'subarea_not_allowed')}
 
-    if gift['type'] in user_gift_obj.gift_code_type:
-        return 11,{'msg':utils.get_msg('gift','this_type_already_get')}
-    if not gift_code_obj:
-        return 11 ,{'msg':utils.get_msg('gift','gift_code_not_exist')}
-    if gift_code not in gift_code_obj.codes:
-        return 11,{'msg':utils.get_msg('gift','gift_code_error')}
-
-    recycling = gift.get('recycling', False)
+    if gift_id in user_gift_obj.gift_code_type:
+        return 11, {'msg': utils.get_msg('gift', 'this_type_already_get')}
+    if not gift_code_obj or gift_code not in gift_code_obj.codes:
+        return 11, {'msg': utils.get_msg('gift', 'gift_code_not_exist')}
+    # 是否允许不同uid领取相同礼品码
+    recycling = gift_conf.get('recycling', False)
     if not recycling:
         if gift_code_obj.codes[gift_code]:
-            return 11,{'msg':utils.get_msg('gift','gift_code_gived')}
-
+            return 11, {'msg': utils.get_msg('gift', 'gift_code_gived')}
+    # 玩家是否已经领取了此礼品码
     if not user_gift_obj.add_has_got_gift_code(gift_code):
-        return 11,{'msg':utils.get_msg('gift','gift_code_gived')}
+        return 11, {'msg': utils.get_msg('gift', 'gift_code_gived')}
 
-    #发礼品
+    # 记录该礼品码被最后一次领取的uid
     gift_code_obj.codes[gift_code] = rk_user.uid
     gift_code_obj.put()
-    if gift.get('gift',{}):
-        user_gift_obj.add_gift(gift['gift'],content=utils.get_msg('gift','exchange_gift_award'))
+    # 记录玩家已领的礼品码
+    user_gift_obj.gift_code_type.append(gift_id)
+    # 发礼品
+    all_get_things = tools.add_things(rk_user, [{'_id': thing_id, 'num': num} for thing_id, num
+       in gift_conf.get('gift', {}).items()], where=u"giftCode_award")
     #对于可以升级获得的奖励
-    if gift.get('lv_up_gift',{}):
-        user_gift_obj.add_lv_up_giftcode(gift_id)
-        user_gift_obj.get_giftcode_lv_up_award(gift_id)
-    user_gift_obj.gift_code_type.append(gift['type'])
+    # if gift.get('lv_up_gift',{}):
+    #     user_gift_obj.add_lv_up_giftcode(gift_id)
+    #     user_gift_obj.get_giftcode_lv_up_award(gift_id)
     user_gift_obj.put()
-    return 0,{}
+    return {'get_info': all_get_things}
 
 
 def get_first_charge_award_info(rk_user, params):

@@ -322,6 +322,8 @@ class UserLogin(GameModel):
         """将奖励于邮件形式发送"""
         for award_type, award_info in awards.items():
             title = award_info.get('title', '')
+            if not title:
+                continue
             content = award_info.get('content', '')
             award = award_info.get('award', {})
             sid = 'system_%s' % (utils.create_gen_id())

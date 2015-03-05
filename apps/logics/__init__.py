@@ -5,7 +5,6 @@ from apps.common import exceptions
 from apps.common import utils
 from apps.config.game_config import game_config
 from apps.oclib import app
-from apps.logics.mails import send_op_mail
 from apps.logics.task import do_daily_task
 
 @do_daily_task
@@ -71,8 +70,6 @@ def process_api(request):
             ul.login_info['api_retry'] = {}
             ul.put()
 
-    # 发运营邮件
-    send_op_mail(rk_user)
 
     try:
         rc_func_data = bl_func(rk_user, params)

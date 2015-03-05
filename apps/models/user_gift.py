@@ -39,7 +39,10 @@ class UserGift(GameModel):
         self.has_got_gift_code = {}
         self.sign_in_record = {}   # 记录签到奖励的信息
         self.sign_month = ''       # 签到的月份
-        self.open_server_record = {} # 记录开服奖励的信息
+        self.open_server_record = {
+            'gifts': {},
+            'date_info': {}
+        } # 记录开服奖励的信息
 
     @classmethod
     def get_instance(cls,uid):
@@ -400,166 +403,12 @@ class UserGift(GameModel):
         self.put()
 
     def add_has_got_gift_code(self, gift_code):
-        if not hasattr(self, 'has_got_gift_code'):
-            self.has_got_gift_code = {}
-            self.put()
         if gift_code in self.has_got_gift_code:
             return False
         else:
             self.has_got_gift_code[gift_code] = 1
             self.put()
             return True
-
-    # def vip_gift_format(self,vip_gift_sale_config,vip_gift_value):
-    #     '''
-    #     vip礼包格式化礼包信息(列表,购买)
-    #     '''
-    #     temp = {}
-    #     data = {}
-    #     vip_gift_id = ''
-    #     vip_charge_info = []
-    #     if type(vip_gift_value) == list:
-    #         vip_charge_info  =  vip_gift_value
-    #         temp = vip_gift_sale_config
-    #     elif type(vip_gift_value) == str:
-    #         vip_gift_id = vip_gift_value
-    #         temp[vip_gift_id] = vip_gift_sale_config[vip_gift_id]
-    #     else:
-    #         return data
-    #     if temp:   
-    #         for k in temp:
-    #             coin = temp[k].get('coin',0)
-    #             gift = temp[k].get('gift',{})
-    #             data[k] = {'gift':{},'coin':int(coin)}
-    #             if vip_charge_info:
-    #                 if k in vip_charge_info:
-    #                     data[k]['buy'] = True
-    #                 else:
-    #                     data[k]['buy'] = False
-    #             if gift:
-    #                 for t in gift:
-    #                    #exp = t.split('_')
-    #                     num = gift[t]
-    #                     if 'item' in t:
-    #                         if 'item' not in data[k]['gift']:
-    #                             data[k]['gift']['item'] = {}
-    #                         data[k]['gift']['item'][t] = num
-    #                     elif 'props' in t:
-    #                         if 'props' not in data[k]['gift']:
-    #                             data[k]['gift']['props'] = {}
-    #                         data[k]['gift']['props'][t] = num
-    #                     elif 'card' in t:
-    #                         if 'card'  not in data[k]['gift']:
-    #                             data[k]['gift']['card'] = {}
-    #                         data[k]['gift']['card'][t] = num
-    #                     elif 'equip' in t:
-    #                         if 'equip'  not in data[k]['gift']:
-    #                            data[k]['gift']['equip'] = {}
-    #                         data[k]['gift']['equip'][t] = num
-    #                     elif 'mat' in t:
-    #                         if 'material' not in data[k]['gift']:
-    #                            data[k]['gift']['material'] = {}
-    #                         data[k]['gift']['material'][t] = num 
-    #                     elif 'soul' in t:
-    #                         if 'soul' not in data[k]['gift']:
-    #                            data[k]['gift']['soul'] = {}
-    #                         for r in gift['soul']:
-    #                            #exp = r.split('_')
-    #                             num = gift['soul'][r]
-    #                             count = len(r)
-    #                             if count == 3:
-    #                                 if 'card' in r:
-    #                                     if vip_gift_id:
-    #                                         if 'card' not in data[k]['gift']['soul']:
-    #                                             data[k]['gift']['soul']['card'] = {}
-    #                                         data[k]['gift']['soul']['card'][r.rstrip('_soul')] = num
-    #                                     else: 
-    #                                         data[k]['gift']['soul'][r.rstrip('_soul')] = num
-    #                                 if 'equip' in r:
-    #                                     if vip_gift_id:
-    #                                         if 'equip' not in data[k]['gift']['soul']:
-    #                                             data[k]['gift']['soul']['equip'] = {}
-    #                                         data[k]['gift']['soul']['equip'][r.rstrip('_soul')] = num 
-    #                                     else:   
-    #                                         data[k]['gift']['soul'][r.rstrip('_soul')] = num
-    #                             if count == 4:
-    #                                 str_path = r[-2:]
-    #                                 if vip_gift_id:       
-    #                                     if 'equip' not in data[k]['gift']['soul']:
-    #                                         data[k]['gift']['soul']['equip'] = {}
-    #                                     data[k]['gift']['soul']['equip'][r[0:r.find('_soul')]+str_path] = num
-    #                                 else:
-    #                                     data[k]['gift']['soul'][r[0:r.find('_soul')]+str_path] = num
-    #     return data
-
-    # def add_vip_gift(self,uid,gift,vip_gift_id):
-    #     '''
-    #     添加vip礼包的物品
-
-    #     '''
-    #     user_property_obj = UserProperty.get_instance(uid)
-    #     user_pack_obj = UserPack.get_instance(uid)
-    #     user_equips_obj = UserEquips.get_instance(uid)
-    #     user_card_obj = UserCards.get_instance(uid)
-    #     user_soul_obj = UserSouls.get_instance(uid)
-    #     data = {}
-    #     if gift[vip_gift_id]:
-    #         temp = gift[vip_gift_id]['gift']
-    #         for k in temp:
-    #             if k:
-    #                 #添加武将
-    #                 if k == 'card':
-    #                     if 'get_cards' not in data:
-    #                         data['get_cards'] = []
-    #                     for m in temp[k]:
-    #                         num = temp[k][m]
-    #                         for i in xrange(num):
-    #                             success_fg,all_cards_num,ucid,is_first = user_card_obj.add_card(m,1,where='vip_gift')
-    #                             tmp = {'ucid':ucid}
-    #                             tmp.update(user_card_obj.cards[ucid])
-    #                             data['get_cards'].append(tmp)
-    #                 #添加装备
-    #                 elif k == 'equip':
-    #                     if 'get_equips' not in data:
-    #                         data['get_equips'] = []
-    #                     for m in temp[k]:
-    #                         num = temp[k][m]
-    #                         fg,all_equips_num,ueid,is_first = user_equips_obj.add_equip(m,num)
-    #                         tmp = {'ueid':ueid}
-    #                         tmp.update(user_equips_obj.equips[ueid])
-    #                         data['get_equips'].append(tmp)
-    #                 #添加药水
-    #                 elif k == 'item':
-    #                     for m in temp[k]:
-    #                         num  = temp[k][m]
-    #                         user_pack_obj.add_item(m,num)
-    #                     data[k] = temp[k]
-    #                 #添加道具
-    #                 elif k == 'props':
-    #                     for m in temp[k]:
-    #                         num = temp[k][m]
-    #                         user_pack_obj.add_props(m,num)
-    #                     data[k] = temp[k]
-    #                 #添加材料
-    #                 elif k == 'material':
-    #                     for m in temp[k]:
-    #                         num = temp[k][m]
-    #                         user_pack_obj.add_material(m,num)
-    #                     data[k] = temp[k]
-    #                 #添加碎片
-    #                 elif k == 'soul':
-    #                     if 'equip' in temp[k]:
-    #                         for m in temp[k]['equip']:
-    #                             user_soul_obj.add_equip_soul(m,num)
-    #                     if 'card' in temp[k]:
-    #                         for m in temp[k]['card']:
-    #                             user_soul_obj.add_normal_soul(m,num)
-    #                     data[k] = temp[k]
-    #     #添加已购买过vid的id
-    #     user_property_obj.add_vip_gift_id(vip_gift_id)
-    #     return data 
-
-# ----------------------------------- new version ⥥ -----------------------------------
 
     def has_got_all_open_server_gifts(self):
         for info in self.open_server_record['gifts'].values():
@@ -573,6 +422,11 @@ class UserGift(GameModel):
         today = str(now.day)
         return not self.sign_in_record.setdefault(today, {}).setdefault('today_has_signed_in', False)
  
+    def openserver_can_get(self):
+        '''判断今天是否可领取开服礼包'''
+        today_str = utils.get_today_str()
+        return not self.open_server_record['date_info'].get(today_str, False)
+
     @property
     def total_sign_days(self):
         '''已签到的天数'''

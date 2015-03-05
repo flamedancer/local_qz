@@ -735,10 +735,10 @@ def gift(request):
             #     data['status'] = '1'
             if gift_id not in gift_keys:
                 data['status'] = '1'
-            elif len(gift_code_obj.codes) > 0:
-                data['status'] = '2'
+            # elif len(gift_code_obj.codes) > 0:
+            #     data['status'] = '2'
             else:
-                new_gift_codes = random.sample(xrange(10000,99999),add_num)                
+                new_gift_codes = random.sample(xrange(10000,100000),add_num)                
                 new_gift_codes_dict = {gift_id+str(gift_code):'' for gift_code in new_gift_codes}
                 gift_code_obj.give_codes(new_gift_codes_dict)
     gift_record = []

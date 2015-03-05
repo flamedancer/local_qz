@@ -294,39 +294,6 @@ def make_config(request, config_name):
         excel = xlrd.open_workbook(file_contents = filename.read());
         sheet = excel.sheet_by_name(config_name)
         data_string = globals().get(config_name, defuault_excel_explain)(sheet)
-        # data_string += {
-        #     'special_dungeon_config': lambda: special_dungeon_config(sheet),
-        #     'dungeon_config': lambda: dungeon_config(sheet),
-        #     'card_config': lambda: card_config(sheet),
-        #     'monster_config': lambda: monster_config(sheet),
-        #     'user_level_config': lambda: user_level_config(sheet),
-        #     'compgacha_config': lambda: compgacha_config(sheet),
-        #     'equip_config': lambda: equip_config(sheet),
-        #     'item_config': lambda: item_config(sheet),
-        #     'material_config': lambda: material_config(sheet),
-        #     'material_desc_config': lambda: material_desc_config(sheet),
-        #     'item_desc_config': lambda: item_desc_config(sheet),
-        #     'card_desc_config': lambda: card_desc_config(sheet),
-        #     'equip_desc_config': lambda: equip_desc_config(sheet),
-        #     'skill_desc_config': lambda: skill_desc_config(sheet),
-        #     'dungeon_desc_config': lambda: dungeon_desc_config(sheet),
-        #     'gacha_config':lambda: gacha_config(sheet),
-        #     'card_level_config':lambda: card_level_config(sheet),
-        #     'weekly_dungeon_config':lambda: weekly_dungeon_config(sheet),
-        #     'skill_config':lambda: skill_config(sheet),
-        #     'leader_skill_config':lambda: leader_skill_config(sheet),
-        #     'fate_conf': lambda: fate_config(sheet),
-        #     'props_config':lambda: props_config(sheet),
-        #     'props_desc_config':lambda:props_desc_config(sheet),
-        #     'user_vip_conf': lambda: user_vip_config(sheet),
-        #     'equip_exp_conf': lambda: equip_exp_config(sheet),
-        #     'talent_skill_config': lambda: talent_skill_config(sheet),
-        #     'drop_info_config': lambda: drop_info_config(sheet),
-        #     'talent_value_config': lambda: talent_value_config(sheet),
-        #     'explore_config': lambda: explore_config(sheet),
-        #     'dungeon_world_config': lambda: dungeon_world_config(sheet),
-        #     'daily_dungeon_config': lambda: daily_dungeon_config(sheet),
-        # }[config_name]()
         return str(data_string)
     except Exception,e:
         traceback.print_exc(file=sys.stderr)
@@ -659,5 +626,13 @@ def suit_type_config(sheet):
     config = make_dict(sheet)
     config_string = "{\n" + print_dict(config, indented) + "\n}"
     return config_string
+
+def bead_config(sheet):
+    indented = ''
+    config = make_dict(sheet)
+    sort_keys = [ '%s' % tag for tag in sorted([int(i) for i in config])]
+    config_string = "{\n" + print_dict(config, indented,sort_keys) + "\n}"
+    return config_string
+
 
 

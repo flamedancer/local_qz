@@ -319,6 +319,14 @@ class UserBase(GameModel):
         data['yuanjun_slot_num'] = self.user_cards.slot_num
         # 能否添加援军
         data['can_add_yuanjun'] = self.user_cards.can_add_yuanjun()
+        # 能否签到
+        data['today_can_sign'] = self.user_gift.today_can_sign()
+        # 能否领开服礼包
+        data['openserver_can_get'] = self.user_gift.openserver_can_get()
+        # 发运营邮件
+        from apps.logics.mails import send_op_mail
+        send_op_mail(self)
+
         return data
 
     def set_name(self,name):

@@ -231,10 +231,10 @@ def show_open_server_gift(rk_user, params):
     now = datetime.datetime.now()
     today = utils.get_today_str()
     # 初始化
-    if not ug.open_server_record:
+    if not ug.open_server_record['gifts']:
         # 'gifts'按领取天数记录奖励是否领取，比如登录过10天，但只领过一次，这时gifts记录的是['1']['has_got']=True ,其他为False
         # 因为每天只能领取一次，'date_info'用来按日期记录哪天是否已领过一次
-        ug.open_server_record = {'gifts': {}, 'date_info': {}}
+        #ug.open_server_record = {'gifts': {}, 'date_info': {}}
         for day in range(1, 32):
             ug.open_server_record['gifts'].setdefault(str(day), {})['has_got'] = False
         ug.put()

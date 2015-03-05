@@ -113,12 +113,12 @@ def send_op_mail(rk_user):
     判断运营是否有新配邮件,这里邮件特指mail_config['mail_list']里的邮件,需要一些实时性，非一些登陆奖励类邮件
     '''
     # 过一定时间再检查是否有新配邮件，而不是每次都检查
-    now_stamp = int(time.time())
-    last_check_stamp = rk_user.user_base.baseinfo.setdefault('last_check_stamp', 1420041600)
-    if now_stamp - last_check_stamp < 3600:
-        return
-    rk_user.baseinfo['last_check_stamp'] = now_stamp
-    rk_user.put()
+    #now_stamp = int(time.time())
+    #last_check_stamp = rk_user.user_base.baseinfo.setdefault('last_check_stamp', 1420041600)
+    #if now_stamp - last_check_stamp < 300:
+    #    return
+    #rk_user.baseinfo['last_check_stamp'] = now_stamp
+    #rk_user.put()
 
     mail_conf = game_config.mail_config.get('mail_list', {})
     for mail_info in mail_conf:

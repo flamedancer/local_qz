@@ -39,5 +39,5 @@ class GiftCode(BaseModel):
         return obj
 
     def give_codes(self,add_codes):
-        self.codes = add_codes
+        self.codes.update(add_codes)
         self.put()

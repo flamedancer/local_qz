@@ -387,8 +387,40 @@ def more_dungeon_drop(dungeon_type, floor_id, room_id, times=1):
                 if not utils.is_happen(thing_drop_conf.get('drop_rate', 0)):
                     continue
                 num += utils.get_item_by_random_simple(thing_drop_conf['num'])
-            thing_type = thing_drop_conf['type']
-            drop_info.setdefault(thing_type, {})
-            thing_id = thing_id.replace('Soul', '')
-            drop_info[thing_type][thing_id] = drop_info[thing_type].get(thing_id, 0) + num
+            if num > 0:
+                thing_type = thing_drop_conf['type']
+                drop_info.setdefault(thing_type, {})
+                thing_id = thing_id.replace('Soul', '')
+                drop_info[thing_type][thing_id] = drop_info[thing_type].get(thing_id, 0) + num
     return drop_info
+
+
+def get_fudai_things(rk_user, params):
+    """开启福袋获得物品
+
+    Args:
+        fudai_id   开启的福袋id 
+        times      开启次数
+    """
+    fudai_id = params.get('fudai_id', '')
+    open_times = int(params.get('times', 0))
+    # 判断是否是福袋
+    if not game_config.props_config.get(fudai_id, {}).get('used_by','') == 'fudai':
+        raise GameLogicError('pack', 'wrong_used')
+        # 判断用户是否有该道具
+    user_pack_obj = rk_user.user_pack
+    if not user_pack_obj.is_props_enough(fudai_id, open_times):
+        raise GameLogicError('pack', 'not_enough_props')
+    fudai_conf = game_config.operat_config.get('fudai_conf', {}).get(fudai_id, {})
+    get_things_conf = fudai_conf.get('get_things', {})
+    get_things_list = []
+    for cnt in range(open_times):
+        get_things_dict = utils.get_items_by_weight_dict(get_things_conf, 1)[0]
+        things_id = get_things_dict['id']
+        things_num = get_things_dict['num']
+        get_things_list.append({'_id': things_id, 'num': things_num})
+    all_get_things = tools.add_things(rk_user, get_things_list, where=u"open_fudai_%s" %fudai_id)
+    return {'get_info': all_get_things}
+
+
+
