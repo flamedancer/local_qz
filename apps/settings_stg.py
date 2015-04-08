@@ -69,8 +69,7 @@ INSTALLED_APPS = (
 # **重要 使用app.pier 缓存models
 PIER_USE = True
 
-
-#appid和平台id
+# **重要  appid和平台id
 OC_APP_ID = ''  #  生成uid的前缀
 OC_PLATFORM_ID = '56' #  生成uid的前缀
 

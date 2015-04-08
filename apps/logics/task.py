@@ -127,3 +127,75 @@ def do_daily_task(func):
         data['user_info']['task_box_can_get'] = request.rk_user.user_task.today_can_get()
         return rc, data
     return wrap_func
+
+
+def show_main_task(rk_user, params):
+    '''
+    获取玩家 主线任务信息
+    '''
+    conf = game_config.task_config['main_task']
+    ut = rk_user.user_task
+    data = {'tasks': {}}
+    for task in conf:
+        data['tasks'][task] = {}
+
+        if task in ut.main_task:
+            print 'ut.main_task:', ut.main_task
+            print 'show_main_task', task
+            #step = ut.main_task[task]['step']
+            #if step >= ut.max_step(task):
+            #    current_step = str(ut.max_step(task))
+            #else:
+            #    current_step = str(step + 1)
+
+            got_award = ut.main_task[task]['got_award']
+            if got_award >= ut.max_step(task):  # 最大进度数和最大奖励个数是一样的
+                current_award = str(ut.max_step(task))
+            else:
+                current_award = str(got_award + 1)
+
+            data['tasks'][task]['title'] = conf[task]['title']
+            data['tasks'][task]['desc'] = conf[task]['desc'] % conf[task]['value'][current_award]
+            data['tasks'][task]['can_award'] = ut.main_task[task]['step'] > ut.main_task[task]['got_award']
+            data['tasks'][task]['award'] = conf[task]['award'][current_award]
+            data['tasks'][task]['total_steps'] = len(conf[task]['value'])
+            data['tasks'][task]['finished_step'] = ut.main_task[task]['step']
+            data['tasks'][task]['got_award'] = ut.main_task[task]['got_award']   # 已领取的奖励个数
+        else:
+            data['tasks'][task]['title'] = conf[task]['title']
+            data['tasks'][task]['desc'] = conf[task]['desc'] % conf[task]['value']['1']
+            data['tasks'][task]['can_award'] = False
+            data['tasks'][task]['award'] = conf[task]['award']['1']
+            data['tasks'][task]['total_steps'] = len(conf[task]['value'])
+            data['tasks'][task]['finished_step'] = 0
+            data['tasks'][task]['got_award'] = 0
+
+    return 0, data
+
+
+def get_award(rk_user, params):
+    '''领取主线任务奖励'''
+    task_set = params['task']
+    award_result = rk_user.user_task.get_award(task_set)  # 已做领奖次数+1的处理
+    print 'award_result', award_result
+    if award_result != 0 :
+        raise GameLogicError('task','cant_get_award')
+    conf = game_config.task_config['main_task']
+    current_award = str(rk_user.user_task.main_task[task_set]['got_award'])
+    print 'current_award',current_award
+    award = conf[task_set]['award'][current_award]
+    print 'awardinfo', [{"_id": goods, "num": award[goods]} for goods in award if goods]
+    data = {}
+    data['get_things'] = tools.add_things(
+        rk_user,
+        [{"_id": goods, "num": award[goods]} for goods in award if goods],
+        where="main_task_award"
+    )
+    data.update(show_main_task(rk_user, params)[1])
+    return 0, data
+
+
+# ----------------------------- test ---------------------------
+def test_check_main_tasks(rk_user, params):
+    rk_user.user_task.check_main_tasks()
+    return show_main_task(rk_user, params)

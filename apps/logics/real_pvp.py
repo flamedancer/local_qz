@@ -21,6 +21,7 @@ def get_pvp_detail(rk_user, params):
 
 
 def get_real_pvp_info(uid):
+    clear(uid)
     urp = UserRealPvp.get(uid)
     pvp_info_data = urp.get_pvp_need_info()
 

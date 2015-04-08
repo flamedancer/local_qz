@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>国服PAD公告</title>
+
+  <style type="text/css">
+.text {
+  font-size: 30px;
+  width: 100%;
+}
+a {color:#07519A; text-decoration: none}
+font {color: rgb(60, 60, 60); text-decoration: none;font-size: 24px;}
+.background_1 {
+  border-image: url(./image_ui/bg1.png) 37 repeat;
+   border-width: 37px;
+   padding: 1px;
+   margin-top: 10px;
+   /*background: #2a0001;*/
+              }
+
+a:hover {color: #FF6600; text-decoration: none}
+.clearfix:after {
+  content: ".";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0;
+  height: 0;
+}
+
+.clearfix {
+  display: inline-block;
+}
+.title {
+  color: rgb(153,51,49);
+  font-size:16px;
+}
+img {
+  margin-bottom:-3px;
+}
+
+body {                
+  background:transparent;
+}
+</style>
+</head>
+<body>  
+  <div class='background_1'>
+    <div>
+      <table border="0" cellpadding="2" cellspacing="0">
+        <tr>
+          <td width='10%'>
+            <img src="./image_ui/important.png" style="height:50px;width:60px"></td>
+          <td> <strong class="title">溫馨提示:健康遊戲忠告</strong>
+          </td>
+        </tr>
+      </table>
+      <div>
+        <hr color="#9E5c07" size="2"></div>
+      <div> <font>
+      抵制不良遊戲，<br>
+      拒絕盜版遊戲，<br>
+      註意自我保護，<br>
+      謹防受騙上當，<br>
+      適度遊戲益腦，<br>
+      沉迷遊戲傷身，<br>
+      合理安排時間，<br>
+      享受健康生活。
+      </font>
+      </div>
+    </div>
+  </div>
+                                                      
+                                                       <div class='background_1'>
+    <div>
+      <table border="0" cellpadding="2" cellspacing="0">
+        <tr>
+          <td width='10%'>
+            <img src="./image_ui/zuixin.png" style="height:50px;width:60px"></td>
+          <td> <strong class="title">開服有禮充值送五星華雄</strong>
+          </td>
+        </tr>
+      </table>
+      <div>
+        <hr color="#9E5c07" size="2"></div>
+      <div> <font>
+	<font style="color:#b879ff">8/22/12:00~9/25/12:00<font>期間,首次充值滿1000元寶（不算雙倍充值獲取的元寶）,可獲得五★華雄一個.
+      </font>
+      </div>
+    </div>
+  </div>
+  
+                                                         <div class='background_1'>
+    <div>
+      <table border="0" cellpadding="2" cellspacing="0">
+        <tr>
+          <td width='10%'>
+            <img src="./image_ui/zuixin.png" style="height:50px;width:60px"></td>
+          <td> <strong class="title">三國Q傳升級有禮大賽</strong>
+          </td>
+        </tr>
+      </table>
+      <div>
+        <hr color="#9E5c07" size="2"></div>
+      <div> <font>
+	<font style="color:#b879ff">8/22/12:00~9/01/12:00<font>開服期間,角色账号每到10級、20級、30級、40級、50級、60級、70級可以額外獲取，50元寶，100進階丹，3W銅錢的獎勵，達到等級后請到郵箱查看。
+      </font>
+      </font>
+      </div>
+    </div>
+  </div>
+  
+
+  
+<div class='background_1'>
+    <div>
+      <table border="0" cellpadding="2" cellspacing="0">
+        <tr>
+          <td width='10%'>
+            <img src="./image_ui/notice.png" style="height:50px;width:70px"></td>
+          <td> <strong class="title">微信開通！禮物來送！</strong>
+          </td>
+        </tr>
+      </table>
+      <div>
+        <hr color="#9E5c07" size="2"></div>
+      <div> <font>
+	親愛的主公們！三國Q傳官方微信開通啦！凡是關註微信賬號的主公們都可以獲得壹份特別定制的三國Q傳獨家微信禮包哦！<br>
+    如果有些機智的主公在看到本條消息前已經添加了我們的官方微信，請這些主公們回復“我很機智”來獲得禮品碼！<br>
+    禮物只能兌換壹次~主公不可以貪心的，，，不過我們還會陸續在微信上面發布新活動給主公們發禮物噠！<br>
+    說了這麽壹大堆小編差點忘記把微信號發給主公們了……微信號：sanguoqzhuan
+      </font>
+      </div>
+    </div>
+  </div>
+    
+
+   <div class='background_1'>
+    <div>
+      <table border="0" cellpadding="2" cellspacing="0">
+        <tr>
+          <td width='10%'>
+            <img src="./image_ui/notice.png" style="height:50px;width:70px"></td>
+          <td> <strong class="title">福利再提升!</strong>
+          </td>
+        </tr>
+      </table>
+      <div>
+        <hr color="#9E5c07" size="2"></div>
+      <div> <font><font style="color:#b879ff">福利1:</font>每日12:00-14:00、18:00-20:00登陸可領取體力值各15點.<br>
+                  <font style="color:#b879ff">福利2:</font>付費玩家每日8次戰場失敗不減體力,新註冊玩家前3日副本失敗不扣體!<br>             
+				  <font style="color:#b879ff">福利3:</font>付費玩家首次10連抽必得5星武將一個.</font>
+      </div>
+    </div>
+  </div>  
+
+  
+</body>
+</html>
+

@@ -328,6 +328,8 @@ def set_key_value(keys_list, values, make_dict, type_value):
                             walk_dict[key] = False
                     elif type_value == 'list':
                         walk_dict[key] = eval(values)
+                    elif type_value == 'tuple':
+                        walk_dict[key] = eval(values)
                     elif type_value == 'str':
                         walk_dict[key] = str(values)
                     elif type_value == 'float':
@@ -375,6 +377,8 @@ def print_dict(values, indented,sort_keys = None):
             walk_values = walk_values.encode('utf-8')
             dict_string += indented + keys_extend + ":unicode('" + walk_values + "','utf-8'),\n"
         elif isinstance(walk_values, list):
+            dict_string += indented + keys_extend + ":" + str(walk_values) + ",\n"
+        elif isinstance(walk_values, tuple):
             dict_string += indented + keys_extend + ":" + str(walk_values) + ",\n"
 
     return dict_string

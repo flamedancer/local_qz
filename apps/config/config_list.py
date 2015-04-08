@@ -331,7 +331,13 @@ g_lConfig = [
     {
         'name': 'task_config',
         'description': u'任务',
-        'use_subarea': True,
+        'use_subarea': False,
+        'category': u'系统/用户'
+    },
+    {
+        'name': 'character_talent_config',
+        'description': u'主角天赋',
+        'use_subarea': False,
         'category': u'系统/用户'
     },
     {

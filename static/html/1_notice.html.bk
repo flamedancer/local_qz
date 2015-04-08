@@ -1,0 +1,45 @@
+﻿<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Login Bulletin</title>
+  <link rel="stylesheet" type="text/css" href="bulletin_ui/ipad.css" />
+</head>
+
+<body style="background: transparent;">
+
+  <div class="background_border" align=center>
+    <img src="bulletin_ui/important.png" class=top_left_corner align=left valign=top border=0>
+
+    <div class=bulletin_title>标题: 特大喜讯, 首次充值，元宝翻倍！ </div>
+
+    <p class=bulletin_detail>详细内容: "帽子歪歪戴，老婆来得快!" 
+    </p>
+
+   <span class="small_date">2014-10-23</span>
+   <br>
+
+  </div>
+
+
+
+  <div class="background_border" align=center>
+    <img src="bulletin_ui/new.png" class=top_left_corner align=left valign=top border=0>
+
+    <div class=bulletin_title>标题: Continue </div>
+    <p class=bulletin_detail>详细内容: No news is a good news! 
+    <br>只作不耍，杰克变傻: All work no play, makes Jack a dumb boy!
+    <br>日月笼中鸟， 乾坤水上沤.
+    <br>兴趣是人生第一导师.
+
+    </p>
+
+    <span class="small_date">2014-10-23</span>
+    <br>
+  </div>
+
+
+</body>
+</html>
+
+

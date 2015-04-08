@@ -52,6 +52,12 @@ def add_things(user, thing_infos, where=""):
             return_info.setdefault("gold", 0)
             return_info["gold"] += num
 
+        elif thing_type == "exp":
+            #处理经验
+            user_property_obj.add_exp(num, where=where)
+            return_info.setdefault("exp", 0)
+            return_info["exp"] += num
+
         elif thing_type == "fight_soul":
             # 处理战魂的奖励
             user_property_obj.add_fight_soul(num, where=where)
@@ -264,7 +270,7 @@ def pack_good(good, num=0):
     
     good_type = ""
     good_info = {}
-    if good_id in ["coin", "gold", "fight_soul", "stamina", "card_exp_point", "honor"]:
+    if good_id in ["coin", "gold", "fight_soul", "stamina", "card_exp_point", "honor", "exp"]:
         good_type = good_id
     elif "cardSoul" in good_id:
         good_type = "cardSoul"

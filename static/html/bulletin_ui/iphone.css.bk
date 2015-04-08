@@ -1,0 +1,46 @@
+﻿body,p,li,pre,a,div {
+    color:#666; text-decoration: none; font-size: 1em;
+}
+
+
+.top_left_corner { z-index: 2; position: relative; 
+    top: -14px; left: -14px; border: 0px; 
+    height: 50px; width: 60px }
+.bulletin_title {color:#933; font-size: 1.6em; text-align: center}
+.bulletin_detail {color:#666; font-size: 1.3em; text-align: justify}
+
+.small_date {color:#7f7; 
+    text-align: right;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 1.5em;
+    float: right;
+    width: 100%;
+    }
+
+
+
+.background_border {
+   border-image: url("border.png") 15 15 stretch stretch;
+   -o-border-image: url("border.png") 15 15 stretch stretch;    /* opera */
+   -webkit-border-image: url("border.png") 15 15 stretch stretch;   /* safari */
+
+   border-width: 15px;
+   padding: 0;
+   margin: 2px 2px 2px 2px;
+/* background: #ecd5ab;
+   */
+   background: #fdb;
+   width: 80%;
+   margin-left: 6%;
+
+   background-size: 100% 100%;
+   }
+
+
+body {                
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}

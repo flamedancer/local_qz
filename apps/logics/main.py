@@ -195,7 +195,7 @@ def get_config(rk_user, params):
     each_item_bought_times = rk_user.user_property.property_info['charge_item_bought_times']
     for item in each_item_bought_times:
         if item in sale_conf:
-            sale_conf['extreme_cheap_time'] = max(sale_conf[item]['extreme_cheap_time'] - each_item_bought_times[item], 0)
+            sale_conf[item]['extreme_cheap_time'] = max(sale_conf[item]['extreme_cheap_time'] - each_item_bought_times[item], 0)
     config_info['sale_conf'] = sale_conf
 
     # 月卡商品配置  要添加是否购买此月卡 和  剩余返还天数
@@ -289,6 +289,11 @@ def get_skill_params_config(rk_user, params):
     """获得技能的配置
     """
     return 0, game_config.skill_params_config
+
+def get_character_talent_config(rk_user, params):
+    """获得主角天赋的配置
+    """
+    return 0, game_config.character_talent_config
 
 def get_material_config(rk_user, params):
     """获得材料的配置
@@ -554,8 +559,11 @@ def show_vedio(rk_user,params):
         return 11,{'msg':utils.get_msg('card','params_wrong')}
 
 
-def get_gift(rk_user, params):
+def get_giftCode_gift(rk_user, params):
     """兑换礼品码
+
+    Args:
+        gift_code:   礼品码
     """
     gift_keys = game_config.gift_config.get('gift_config', {})
     if rk_user.client_type in settings.ANDROID_CLIENT_TYPE and 'is_open' in game_config.android_config:

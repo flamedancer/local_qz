@@ -327,6 +327,13 @@ class UserBase(GameModel):
         from apps.logics.mails import send_op_mail
         send_op_mail(self)
 
+        # 检查主线任务
+        self.user_task.check_main_tasks()
+        # 是否有能领取的主线任务奖励
+        data['can_get_maintask_award'] = self.user_task.can_get_award()
+
+        # 珠子伤害
+        data['zhuzi_damage'] = self.user_character.zhuzi_damage()
         return data
 
     def set_name(self,name):

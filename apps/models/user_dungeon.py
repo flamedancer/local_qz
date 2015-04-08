@@ -908,3 +908,10 @@ class UserDungeon(GameModel):
         elif dungeon_type == 'daily':
             self.dungeon_repeat_info[dungeon_type][floor_id] += cnt
         self.put()
+
+    @property
+    def total_got_star(self):
+        num = 0
+        for floor, info in self.has_played_info['normal'].items():
+            num += info.get('cur_star', 0)
+        return num

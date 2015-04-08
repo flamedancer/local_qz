@@ -637,6 +637,8 @@ def end(rk_user,params):
     #     data['copy_times']['floor_id'] = floor_id
 
     user_dungeon_obj.put()
+    if lv_up:
+        rk_user.user_character.check_open_talent()
     data_log_mod.set_log('DungeonRecord', rk_user, **log_data)
 
     return 0,data

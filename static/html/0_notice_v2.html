@@ -1,0 +1,76 @@
+﻿<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Login Bulletin</title>
+  <link rel="stylesheet" type="text/css" href="bulletin_ui/ipad.css" />
+</head>
+
+<!-- ipad: 1024x768, iphone: 960x480 -->
+<body style="background-color: transparent">
+
+  <script>
+    function show_div(i_div) {
+      var n_div=1;
+      for (i=0; i<=n_div; i++) {
+        if (i != i_div)
+          document.getElementById('title_div_'+i).style.display = 'none';
+        else
+          document.getElementById('title_div_'+i).style.display = 'block';
+      }
+      return false
+    }
+  </script>
+
+  <div id=title_div_0>
+  
+<!-- 第0块 开始 -->
+  <div class="background_border" align=center>
+    <img src="bulletin_ui/important.png" class=top_left_corner align=left valign=top border=0>
+
+    <div class=bulletin_title>
+      <span style="color: rgb(147,54,47)">
+      测试3
+      </span>
+    </div>
+
+    <div class=bulletin_detail>
+    测试3
+    </div>
+
+    
+
+  </div>
+
+<!-- 第0块 结束 -->
+
+  </div>
+
+  
+<!-- 第0块 更多详情 开始 -->
+  <div id=title_div_1 class=hidden_more_detail>
+
+    <div class=bulletin_title>
+      <span style="color: ; text-align: center">
+      
+      </span>
+    </div>
+
+    <div class=bulletin_detail>
+    
+    </div>
+
+    <div style="text-align: right">
+    <a href='#' onclick="show_div(0);" class=bulletin_button>&lt;返回&gt;</a>
+    </div>
+
+  </div>
+
+<!-- 第0块 更多详情 结束 -->
+
+
+</body>
+</html>
+
+
+

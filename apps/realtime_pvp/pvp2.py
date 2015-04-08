@@ -88,6 +88,8 @@ class Player(object):
         self.last_recv_fg = True    # 判断是否活跃通信的标示，用于主动断开长时间没有通信的玩家
 
         self.websocket = websocket
+
+        self.changeround_switch = 0
         # 
         # self.first_attacker = False
 
@@ -165,7 +167,8 @@ class Player(object):
                     most_near_index = near_left
         print "debug ", most_near_index, readying_players_scores
         # 如果是首次匹配而且 gap 太大， 不进行匹配，而是加入等待
-        if self.fight_statue == -2 and abs(readying_players_scores[most_near_index] - score) > 100:
+        # if self.fight_statue == -2 and abs(readying_players_scores[most_near_index] - score) > 100:
+        if self.fight_statue == -2 and abs(readying_players_scores[most_near_index] - score) < 0:
             readying_players_scores.insert(index, score)
             readying_players.insert(index, self)
             THIS_READYING_REDIS.set(self.uid, score)
@@ -256,26 +259,51 @@ class Player(object):
         #self.fight_start = True
 
     def req_fight_command(self, msg_dict):
-        #
-        response_self = req_fight_command(msg_dict)
-        self.send(response_self)
-        #  转发给对手
+        # 回复
+        # response_self = req_fight_command(msg_dict)
+        # self.send(response_self)
+        # 转发给对手
         response_opponent = inf_fight_command(msg_dict)
         self.send_opponent(response_opponent)
+
+    def req_touch_move(self, msg_dict):
+        self.req_fight_command(msg_dict)
+
+    def req_touch_end(self, msg_dict):
+        self.req_fight_command(msg_dict)
+
+    def req_hostcal(self, msg_dict):
+        self.req_fight_command(msg_dict)
+
+    def req_ani(self, msg_dict):
+        self.req_fight_command(msg_dict)
+
+    def req_skill(self, msg_dict):
+        self.req_fight_command(msg_dict)
+
+    def req_hostskillcal(self, msg_dict):
+        self.req_fight_command(msg_dict)
 
     def ans_fight_command(self, msg_dict):
         debug_print("get_ans : ans_fight_command")
         pass
 
-    def req_end_round(self, msg_dict):
-        response = req_end_round(msg_dict)
-        self.send(response)
+    # def req_end_round(self, msg_dict):
+    #     response = req_end_round(msg_dict)
+    #     self.send(response)
 
-        self.inf_switch_attack(msg_dict)
+    #     self.inf_switch_attack(msg_dict)
 
-    def inf_switch_attack(self, msg_dict):
-        response = inf_switch_attack(msg_dict, self.opponent.core_id)
-        self.broad(response)
+    # def inf_switch_attack(self, msg_dict):
+    #     response = inf_switch_attack(msg_dict, self.opponent.core_id)
+    #     self.broad(response)
+
+    def req_changeround(self, msg_dict):
+        self.changeround_switch = 1
+        if self.opponent.changeround_switch:
+            response = inf_changeround(msg_dict)
+            self.broad(response)
+            self.changeround_switch = self.opponent.changeround_switch = 0
 
     def ans_switch_attack(self, msg_dict):
         debug_print("get_ans : ans_switch_attack", self.core_id)
@@ -291,7 +319,7 @@ class Player(object):
 
     def ans_result_fight(self, msg_dict):
         debug_print("get_ans : ans_result_fight")
-        end_fight_reason = msg_dict['end_fight']["pvp_end_reason"]
+        end_fight_reason = msg_dict["pvp_end_reason"]
         disconnect_player(self, reason_msg=end_fight_reason)
         pass
 
@@ -444,10 +472,8 @@ def lose_connect_end_fight_msg(player):
     msg = {
        "coreid" : player.core_id,
        "datafield" : "end_fight",
-       "end_fight" : {
-          "pvp_end_reason" : "network_error",
-          "win" : player.opponent.core_id,
-       },
+       "pvp_end_reason" : "network_error",
+       "winner" : player.opponent.uid,
        "errormsg" : "",
        "msg_ref" : int(time.time()),
        "msgtype" : "req_end_fight",
@@ -469,16 +495,17 @@ def response_success(msg_data, success_data):
     return msg_data
 
 def check_statu(msg_data):
-    check_keys = ['msgtype', 'coreid', 'datafield', 'msg_ref', 'rc', 'errormsg']
+    # check_keys = ['msgtype', 'coreid', 'datafield', 'msg_ref', 'rc', 'errormsg']
+    check_keys = ['msgtype', 'coreid', 'msg_ref', 'rc', 'errormsg']
     if set(check_keys) - set(msg_data.keys()):
         print '!!!!! json missing keys:', set(check_keys) - set(msg_data.keys())
         return 'missing keys'
     if msg_data['rc']:
         print '!!!!! json rc error:', msg_data['errormsg']
         return msg_data['errormsg']
-    if msg_data['datafield'] not in msg_data:
-        print '!!!!! json missing datafield:', msg_data['datafield']
-        return "has no that datafield", msg_data['datafield']
+    # if msg_data['datafield'] not in msg_data:
+    #     print '!!!!! json missing datafield:', msg_data['datafield']
+    #     return "has no that datafield", msg_data['datafield']
 
 
 def inf_readying_pvp(msg_data):
@@ -512,10 +539,8 @@ def inf_start_fight(msg_data, attack_core_id):
     success_data = dict(
         msgtype = 'inf_start_fight',
         datafield = 'pvp_info',
-        pvp_info = {
-            'attack': attack_core_id,
-            'fight_info': random.choice(MAPS),
-        },
+        attacker = attack_core_id,
+        bead_list = _make_bead_list(),
         msg_ref = int(time.time()),
     )
     return response_success(msg_data, success_data)
@@ -537,7 +562,8 @@ def req_fight_command(msg_data):
 
 def inf_fight_command(msg_data):
     success_data = dict(
-        msgtype = 'inf_fight_command',
+        # msgtype = 'inf_fight_command',
+        msgtype = msg_data['msgtype'].replace('req', 'inf'),
     )
     return response_success(msg_data, success_data)
 
@@ -559,17 +585,23 @@ def req_end_round(msg_data):
     return response_success(msg_data, success_data)
 
 
-def inf_switch_attack(msg_data, attack_core_id):
+# def inf_switch_attack(msg_data, attack_core_id):
+#     success_data = dict(
+#         msgtype = 'inf_switch_attack',
+#         datafield = 'pvp_info',
+#         pvp_info = {
+#             'attacker': attack_core_id,
+#         },
+#         msg_ref = int(time.time()),
+#     )
+#     return response_success(msg_data, success_data)
+
+
+def inf_changeround(msg_data):
     success_data = dict(
-        msgtype = 'inf_switch_attack',
-        datafield = 'pvp_info',
-        pvp_info = {
-            'attack': attack_core_id,
-        },
-        msg_ref = int(time.time()),
+        msgtype = 'inf_changeround',
     )
     return response_success(msg_data, success_data)
-
 
 # def inf_switch_attack(msg_data, self_core_id):
 #     if msg_data['coreid'] == self_core_id:
@@ -597,33 +629,38 @@ def rsp_end_fight(msg_data):
 
 
 def inf_result_fight(msg_data, self, opponent):
-    self_uid = self.uid
-    opponent_uid = opponent.uid
-    self_core_id = self.core_id
-    # opponent.core_id = opponent.core_id
-    if not opponent.connecting:
-        win_uid, lose_uid = (self_uid, opponent_uid)
-    else:
-        datafield = msg_data['datafield']
-        win_core_id = msg_data[datafield]["win"]
-        win_uid, lose_uid = (self_uid, opponent_uid) if win_core_id == self_core_id else (opponent_uid, self_uid)
-    result_info = real_pvp.result_fight(win_uid, lose_uid)
+    print "!!!!!!!!", msg_data
+    if "winner" in msg_data:
+        self_uid = self.uid
+        opponent_uid = opponent.uid
+        # self_core_id = self.core_id
+        # opponent.core_id = opponent.core_id
+        if not opponent.connecting:
+            win_uid, lose_uid = (self_uid, opponent_uid)
+        else:
+            # datafield = msg_data['datafield']
+            # win_core_id = msg_data[datafield]["win"]
+            # win_uid, lose_uid = (self_uid, opponent_uid) if win_core_id == self_core_id else (opponent_uid, self_uid)
+            win_uid = msg_data["winner"]
+            win_uid, lose_uid = (self_uid, opponent_uid) if win_uid == self_uid else (opponent_uid, self_uid)
+        result_info = real_pvp.result_fight(win_uid, lose_uid)
 
-    self_user_pvp_object = UserRealPvp.get(win_uid)
-    opponent_user_pvp_object = UserRealPvp.get(lose_uid)
+        self_user_pvp_object = UserRealPvp.get(win_uid)
+        opponent_user_pvp_object = UserRealPvp.get(lose_uid)
 
-    data_log_mod.set_log('PvpRecord', UserRealPvp.get(self.uid),
-                        **{
-                            "winner": self_user_pvp_object.pvp_detail,
-                            "loser": opponent_user_pvp_object.pvp_detail,
-                            "end_reason": msg_data["end_fight"]["pvp_end_reason"],
-                        })
+        data_log_mod.set_log('PvpRecord', UserRealPvp.get(self.uid),
+                            **{
+                                "winner": self_user_pvp_object.pvp_detail,
+                                "loser": opponent_user_pvp_object.pvp_detail,
+                                "end_reason": msg_data["pvp_end_reason"],
+                            })
 
-    success_data = dict(
-        msgtype = 'inf_result_fight',
-    )
-    msg_data[datafield].update(result_info)
-    return response_success(msg_data, success_data)
+        success_data = dict(
+            msgtype = 'inf_result_fight',
+        )
+        msg_data.update(result_info)
+        return response_success(msg_data, success_data)
+    return {}
 
 
 def req_cancel_pvp(msg_data):
@@ -664,6 +701,13 @@ def inf_reconnect_fight(msg_data):
         msgtype = 'inf_reconnect_fight',
     )
     return response_success(msg_data, success_data)
+
+
+INIT_BEAD_LIST = []
+[INIT_BEAD_LIST.extend([i] * 40) for i in range(5)]
+def _make_bead_list():
+    random.shuffle(INIT_BEAD_LIST)
+    return INIT_BEAD_LIST
 
 
 def check_dead_user():

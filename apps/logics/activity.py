@@ -420,6 +420,8 @@ def get_fudai_things(rk_user, params):
         things_num = get_things_dict['num']
         get_things_list.append({'_id': things_id, 'num': things_num})
     all_get_things = tools.add_things(rk_user, get_things_list, where=u"open_fudai_%s" %fudai_id)
+    # 减素材
+    user_pack_obj.minus_props(fudai_id, open_times, where="open_fudai")
     return {'get_info': all_get_things}
 
 
