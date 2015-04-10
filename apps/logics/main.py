@@ -723,3 +723,14 @@ def recover_stamina(rk_user, params):
     user_property_obj.add_recover_times('recover_stamina')
     user_property_obj.add_stamina(recover_stamina)
     return {}
+
+
+def skip_tutorial(rk_user, params):
+    user = rk_user
+    #一键过新手引导
+    if user.user_property.newbie:
+        newbie_steps_num = int(user.game_config.system_config.get('newbie_steps', 6))
+        user.user_property.property_info['newbie_steps'] = (1 << newbie_steps_num) - 1
+        user.user_property.set_newbie()
+        user.user_property.do_put()
+    return {}
