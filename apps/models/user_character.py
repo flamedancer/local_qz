@@ -34,39 +34,20 @@ class UserCharacter(GameModel):
     #     },
     # talent tree 只表示天赋的状态,
     __init_talent_tree = {
-        '1': {
-            'lv':-1
-        },
-        '2': {
-            'lv':-1,
-            'jin':0,
-            'mu':0,
-            'shui':0,
-            'huo':0,
-            'tu':0,
-        },
-        '3': {
-            'lv':-1
-        },
-        '4': {
-            'lv':-1,
-            'jin':0,
-            'mu':0,
-            'shui':0,
-            'huo':0,
-            'tu':0,
-        },
-        '5': {
-            'lv':-1
-        },
-        '6': {
-            'lv':-1,
-            'jin':0,
-            'mu':0,
-            'shui':0,
-            'huo':0,
-            'tu':0,
-        },
+        '1': {'lv':-1},
+        '2': {'lv':-1, 'jin':0, 'mu':0, 'shui':0, 'huo':0, 'tu':0,},
+        '3': {'lv':-1},
+        '4': {'lv':-1, 'jin':0, 'mu':0, 'shui':0, 'huo':0, 'tu':0,},
+        '5': {'lv':-1},
+        '6': {'lv':-1, 'jin':0, 'mu':0, 'shui':0, 'huo':0, 'tu':0,},
+        '7': {'lv':-1},
+        '8': {'lv':-1, 'jin':0, 'mu':0, 'shui':0, 'huo':0, 'tu':0,},
+        '9': {'lv':-1},
+        '10': {'lv':-1, 'jin':0, 'mu':0, 'shui':0, 'huo':0, 'tu':0,},
+        '11': {'lv':-1},
+        '12': {'lv':-1, 'jin':0, 'mu':0, 'shui':0, 'huo':0, 'tu':0,},
+        '13': {'lv':-1},
+        '14': {'lv':-1, 'jin':0, 'mu':0, 'shui':0, 'huo':0, 'tu':0,},
     }
 
 
@@ -142,7 +123,9 @@ class UserCharacter(GameModel):
         '''
         max_lv = self.game_config.character_talent_config['max_lv']
         new_talent = json.loads(new_talent)
-        print 'new_talent', new_talent
+
+        if new_talent == self.cur_talent:
+            return 13
         for layer in new_talent:
             if layer not in self.cur_talent:
                 return 1

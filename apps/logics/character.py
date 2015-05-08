@@ -76,6 +76,8 @@ def learn_talent(rk_user, params):
         return 11,{'msg':utils.get_msg('talent','atleast_one_zhuzi')}
     if learn_result == 12:
         return 11,{'msg':utils.get_msg('talent','cant_open_zhuzi')}
+    if learn_result == 13:
+        return 11,{'msg':utils.get_msg('talent','no_change')}
         
     uc.consume_star(cost_star)
     uc.consume_gold(cost_gold)

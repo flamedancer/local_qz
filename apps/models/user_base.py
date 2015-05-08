@@ -327,6 +327,8 @@ class UserBase(GameModel):
         from apps.logics.mails import send_op_mail
         send_op_mail(self)
 
+        # 有可以领取的每日任务宝箱
+        data['task_box_can_get'] = self.user_task.today_can_get()
         # 检查主线任务
         self.user_task.check_main_tasks()
         # 是否有能领取的主线任务奖励

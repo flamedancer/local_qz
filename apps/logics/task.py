@@ -124,7 +124,7 @@ def do_daily_task(func):
                 ut.do_daily_task(method_list[method])
         # 是否有可领取的每日任务宝箱
         # 没写在 wrap_info 里  是因为只有调用了任务的接口才有必要去判断这个字段
-        data['user_info']['task_box_can_get'] = request.rk_user.user_task.today_can_get()
+        #data['user_info']['task_box_can_get'] = request.rk_user.user_task.today_can_get()
         return rc, data
     return wrap_func
 
