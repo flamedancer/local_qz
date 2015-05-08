@@ -24,3 +24,28 @@ cp -r ../../qz_svn/back-end-code/guochen\ \(branch\)
 
 
 修改 setting 里面的数据库地址
+
+
+
+设置第一个admin权限：
+            进入  manage shell
+            from apps.views.models import Moderator
+            import hashlib
+            moderator = Moderator.get_instance(username)
+            moderator.username = username
+            moderator.is_staff = True
+            moderator.set_password(hashlib.md5(password).hexdigest())
+            moderator.in_review = False
+            moderator.put()
+
+
+设置第一个uid:
+   在mongo中创建sequence并初始化：
+   db.sequence.insert(
+       {
+          _id: "userid",
+          seq: 100000000
+       }
+    )
+
+

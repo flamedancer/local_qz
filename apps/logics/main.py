@@ -726,11 +726,20 @@ def recover_stamina(rk_user, params):
 
 
 def skip_tutorial(rk_user, params):
+    """跳过新手引导
+
+    Args:
+        newbie_steps   要跳过几步新手引导
+    """
     user = rk_user
-    #一键过新手引导
+    # 获取新手引导的额步骤
+    max_steps_num = int(user.game_config.system_config.get('newbie_steps', 6))
+    newbie_steps_num = params.get('newbie_steps') or max_steps_num
+    # 要跳过那个哪步新手引导
+    # 一键过新手引导
     if user.user_property.newbie:
-        newbie_steps_num = int(user.game_config.system_config.get('newbie_steps', 6))
-        user.user_property.property_info['newbie_steps'] = (1 << newbie_steps_num) - 1
+        # user.user_property.property_info['newbie_steps'] = (1 << newbie_steps_num) - 1
+        user.user_property.property_info['newbie_steps'] = newbie_steps_num
         user.user_property.set_newbie()
         user.user_property.do_put()
     return {}
