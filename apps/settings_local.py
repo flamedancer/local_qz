@@ -10,7 +10,7 @@ WALKER_POP_URL = ''
 WALKER_KING_URL = ''
 WALKER_APP_ID = ''
 
-BASE_ROOT = '/Users/gc/chen/mysite/local_qz'
+BASE_ROOT = '/Users/admin/Documents/local_qz/local_qz'
 BASE_URL = 'http://maxstrikecn.negaplay.com'
 #BASE_ROOT = '/data/sites/MaxStriketw'
 #BASE_URL = 'http://maxstrikecn.nega777.com'

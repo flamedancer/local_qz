@@ -36,8 +36,8 @@ from apps.config.backup import show_config_backup
 from apps.models.redis_tool import RedisTool
 
 from apps.admin.views import RedisCaptcha
-captchaFactory = RedisCaptcha.Factory()
-from apps.admin.views.RedisCaptcha.Visual import Tests as captchaTests
+# captchaFactory = RedisCaptcha.Factory()
+# from apps.admin.views.RedisCaptcha.Visual import Tests as captchaTests
 import StringIO
 
 
@@ -1045,42 +1045,42 @@ def beautify_config_value(value_str):
     return '\n'.join(lines)
 
 
-def captcha_image(request):
-    '''利用 PyCaptcha (它用了PIL, Python Image Library),
-    处理 /admin/captcha_image/?id=#X$#@123
-    返回 jpeg 图像给网页浏览器
-    '''
-    img_id=request.GET.get('id', '')
-    print '#### captchaFactory.storedInstances=', captchaFactory.storedInstances
-    test = captchaFactory.get(img_id)
-    if not test:
-        return HttpResponse('Invalid id')
+# def captcha_image(request):
+#     '''利用 PyCaptcha (它用了PIL, Python Image Library),
+#     处理 /admin/captcha_image/?id=#X$#@123
+#     返回 jpeg 图像给网页浏览器
+#     '''
+#     img_id=request.GET.get('id', '')
+#     print '#### captchaFactory.storedInstances=', captchaFactory.storedInstances
+#     test = captchaFactory.get(img_id)
+#     if not test:
+#         return HttpResponse('Invalid id')
 
-    img = test.render()
-    buf= StringIO.StringIO()
-    img.save(buf, format= 'JPEG')
-    jpeg_str= buf.getvalue()
-    buf.close()
+#     img = test.render()
+#     buf= StringIO.StringIO()
+#     img.save(buf, format= 'JPEG')
+#     jpeg_str= buf.getvalue()
+#     buf.close()
 
-    return HttpResponse(jpeg_str, content_type="image/jpeg" )
-
-
-def get_captcha_image_id():
-    '''利用 PyCaptcha (它用了PIL, Python Image Library)
-    '''
-    test = captchaFactory.new( captchaTests.PseudoGimpy )
-    #test = captchaFactory.new( captchaTests.AntiSpam )
-    return test.id
+#     return HttpResponse(jpeg_str, content_type="image/jpeg" )
 
 
-def captcha_check(img_id='', word=''):
-    '''利用 PyCaptcha (它用了PIL, Python Image Library),
-    '''
+# def get_captcha_image_id():
+#     '''利用 PyCaptcha (它用了PIL, Python Image Library)
+#     '''
+#     test = captchaFactory.new( captchaTests.PseudoGimpy )
+#     #test = captchaFactory.new( captchaTests.AntiSpam )
+#     return test.id
 
-    test = captchaFactory.get(img_id)
-    if not test:
-        return HttpResponse('Invalid id')
 
-    # Invalid tests will always return False, to prevent
-    # random trial-and-error attacks. This could be confusing to a user...
-    return ( test.valid and test.testSolutions([word]) )
+# def captcha_check(img_id='', word=''):
+#     '''利用 PyCaptcha (它用了PIL, Python Image Library),
+#     '''
+
+#     test = captchaFactory.get(img_id)
+#     if not test:
+#         return HttpResponse('Invalid id')
+
+#     # Invalid tests will always return False, to prevent
+#     # random trial-and-error attacks. This could be confusing to a user...
+#     return ( test.valid and test.testSolutions([word]) )
