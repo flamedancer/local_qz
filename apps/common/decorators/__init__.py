@@ -768,17 +768,17 @@ def auth_token_for_oc(request,access_token,openid,uuid,mktid,version,client_type
     msg = ''
     subarea = request.REQUEST.get("subarea", "1") or '1'
     #没有openid时，检查后控制自动分配id的开头是否开启，如果已经关闭，返回提示
-#    if not openid:
-#        if game_config.system_config.get('account_assign_switch'):
-#            fg = True
-#            pid = get_uuid()
-#            #验证成功，安装用户
-#            request.rk_user = UserBase._install(pid,'oc',uuid,mktid,version,client_type,macaddr,idfa,ios_ver, subarea=subarea)
-#            access_token = get_upwd()
-#            request.rk_user.account.update_info(pid, access_token)
-#        else:
-#            msg = get_msg('login','cannot_register')
-#            return fg,pid,msg
+   if not openid:
+       if game_config.system_config.get('account_assign_switch'):
+           fg = True
+           pid = get_uuid()
+           #验证成功，安装用户
+           request.rk_user = UserBase._install(pid,'oc',uuid,mktid,version,client_type,macaddr,idfa,ios_ver, subarea=subarea)
+           access_token = get_upwd()
+           request.rk_user.account.update_info(pid, access_token)
+       else:
+           msg = get_msg('login','cannot_register')
+           return fg,pid,msg
     if not check_openid(openid):
         msg = get_msg('login','cannot_register')
         return fg,pid,msg

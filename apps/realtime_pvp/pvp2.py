@@ -31,7 +31,7 @@ port = "9040" if len(sys.argv) != 2 else sys.argv[1]
 
 
 # localIP = socket.gethostbyname(socket.gethostname())
-localIP = "10.200.55.32"
+localIP = '42.96.168.85'
 server_site = localIP + ":" + port
 THIS_READYING_REDIS = readying_player_redis.ALL_REDIS_MODEL[server_site]
 print "$$$$$$$$THIS  server_site is", server_site 
@@ -722,7 +722,7 @@ def check_dead_user():
                 disconnect_player(user, reason_msg='no msg in 15s')
             else:
                 user.last_recv_fg = False
-        time.sleep(15)
+        time.sleep(15000)
 
 
 if __name__ == "__main__":

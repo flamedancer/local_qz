@@ -127,8 +127,8 @@ def top_pvp(rk_user, params):
 
 
 PVP_IN_SUBAREA = False   # false为全玩家都可以pvp   true为只能同区pvp
-VIRTUL_SERVER_IP = "10.200.55.32"  # 对内网服务器地址
-TRUE_SERVER_IP = "42.121.15.153" # 真实的对外网服务器地址
+VIRTUL_SERVER_IP = "42.96.168.85"  # 对内网服务器地址
+TRUE_SERVER_IP = "42.96.168.85" # 真实的对外网服务器地址
 def get_suitable_server(rk_user, params):
     """
     返回最适合此玩家pvp的服务器地址
