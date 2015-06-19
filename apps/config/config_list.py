@@ -358,11 +358,6 @@ g_lConfig = [
         'use_subarea': False,
     },
     {
-        'name': 'cardata',
-        'description': u'cardata',
-        'use_subarea': False,
-    },
-    {
         'name': 'vip_store_config',
         'description': u'vip商店',
         'use_subarea': False,
