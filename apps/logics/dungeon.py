@@ -240,14 +240,20 @@ def calculate_steps(params, conf, rk_user, multiply=1):
         #遍历每一小节
         cur_step_info = []
         for monster_info in steps_info[step]:
-            monster_list = {}
-            #获取金币配置区间
-            gold_config = monster_info[1]
-            #设置id
-            monster_list['monster_id'] = monster_info[0]
-            monster_list['gold'] = random.randint(gold_config[0],gold_config[1])
-            #统计总的金币掉落
-            max_gold += monster_list['gold'] * multiply
+            # monster_list = {}
+            # #获取金币配置区间
+            # gold_config = monster_info[1]
+            # #设置id
+            # monster_list['monster_id'] = monster_info[0]
+            # monster_list['gold'] = random.randint(gold_config[0],gold_config[1])
+            # #统计总的金币掉落
+            # max_gold += monster_list['gold'] * multiply
+
+            # 修改配置格式于  2015-06-29
+            # 旧格式： '1':[['1_1_0_1_monster', [20, 30]], ['1_1_0_2_monster', [20, 30]]
+            # 新格式： '1':['1_1_0_1_monster', '1_1_0_2_monster']
+            monster_list = {'monster_id': monster_info, 'gold': 0}
+
             #将敌将信息给当前小节
             cur_step_info.append(monster_list)
         #将每一步的信息赋值到要返回的信息中

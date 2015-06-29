@@ -1,10 +1,12 @@
+#! /usr/bin/python
 # -*- coding: utf-8 -*-
 
 import os
 import sys
 import datetime
 
-cwd = os.getcwd()
+cwd = os.path.dirname(os.path.abspath(__file__))
+print cwd
 main_dir = os.path.dirname(cwd)
 sys.path.insert(0, main_dir)
 import apps.settings as settings
@@ -21,7 +23,7 @@ if not os.path.exists(dirpath):
     print "*** mkdir", dirpath
     os.mkdir(dirpath)
 
-daystr = str(datetime.datetime.today())
+daystr = str(datetime.date.today())
 filepath = os.path.join(dirpath, daystr)
 
 config_f = open(filepath, 'w')
@@ -36,10 +38,9 @@ config_f.write(str(d))
 config_f.close()
 print "**end backup!"
 
-oldest_daystr = str(datetime.datetime.today() -
+oldest_daystr = str(datetime.date.today() -
     datetime.timedelta(days=30))
-oldest_filepath = os.path.join(dirpath, oldest_daystr) 
+oldest_filepath = os.path.join(dirpath, oldest_daystr)
 if os.path.exists(oldest_filepath):
     print "****delet too old configfile:", oldest_filepath
     os.remove(oldest_filepath)
-    
