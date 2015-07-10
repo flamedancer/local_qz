@@ -72,13 +72,13 @@ class UserPack(GameModel):
         '''
         判断是否有该素材
         '''
-        return mat_id in self.materials.keys()
+        return mat_id in self.materials
 
     def has_props(self,props_id):
         '''
         判断是否有该道具
         '''
-        return props_id in self.props.keys()
+        return props_id in self.props
 
     def minus_material(self,material_id,num,where=None):
         '''

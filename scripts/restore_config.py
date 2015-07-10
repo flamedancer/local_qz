@@ -25,11 +25,11 @@ setup_environ(settings)
 
 this_config_name = ''
 config_path = 'config_file.txt'
-if len(sys.argv) >= 2:
-    config_path = os.path.join(cur_dir, sys.argv[1])
-    assert os.path.exists(config_path), '!!!Can find COnfigfile!!'
-    if len(sys.argv) == 3:
-    	this_config_name = sys.argv[2]
+assert len(sys.argv) >= 2, 'no config_file'
+config_path = os.path.join(cur_dir, sys.argv[1])
+assert os.path.exists(config_path), '!!!Can find COnfigfile!!'
+if len(sys.argv) == 3:
+	this_config_name = sys.argv[2]
 
 
 from apps.models.config import Config
@@ -37,11 +37,10 @@ from apps.models.config import Config
 config_dict = ast.literal_eval(open("config_file.txt", "r").read())
 
 for sconfig_name in config_dict:
-	print "*Find config ", sconfig_name,  "*This_config", this_config_name
-	if this_config_name and this_config_name != sconfig_name:
-		continue
+    print "*Find config ", sconfig_name,  "*This_config", this_config_name
+    if this_config_name and this_config_name != sconfig_name:
+        continue
     print "** load  :", sconfig_name
-
     config = Config.get(sconfig_name)
     if not config:
         config = Config.create(sconfig_name)

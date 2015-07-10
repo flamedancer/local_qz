@@ -99,8 +99,13 @@ class UserMysteryStore(GameModel):
         user_property_obj = self.user_property
         refresh_hours_gap = self.game_config.mystery_store_config["refresh_hours_gap"]
         now = datetime.datetime.now()
-        next_refresh_hour = ((now.hour / refresh_hours_gap) + 1) * refresh_hours_gap
-        next_auto_refresh_time = str(datetime.datetime(now.year, now.month, now.day, next_refresh_hour))
+        max_free_fresh_cnt = vip_conf[str(cur_vip_lv)].get('max_free_fresh_mystery_store_cnt', 4)
+        # 如果已近达到最大免费刷新数, next_auto_refresh_time为 0
+        if self.free_refresh_cnt >= max_free_fresh_cnt:
+            next_auto_refresh_time = 0
+        else:
+            next_refresh_hour = ((now.hour / refresh_hours_gap) + 1) * refresh_hours_gap
+            next_auto_refresh_time = str(datetime.datetime(now.year, now.month, now.day, next_refresh_hour))
 
         mystery_store_info = {
             "store": self.store,
@@ -128,9 +133,13 @@ class UserMysteryStore(GameModel):
         vip_conf = self.game_config.user_vip_config
         max_free_fresh_cnt = vip_conf[str(cur_vip_lv)].get('max_free_fresh_mystery_store_cnt', 4)
         # 计算可产生多少刷新次数：间隔的小时数 / 刷新间隔
-        may_product_cnt = ((deltatime.total_seconds() / 3600) / refresh_hours_gap)
+        may_product_cnt = int((deltatime.total_seconds() // 3600) // refresh_hours_gap)
+        print self.last_incre_refresh_cnt_timestr, now
+        print "may_product_cnt", may_product_cnt
         # 更新刷新次数
-        self.free_refresh_cnt = min(may_product_cnt + self.free_refresh_cnt, max_free_fresh_cnt)
+        self.free_refresh_cnt = min(int(may_product_cnt + self.free_refresh_cnt), max_free_fresh_cnt)
+        # 更新刷新时间
+        self.last_incre_refresh_cnt_timestr = str(datetime.datetime(now.year, now.month, now.day, now.hour))
         self.put()
         return self.store_info()
 

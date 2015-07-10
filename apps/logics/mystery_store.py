@@ -256,6 +256,11 @@ def get_store_info(rk_user, params):
     得到当前玩家的神秘商店信息
     前段点击 和 前段倒计时结束时调用此接口 神秘商店时调用此接口
      此接口会先判断是否要自动刷新商品
+     Returns:
+        fight_soul: 玩家战魂数
+        next_auto_refresh_time 下次刷新时间datetimestr
+        free_refresh_cnt 可免费刷新次数 
+        store  商店物品信息
     """
     user_mystery_store_obj = rk_user.user_mystery_store
     return _pack_store_info(user_mystery_store_obj.incre_free_refresh_cnt())
@@ -269,21 +274,22 @@ def refresh_store_by_self(rk_user,params):
     3. 以上都没有, 用元宝刷新
 
     """
-    # 根据vip可刷新次数判断是否可以刷新
-    vip.check_limit_recover(rk_user,'recover_mystery_store')
-    # 已刷新次数+1
     user_property_obj = rk_user.user_property
-    user_property_obj.add_recover_times('recover_mystery_store')
 
     user_mystery_store_obj = rk_user.user_mystery_store
-    user_pack_obj = rk_user.user_mystery_store
+    user_pack_obj = rk_user.user_pack
     needed_cost = int(game_config.mystery_store_config["store_refresh_cost"])
     if user_mystery_store_obj.free_refresh_cnt:
         user_mystery_store_obj.free_refresh_cnt -= 1
         user_mystery_store_obj.put()
     elif user_pack_obj.has_props('28_props'):
         user_pack_obj.minus_props('28_props', 1, 'refresh_mystery_store')
-    elif not user_property_obj.minus_coin(needed_cost, 'refresh_mystery_store'):
+    # 根据vip用元宝可刷新次数判断是否可以刷新
+    elif vip.check_limit_recover(rk_user, 'recover_mystery_store') >= 0 and \
+         user_property_obj.minus_coin(needed_cost, 'refresh_mystery_store'):
+        # 已刷新次数+1
+        user_property_obj.add_recover_times('recover_mystery_store')        
+    else:
         raise GameLogicError('user', 'not_enough_coin')
     
     user_mystery_store_obj.refresh_store()

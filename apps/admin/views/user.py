@@ -80,16 +80,8 @@ def edit_user(request):
     game_config.set_subarea(user.subarea)
 
     data = {
-        'user_property_obj':user_property_obj,
-        'user':user,
         'deck_cards':[],
         'other_cards':[],
-        'add_time':timestamp_toString(user.add_time),
-        'last_login_time':timestamp_toString(user.user_property.login_time),
-        'login_record':UserLogin.get(uid).login_info['login_record'],
-        'user_real_pvp_obj': user_real_pvp_obj.pvp_detail,
-        'mystery_store': mystery_store.get_store_info(user, {}),
-        'pk_store': pk_store.get_store_info(user, {}),
     }
     if not user.client_type:
         data['client_type'] = 'appstore_ios'
@@ -118,7 +110,6 @@ def edit_user(request):
     if request.POST.get('refresh_mystery_store',''):
         store_type = request.POST.get('store_type')
         params = {
-            'store_type': store_type,
         }
         mystery_store.refresh_store_by_self(user, params)
     #   购买  物品
@@ -602,8 +593,6 @@ def edit_user(request):
         'mails': sorted(temp_mails, key=operator.itemgetter('can_get', 'create_time'), reverse=True),
         'user_property_obj':user_property_obj,
         'user':user,
-        'deck_cards':[],
-        'other_cards':[],
         'add_time':timestamp_toString(user.add_time),
         'last_login_time':timestamp_toString(user.user_property.login_time),
         'login_record':UserLogin.get(uid).login_info['login_record'],
