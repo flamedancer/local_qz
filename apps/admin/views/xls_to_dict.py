@@ -292,7 +292,7 @@ def make_config(request, config_name):
         data_string = ''
         filename = request.FILES.get('xls', None)
         excel = xlrd.open_workbook(file_contents = filename.read());
-        sheet = excel.sheet_by_name(config_name)
+        sheet = excel.sheet_by_name('config')
         data_string = globals().get(config_name, defuault_excel_explain)(sheet)
         return str(data_string)
     except Exception,e:
@@ -331,7 +331,10 @@ def set_key_value(keys_list, values, make_dict, type_value):
                     elif type_value == 'tuple':
                         walk_dict[key] = eval(values)
                     elif type_value == 'str':
-                        walk_dict[key] = str(values)
+                        if isinstance(values, float) and not (values % 1):
+                            walk_dict[key] = str(int(values))
+                        else:
+                            walk_dict[key] = str(values)
                     elif type_value == 'float':
                         values = str(values).replace("'", "")
                         walk_dict[key] = float(values)

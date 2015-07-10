@@ -134,7 +134,7 @@ def make_config(request, config_name):
         data_string = ''
         filename = request.FILES.get('xls', None)
         excel = xlrd.open_workbook(file_contents = filename.read());
-        sheet = excel.sheet_by_name(config_name)
+        sheet = excel.sheet_by_name('config')
         data_string = globals()[config_name](sheet)
         # data_string += {
         #     'special_dungeon_config': lambda: special_dungeon_config(sheet),

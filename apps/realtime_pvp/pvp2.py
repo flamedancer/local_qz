@@ -284,6 +284,10 @@ class Player(object):
     def req_hostskillcal(self, msg_dict):
         self.req_fight_command(msg_dict)
 
+    def req_skill_ball(self, msg_dict):
+        self.req_fight_command(msg_dict)
+
+
     def ans_fight_command(self, msg_dict):
         debug_print("get_ans : ans_fight_command")
         pass
