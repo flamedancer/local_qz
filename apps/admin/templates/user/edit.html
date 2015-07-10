@@ -745,6 +745,8 @@
     </table>
 
 <h3>神秘商店信息</h3>
+    <label>剩余免费刷新次数：{{mystery_store.free_refresh_cnt}}</label>
+    <label>下次增加免费刷新次数时间：{{mystery_store.next_auto_refresh_time}}</label>
     <form method="post">
         <table border="1px" cellspacing="0px" bordercolor="gray" style="border-collapse:collapse">
             <tr class="{% cycle 'odd' 'even'%}">
@@ -763,7 +765,7 @@
                     </form>
                 </td>
             </tr>
-            {%for package in mystery_store.fight_coin_store%}
+            {%for package in mystery_store.store%}
             <tr class="{% cycle 'odd' 'even'%}">
                 <td>{{ forloop.counter0 }}</td>
                 <td width="90">{{ package.need_gold }}</td>

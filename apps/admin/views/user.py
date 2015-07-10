@@ -597,7 +597,20 @@ def edit_user(request):
             mail['awards'].append({award.values()[0]['good_id']: award.values()[0].get('num', 0)})
             mail['awards'].pop(0)
 
-    data['mails'] = sorted(temp_mails, key=operator.itemgetter('can_get', 'create_time'), reverse=True)
+
+    data.update({
+        'mails': sorted(temp_mails, key=operator.itemgetter('can_get', 'create_time'), reverse=True),
+        'user_property_obj':user_property_obj,
+        'user':user,
+        'deck_cards':[],
+        'other_cards':[],
+        'add_time':timestamp_toString(user.add_time),
+        'last_login_time':timestamp_toString(user.user_property.login_time),
+        'login_record':UserLogin.get(uid).login_info['login_record'],
+        'user_real_pvp_obj': user_real_pvp_obj.pvp_detail,
+        'mystery_store': mystery_store.get_store_info(user, {}),
+        'pk_store': pk_store.get_store_info(user, {}),
+    })
 
     return 'user/edit.html', data
 

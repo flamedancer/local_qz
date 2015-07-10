@@ -257,31 +257,36 @@ def get_store_info(rk_user, params):
     前段点击 和 前段倒计时结束时调用此接口 神秘商店时调用此接口
      此接口会先判断是否要自动刷新商品
     """
-    user_mystery_store_obj = UserMysteryStore.get_instance(rk_user.uid)
-    return _pack_store_info(user_mystery_store_obj.auto_refresh_store())
+    user_mystery_store_obj = rk_user.user_mystery_store
+    return _pack_store_info(user_mystery_store_obj.incre_free_refresh_cnt())
 
 
 def refresh_store_by_self(rk_user,params):
     """
     玩家主动刷新时  调用此接口
-    params  参数需包含 store_type ：  "gold_store"  or  "coin_store"
+    1. 若有免费刷新次数, 消耗刷新次数
+    2. 若有刷新令, 消耗刷新令28_props
+    3. 以上都没有, 用元宝刷新
+
     """
-    store_type = 'fight_coin_store'
-    needed_cost = int(game_config.mystery_store_config["store_refresh_cost"])
-
-    # 消耗元宝
-    minus_func = getattr(rk_user.user_property, "minus_coin")
-
-    #根据vip刷新次数
+    # 根据vip可刷新次数判断是否可以刷新
     vip.check_limit_recover(rk_user,'recover_mystery_store')
-    #回复次数+1
-    rk_user.user_property.add_recover_times('recover_mystery_store')
-    # 再判断是否 coin  足够
-    if not minus_func(needed_cost, 'refresh_mystery_store'):
-        raise GameLogicError('user', 'not_enough_coin')
+    # 已刷新次数+1
+    user_property_obj = rk_user.user_property
+    user_property_obj.add_recover_times('recover_mystery_store')
 
-    user_mystery_store_obj = UserMysteryStore.get_instance(rk_user.uid)
-    user_mystery_store_obj.refresh_store(store_type)
+    user_mystery_store_obj = rk_user.user_mystery_store
+    user_pack_obj = rk_user.user_mystery_store
+    needed_cost = int(game_config.mystery_store_config["store_refresh_cost"])
+    if user_mystery_store_obj.free_refresh_cnt:
+        user_mystery_store_obj.free_refresh_cnt -= 1
+        user_mystery_store_obj.put()
+    elif user_pack_obj.has_props('28_props'):
+        user_pack_obj.minus_props('28_props', 1, 'refresh_mystery_store')
+    elif not user_property_obj.minus_coin(needed_cost, 'refresh_mystery_store'):
+        raise GameLogicError('user', 'not_enough_coin')
+    
+    user_mystery_store_obj.refresh_store()
     return _pack_store_info(user_mystery_store_obj.store_info())
 
 
@@ -292,14 +297,13 @@ def buy_store_goods(rk_user, params):
                      goods_index:  int  为所买商品在所属类型的index   
     """
     #store_type = params['store_type']
-    store_type = 'fight_coin_store'
     goods_index = int(params['goods_index'])
 
     buy_goods_info = {}
     goods_list = []
     user_mystery_store_obj = rk_user.user_mystery_store
 
-    buy_goods_info = user_mystery_store_obj.store_info()[store_type][goods_index]
+    buy_goods_info = user_mystery_store_obj.store_info()['store'][goods_index]
     goods_list.append(buy_goods_info['goods'])
     need = "need_coin" if buy_goods_info.get("need_coin", 0) else "need_fight_soul"
     needed_cost = buy_goods_info.get(need, 0)
@@ -314,7 +318,7 @@ def buy_store_goods(rk_user, params):
 
     # 发商品    
     # 前端通过rc 是否等于 0 判断是否购买成功
-    if not user_mystery_store_obj.update_goods_info_by_index(store_type, goods_index):
+    if not user_mystery_store_obj.update_goods_info_by_index(goods_index):
         raise GameLogicError('has bought this item')
     all_get_goods = tools.add_things(rk_user, goods_list, where=u"buy_from_mystery_store")
 
@@ -327,7 +331,7 @@ def buy_store_goods(rk_user, params):
 
 def _pack_store_info(store_info):
     store_info = copy.deepcopy(store_info)
-    for each_good_info in store_info["fight_coin_store"]:
+    for each_good_info in store_info["store"]:
         good_id = each_good_info["goods"]["_id"]
         num = each_good_info["goods"]["num"]
         pack = tools.pack_good(good_id, num)
