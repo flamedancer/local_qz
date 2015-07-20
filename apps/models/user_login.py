@@ -184,8 +184,8 @@ class UserLogin(GameModel):
             mail_awards['bind_award'] = self.game_config.weibo_config['bind_award']
             user_property_obj.property_info['bind_award'] = False
         
-        if not user_property_obj.newbie:
-            rtn_data = self.new_login_bonus(now, user_property_obj)
+        # if not user_property_obj.newbie:
+        #     rtn_data = self.new_login_bonus(now, user_property_obj)
 
         # 根据上一次22:00的pvp排名给予相应的功勋奖励
         mail_awards.update(self.get_honor_award())
@@ -212,33 +212,33 @@ class UserLogin(GameModel):
         self.put()
         user_property_obj.put()
         
-        return rtn_data
+        return {}
 
-    def new_login_bonus(self, now, user_property):
-        '''
-        新版本-登录收益
-        '''
-        data = {}
-        # login_record_new sample  [u'2014-11-21 16:42:04', u'2014-11-21 10:40:22', u'2014-11-19 15:40:22']
-        if len(self.login_info['login_record_new']) <= 1:
-            return data
-        last_login_time = utils.string_toDatetime(self.login_info['login_record_new'][1])
-        delta = now - last_login_time
+    # def new_login_bonus(self, now, user_property):
+    #     '''
+    #     新版本-登录收益
+    #     '''
+    #     data = {}
+    #     # login_record_new sample  [u'2014-11-21 16:42:04', u'2014-11-21 10:40:22', u'2014-11-19 15:40:22']
+    #     if len(self.login_info['login_record_new']) <= 1:
+    #         return data
+    #     last_login_time = utils.string_toDatetime(self.login_info['login_record_new'][1])
+    #     delta = now - last_login_time
         
-        conf = self.game_config.user_level_config[str(user_property.lv)]['outline_permin_award']
-        mm = delta.seconds % 3600 / 60
-        hh = delta.days * 24 + delta.seconds / 3600
-        minutes = min(hh * 60 + mm, 1440)
-        gold = int(round(conf['gold'] * minutes))
-        exp_point = int(round(conf['card_exp_point'] * minutes))
-        user_property.add_gold(gold, 'login_bonus')
-        user_property.add_card_exp_point(exp_point, 'login_bonus')
-        data['gold'] = gold
-        data['exp_point'] = exp_point
-        # 离线的分钟和小时
-        data['mm'] = mm
-        data['hh'] = hh
-        return data
+    #     conf = self.game_config.user_level_config[str(user_property.lv)]['outline_permin_award']
+    #     mm = delta.seconds % 3600 / 60
+    #     hh = delta.days * 24 + delta.seconds / 3600
+    #     minutes = min(hh * 60 + mm, 1440)
+    #     gold = int(round(conf['gold'] * minutes))
+    #     exp_point = int(round(conf['card_exp_point'] * minutes))
+    #     user_property.add_gold(gold, 'login_bonus')
+    #     user_property.add_card_exp_point(exp_point, 'login_bonus')
+    #     data['gold'] = gold
+    #     data['exp_point'] = exp_point
+    #     # 离线的分钟和小时
+    #     data['mm'] = mm
+    #     data['hh'] = hh
+    #     return data
 
     def get_monthCard_bonus(self):
         user_property_obj = self.user_property

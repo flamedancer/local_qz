@@ -83,9 +83,9 @@ class UserEquips(GameModel):
 
         Args:
             eid: 装备唯一标示符
-            quality: 品质  例如  蓝装 +1、紫装+2
+            quality: 品质  例如  蓝装 、紫装
         """
-        addret, ueid, is_first = self.__add_equip(eid, quality)
+        addret, ueid, is_first = self.__add_equip(eid)
         if addret and where:
             log_data = {'where': where,
                         'equip_dict': self.get_equip_dict(ueid),
@@ -95,22 +95,22 @@ class UserEquips(GameModel):
         all_equips_num = self.get_equips_num()
         return True, all_equips_num, ueid, is_first
 
-    def __add_equip(self, eid, quality):
+    def __add_equip(self, eid):
         """增加装备逻辑处理
 
         Args:
             eid: 装备唯一标示符
-            quality: 品质  例如  蓝+1( blue+1 ) 、紫+3(violet+3)  
+            quality: 品质  例如  蓝 、紫 
         """
         ueid = create_gen_id()
         is_first = False
         ret = False
         equip_upgrade_config = self.game_config.equip_upgrade_config
-        if not quality:
-            quality = self.game_config.equip_config[eid].get('init_quality', 'white+0')
 
-        #获取装备的star和基础经验    装备星级 由品质 决定
-        star = equip_upgrade_config['color_star'][quality.split('+')[0]]
+        quality = self.game_config.equip_config[eid].get('init_quality', 'white')
+        star = self.game_config.equip_config[eid].get('star', 1)
+        # #获取装备的star和基础经验    装备星级 由品质 决定
+        # star = equip_upgrade_config['color_star'][quality.split('+')[0]]
         eqtype = self.game_config.equip_config[eid]['eqtype']
         #因为普通装备的经验和金钱是等价的所以这里使用common_gold
         if eqtype<=4:
@@ -123,13 +123,13 @@ class UserEquips(GameModel):
         real_exp = int(base_exp*coefficient)
         #取得卡片的技能ID
         self.equips[ueid] = {
-                        'eid':eid,
-                        'upd_time':int(time.time()),
-                        'used_by':'',
-                        'cur_lv':1,
-                        'cur_experience':real_exp,
-                        'quality': quality,
-                        'star': star  #  装备星级 由品质 决定
+            'eid':eid,
+            'upd_time':int(time.time()),
+            'used_by':'',
+            'cur_lv':1,
+            'cur_experience':real_exp,
+            'quality': quality,
+            'star': star  #  装备星级 由品质 决定
         }
         is_first = UserCollection.get_instance(self.uid).add_collected_card(eid,'equips')
         ret = True

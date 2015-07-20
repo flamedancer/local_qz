@@ -86,7 +86,6 @@ def get_config(rk_user, params):
         'recover_daily_copy_need': game_config.system_config['recover_daily_copy_need'],
 
         'gacha_cost_coin': game_config.gacha_config['cost_coin'],
-        'gacha_notice': game_config.gacha_config['notice'],
         'agreement': game_config.system_config.get('agreement',''),
         'help_links': game_config.system_config.get('help_links',[]),
         'aboutus': game_config.system_config['aboutus'],
@@ -181,8 +180,6 @@ def get_config(rk_user, params):
     config_info['card_level'] = game_config.card_level_config
     #好友送礼配置
     config_info['friend_gift_conf'] = game_config.invite_config['friend_gift_conf']
-    #武将品质配置
-    config_info['card_quality_conf'] = game_config.card_update_config['card_quality']
     #战场配置
     rc,config_info['dungeon'] = get_dungeon_config(rk_user,params)
     config_info['dungeon_world'] = game_config.dungeon_world_config['world']
@@ -248,20 +245,8 @@ def get_equip_config(rk_user, params):
     """
     data = {}
     #获取装备配置信息
-    equip_config = copy.deepcopy(game_config.equip_config)
-    for eid in equip_config:
-        unlock_skill = equip_config[eid].get('unlock_skill',{})
-        if unlock_skill:
-            #如果有解锁技能的话 就格式化解锁技能
-            all_keys = sorted(unlock_skill.keys())
-            tmp = []
-            for lv in all_keys:
-                info = unlock_skill[str(lv)]
-                info['lv'] = str(lv)
-                tmp.append(info)
-            equip_config[eid]['unlock_skill'] = tmp
 
-    data['equip_conf'] = equip_config
+    data['equip_conf'] = game_config.equip_config
     #获取装备等级经验配置信息
     data['equip_exp_conf'] = game_config.equip_exp_config
     #获取套装配置信息
