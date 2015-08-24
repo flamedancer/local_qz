@@ -222,13 +222,15 @@ def get_config(rk_user, params):
                         'hc_drop_rate':game_config.skill_params_config.get('hc_drop_rate',0.1),
                         'bc_drop_rate':game_config.skill_params_config.get('bc_drop_rate',0.1),
                     }
+
     # 探索展示物品配置
-    config_info['explore_show'] = {}
-    explore_show_can_get = game_config.explore_config.get('show_can_get', {})
-    for explore_type, goods_info in explore_show_can_get.items():
-        config_info['explore_show'][explore_type] = [tools.pack_good(goods_id, num) for goods_id, num in goods_info.items()]
+    # config_info['explore_show'] = {}
+    # explore_show_can_get = game_config.explore_config.get('show_can_get', {})
+    # for explore_type, goods_info in explore_show_can_get.items():
+    #     config_info['explore_show'][explore_type] = [tools.pack_good(goods_id, num) for goods_id, num in goods_info.items()]
     # 珠子掉落配置
-    config_info['bead_config'] = game_config.bead_config
+    # config_info['bead_config'] = game_config.bead_config
+
     # 各功能开放的等级
     config_info["open_lv"] = game_config.user_init_config['open_lv']
     # VIP玩家每天福利
@@ -254,7 +256,7 @@ def get_equip_config(rk_user, params):
     data['suit_type_conf'] = game_config.suit_type_config
     #获取武器和碎片的掉落来源信息
     # data.update(get_equip_drop_info())
-    data['equip_upgrade_config'] = game_config.equip_upgrade_config  # 装备升品配置
+    # data['equip_upgrade_config'] = game_config.equip_upgrade_config  # 装备升品配置
     return 0, data
 
 def get_yuan_fen(rk_user,params):

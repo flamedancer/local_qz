@@ -591,23 +591,6 @@ def user_level_config(sheet):
     user_level_config_string = "{\n" + print_dict(user_level_config, indented,sort_keys) + "\n}"
     return user_level_config_string
 
-def gacha_config(sheet):
-    indented = '\t'
-    gacha_config = make_dict(sheet)
-    gacha_config_string = "{\n" + print_dict(gacha_config, indented) + "\n}"
-    return gacha_config_string
-
-def card_level_config(sheet):
-    indented = '\t'
-    card_level_config = make_dict(sheet)
-    card_level_config_string = "{\n" + print_dict(card_level_config, indented) + "\n}"
-    return card_level_config_string
-
-def compgacha_config(sheet):
-    indented = '\t'
-    compgacha_config = make_dict(sheet)
-    compgacha_config_string = "{\n" + print_dict(compgacha_config, indented) + "\n}"
-    return compgacha_config_string
 
 def equip_config(sheet):
     indented = ''
@@ -616,30 +599,6 @@ def equip_config(sheet):
     equip_config_string = "{\n" + print_dict(equip_config, indented,sort_keys) + "\n}"
     return equip_config_string
 
-def pk_config(sheet):
-    indented = '\t'
-    config = make_dict(sheet)
-    config_string = "{\n" + print_dict(config, indented) + "\n}"
-    return config_string
-
-def equip_upgrade_config(sheet):
-    indented = '\t'
-    config = make_dict(sheet)
-    config_string = "{\n" + print_dict(config, indented) + "\n}"
-    return config_string
-
-def suit_type_config(sheet):
-    indented = '\t'
-    config = make_dict(sheet)
-    config_string = "{\n" + print_dict(config, indented) + "\n}"
-    return config_string
-
-def bead_config(sheet):
-    indented = ''
-    config = make_dict(sheet)
-    sort_keys = [ '%s' % tag for tag in sorted([int(i) for i in config])]
-    config_string = "{\n" + print_dict(config, indented,sort_keys) + "\n}"
-    return config_string
 
 
 

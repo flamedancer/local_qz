@@ -50,12 +50,12 @@ g_lConfig = [
         'use_subarea': False,
         'category': u'系统/用户'
     },
-    {
-        'name': 'explore_config',
-        'description': u'探索',
-        'use_subarea': False,
-        'category': u'系统/用户'
-    },
+    # {
+    #     'name': 'explore_config',
+    #     'description': u'探索',
+    #     'use_subarea': False,
+    #     'category': u'系统/用户'
+    # },
     {
         'name': 'gacha_config',
         'description': u'招募求将',
@@ -170,12 +170,12 @@ g_lConfig = [
         'use_subarea': False,
         'category': u'战场'
     },
-    {
-        'name': 'bead_config',
-        'description': u'珠盘配置',
-        'use_subarea': False,
-        'category': u'战场'
-    },
+    # {
+    #     'name': 'bead_config',
+    #     'description': u'珠盘配置',
+    #     'use_subarea': False,
+    #     'category': u'战场'
+    # },
     {
         'name': 'msg_config',
         'description': u'提示语',
@@ -237,12 +237,12 @@ g_lConfig = [
     #     'use_subarea': False,
     #     'category': u'装备/技能'
     # },
-    {
-        'name': 'equip_upgrade_config',
-        'description': u'装备升品',
-        'use_subarea': False,
-        'category': u'装备/技能'
-    },
+    # {
+    #     'name': 'equip_upgrade_config',
+    #     'description': u'装备升品',
+    #     'use_subarea': False,
+    #     'category': u'装备/技能'
+    # },
     {
         'name': 'suit_type_config',
         'description': u'装备套装',
@@ -315,12 +315,12 @@ g_lConfig = [
         'use_subarea': False,
         'category': u'装备/技能'
     },
-    {
-        'name': 'ruby_skill_params_config',
-        'description': u'ruby技能数值(会改变技能数值!)',
-        'use_subarea': False,
-        'category': u'装备/技能'
-    },
+    # {
+    #     'name': 'ruby_skill_params_config',
+    #     'description': u'ruby技能数值(会改变技能数值!)',
+    #     'use_subarea': False,
+    #     'category': u'装备/技能'
+    # },
 
     {
         'name': 'marquee_config',

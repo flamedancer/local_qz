@@ -82,8 +82,10 @@ def banquet_info(rk_user, params):
     banquet_info.pop('banquet_interval')
     banquet_info['am_flag'] = user_banquet_info.get(banquet_info['am_start'],False)
     banquet_info['pm_flag'] = user_banquet_info.get(banquet_info['pm_start'],False)
+
     # 获取探索的相关内容
-    explore_info = get_explore_info(rk_user)
+    # explore_info = get_explore_info(rk_user)
+
     # 获取成长礼包相关内容
     growup_info = get_growup_info(rk_user, params)
     # 判断新手引导
@@ -92,7 +94,7 @@ def banquet_info(rk_user, params):
         rk_user.user_property.set_newbie_steps(newbie_step, "banquet_info")
     return {
         'banquet_info': banquet_info, 
-        'explore_info': explore_info,
+        # 'explore_info': explore_info,
         'growup_info': growup_info,
     }
 
@@ -127,131 +129,131 @@ def get_banquet_stamina(rk_user, params):
     return 0, {'add_stamina': get_stamina}
 
 
-def get_explore_info(rk_user):
-    '''
-    获取探索的信息
-    uid
-    '''
-    data = {}
-    for explore_type in ['gold','silver','copper']:
-        data['cost_'+explore_type] = game_config.explore_config.get('cost_'+explore_type+'_shovel')
-        data['explore_'+explore_type+'_cost'] = game_config.explore_config.get('explore_cost_config',{}).get(explore_type,10)
-    #获取背包中的道具信息
-    user_pack_obj = rk_user.user_pack
-    #获取所有的道具
-    all_props = user_pack_obj.get_props()
-    props_config = game_config.props_config
-    user_explore_props = {}
-    #获取用户的道具配置
-    for props_id in props_config:
-        user_by = props_config.get(props_id,{}).get('used_by','')
-        if user_by == 'explore' and props_id in all_props:
-            props_type = props_config.get(props_id,{}).get('type','')
-            #获取可以探索的id 
-            user_explore_props[props_type] = all_props[props_id]
-    #获取探索信息 用户的道具的数量
-    user_activity_obj = rk_user.user_activity
-    explore_times = user_activity_obj.get_explore_times()
-    for explore_type in explore_times:
-        #data[explore_type] = explore_times[explore_type]
-        data['user_'+explore_type] = user_explore_props.get(explore_type,0)
-    #结果返回
-    return data
+# def get_explore_info(rk_user):
+#     '''
+#     获取探索的信息
+#     uid
+#     '''
+#     data = {}
+#     for explore_type in ['gold','silver','copper']:
+#         data['cost_'+explore_type] = game_config.explore_config.get('cost_'+explore_type+'_shovel')
+#         data['explore_'+explore_type+'_cost'] = game_config.explore_config.get('explore_cost_config',{}).get(explore_type,10)
+#     #获取背包中的道具信息
+#     user_pack_obj = rk_user.user_pack
+#     #获取所有的道具
+#     all_props = user_pack_obj.get_props()
+#     props_config = game_config.props_config
+#     user_explore_props = {}
+#     #获取用户的道具配置
+#     for props_id in props_config:
+#         user_by = props_config.get(props_id,{}).get('used_by','')
+#         if user_by == 'explore' and props_id in all_props:
+#             props_type = props_config.get(props_id,{}).get('type','')
+#             #获取可以探索的id 
+#             user_explore_props[props_type] = all_props[props_id]
+#     #获取探索信息 用户的道具的数量
+#     user_activity_obj = rk_user.user_activity
+#     explore_times = user_activity_obj.get_explore_times()
+#     for explore_type in explore_times:
+#         #data[explore_type] = explore_times[explore_type]
+#         data['user_'+explore_type] = user_explore_props.get(explore_type,0)
+#     #结果返回
+#     return data
 
 
-def explore(rk_user,params):
-    '''
-    *宝藏探索 
-    *输入 要探索的宝藏类型  探索次数
-    返回 探索获取的
-    '''
-    shovel = params.get('shovel')
-    if shovel not in ['gold','silver','copper']:
-        return 11,{'msg':utils.get_msg('pack', 'no_materials')}
-    #获取探索的次数
-    times = int(params.get('times',1))
-    #获取是否是消耗元宝进行的探索
-    use_coin = params.get('use_coin',False)
-    #获取当前探索类型的每一次所消耗的道具数量
-    once_cost_num = int(game_config.explore_config.get('cost_'+shovel+'_shovel'))
-    all_cost_num = times * once_cost_num
-    #user_activity_obj = UserActivity.get_instance(rk_user.uid)
-    # #获取可探索的次数
-    # left_explore_times = user_activity_obj.get_explore_times()
-    # #判断可探索次数是为空
-    # if not left_explore_times[shovel]:
-    #     return 11,{'msg':utils.get_msg('pack', 'not_enough_times')}
-    # #判断可探索次数和要探索次数是否符合逻辑
-    # if times>left_explore_times[shovel]:
-    #     return 11,{'msg':utils.get_msg('pack', 'not_enough_material')}
-    if use_coin:
-        #用户使用元宝进行探索
-        explore_cost_config = game_config.explore_config.get('explore_cost_config',{})
-        cost_coin = int(explore_cost_config.get(shovel,10))
-        all_cost_coin = cost_coin * times
-        if rk_user.user_property.coin < all_cost_coin:
-            return 11,{'msg':utils.get_msg('user','not_enough_coin')}
-        #减元宝
-        rk_user.user_property.minus_coin(all_cost_coin, where="explore")
-        cost_what = "coin"
-        cost_num = all_cost_coin
-    else:
-        #将类型转化为可识别的道具
-        props_config = game_config.props_config
-        #根据探索的类型获取探索所需要的道具
-        for props_id in props_config:
-            if props_config[props_id].get('used_by','')=='explore' and props_config[props_id].get('type','')== shovel:
-                p_id = props_id
-                break
-            else:
-                pass
-        #使用道具进行探索
-        user_pack_obj = UserPack.get_instance(rk_user.uid)
-        #判断道具是否足够
-        if not user_pack_obj.is_props_enough(p_id,all_cost_num):
-            return 11,{'msg':utils.get_msg('pack', 'not_enough_props')}
-        #减素材
-        user_pack_obj.minus_props(p_id, all_cost_num, where="explore")
-        cost_what = props_id
-        cost_num = all_cost_num
-    #减可探索的次数
-    # user_activity_obj.min_explore_times(shovel,all_cost_num)
-    log_data = {"type": shovel, "cost": cost_what, "cost_num": cost_num, "num": times}
-    data_log_mod.set_log('Explore', rk_user, **log_data)
-    explore_info = add_explore_info(shovel, rk_user, times)
+# def explore(rk_user,params):
+#     '''
+#     *宝藏探索 
+#     *输入 要探索的宝藏类型  探索次数
+#     返回 探索获取的
+#     '''
+#     shovel = params.get('shovel')
+#     if shovel not in ['gold','silver','copper']:
+#         return 11,{'msg':utils.get_msg('pack', 'no_materials')}
+#     #获取探索的次数
+#     times = int(params.get('times',1))
+#     #获取是否是消耗元宝进行的探索
+#     use_coin = params.get('use_coin',False)
+#     #获取当前探索类型的每一次所消耗的道具数量
+#     once_cost_num = int(game_config.explore_config.get('cost_'+shovel+'_shovel'))
+#     all_cost_num = times * once_cost_num
+#     #user_activity_obj = UserActivity.get_instance(rk_user.uid)
+#     # #获取可探索的次数
+#     # left_explore_times = user_activity_obj.get_explore_times()
+#     # #判断可探索次数是为空
+#     # if not left_explore_times[shovel]:
+#     #     return 11,{'msg':utils.get_msg('pack', 'not_enough_times')}
+#     # #判断可探索次数和要探索次数是否符合逻辑
+#     # if times>left_explore_times[shovel]:
+#     #     return 11,{'msg':utils.get_msg('pack', 'not_enough_material')}
+#     if use_coin:
+#         #用户使用元宝进行探索
+#         explore_cost_config = game_config.explore_config.get('explore_cost_config',{})
+#         cost_coin = int(explore_cost_config.get(shovel,10))
+#         all_cost_coin = cost_coin * times
+#         if rk_user.user_property.coin < all_cost_coin:
+#             return 11,{'msg':utils.get_msg('user','not_enough_coin')}
+#         #减元宝
+#         rk_user.user_property.minus_coin(all_cost_coin, where="explore")
+#         cost_what = "coin"
+#         cost_num = all_cost_coin
+#     else:
+#         #将类型转化为可识别的道具
+#         props_config = game_config.props_config
+#         #根据探索的类型获取探索所需要的道具
+#         for props_id in props_config:
+#             if props_config[props_id].get('used_by','')=='explore' and props_config[props_id].get('type','')== shovel:
+#                 p_id = props_id
+#                 break
+#             else:
+#                 pass
+#         #使用道具进行探索
+#         user_pack_obj = UserPack.get_instance(rk_user.uid)
+#         #判断道具是否足够
+#         if not user_pack_obj.is_props_enough(p_id,all_cost_num):
+#             return 11,{'msg':utils.get_msg('pack', 'not_enough_props')}
+#         #减素材
+#         user_pack_obj.minus_props(p_id, all_cost_num, where="explore")
+#         cost_what = props_id
+#         cost_num = all_cost_num
+#     #减可探索的次数
+#     # user_activity_obj.min_explore_times(shovel,all_cost_num)
+#     log_data = {"type": shovel, "cost": cost_what, "cost_num": cost_num, "num": times}
+#     data_log_mod.set_log('Explore', rk_user, **log_data)
+#     explore_info = add_explore_info(shovel, rk_user, times)
 
-    return 0,{'explore_info':explore_info}
+#     return 0,{'explore_info':explore_info}
 
 
-def add_explore_info(explore_type, rk_user, times):
-    '''
-    根据探索类型获取探索的内容 并且添加
-    '''
-    explore_config = game_config.explore_config.get('get_explore_info',{}).get(explore_type,{})
+# def add_explore_info(explore_type, rk_user, times):
+#     '''
+#     根据探索类型获取探索的内容 并且添加
+#     '''
+#     explore_config = game_config.explore_config.get('get_explore_info',{}).get(explore_type,{})
 
-    get_things = []
-    show_things = []
-    #格式化探索获得的内容
-    for i in xrange(times):
-        get_explore_type = utils.get_item_by_random_simple(explore_config)
-        explore_info = game_config.explore_config.get(get_explore_type, {})
-        #格式化要获取的 id 和权重
-        wlst = []
-        for index, explore_dict in explore_info.items():
-            weight = int(explore_dict['weight'])
-            thing_id = explore_dict['id']
-            thing_num = explore_dict['num']
-            wlst.append([(thing_id, thing_num), weight])
-        #获取探索得到的 id  #[[value,weight],[value,weight],[value,weight],[value,weight]]
-        get_id, get_num = utils.windex(wlst)
-        # #获取探索得到的数量
-        # get_num = int(explore_info[get_id]['num'])
-        #获取探索得到的种类
-        get_things.append({"_id": get_id, "num": get_num})
-        show_things.append(tools.pack_good(get_id, get_num))
+#     get_things = []
+#     show_things = []
+#     #格式化探索获得的内容
+#     for i in xrange(times):
+#         get_explore_type = utils.get_item_by_random_simple(explore_config)
+#         explore_info = game_config.explore_config.get(get_explore_type, {})
+#         #格式化要获取的 id 和权重
+#         wlst = []
+#         for index, explore_dict in explore_info.items():
+#             weight = int(explore_dict['weight'])
+#             thing_id = explore_dict['id']
+#             thing_num = explore_dict['num']
+#             wlst.append([(thing_id, thing_num), weight])
+#         #获取探索得到的 id  #[[value,weight],[value,weight],[value,weight],[value,weight]]
+#         get_id, get_num = utils.windex(wlst)
+#         # #获取探索得到的数量
+#         # get_num = int(explore_info[get_id]['num'])
+#         #获取探索得到的种类
+#         get_things.append({"_id": get_id, "num": get_num})
+#         show_things.append(tools.pack_good(get_id, get_num))
 
-    all_get_goods = tools.add_things(rk_user, get_things, where='explore')
-    return {"get_info": all_get_goods, "show_things": show_things}
+#     all_get_goods = tools.add_things(rk_user, get_things, where='explore')
+#     return {"get_info": all_get_goods, "show_things": show_things}
 
         
 def buy_growup_plan(rk_user, params):

@@ -104,7 +104,6 @@ class UserEquips(GameModel):
         ueid = create_gen_id()
         is_first = False
         ret = False
-        equip_upgrade_config = self.game_config.equip_upgrade_config
 
         star = self.game_config.equip_config[eid].get('star', 1)
 
@@ -485,22 +484,22 @@ class UserEquips(GameModel):
                     suit_equips[ueid] = ueid_info
         return suit_equips
 
-    def upgrade_equip(self, ueid, next_quality):
-        star = self.game_config.equip_upgrade_config['color_star'][next_quality.split('+')[0]]
-        old_quality = self.equips[ueid]['quality']
-        self.equips[ueid]['quality'] = next_quality
-        self.equips[ueid]['star'] = star
-        equip_info = self.equips[ueid]
-        equip_info.update({'ueid': ueid})
-        self.put()
+    # def upgrade_equip(self, ueid, next_quality):
+    #     star = self.game_config.equip_upgrade_config['color_star'][next_quality.split('+')[0]]
+    #     old_quality = self.equips[ueid]['quality']
+    #     self.equips[ueid]['quality'] = next_quality
+    #     self.equips[ueid]['star'] = star
+    #     equip_info = self.equips[ueid]
+    #     equip_info.update({'ueid': ueid})
+    #     self.put()
 
-        log_data = {
-            'old_quality': old_quality,
-            'new_quality': next_quality,
-            'eid': equip_info['eid'],
-            'equip_msg': equip_info,
-        }
-        data_log_mod.set_log('EquUpgrade', self, **log_data)
-        return equip_info
+    #     log_data = {
+    #         'old_quality': old_quality,
+    #         'new_quality': next_quality,
+    #         'eid': equip_info['eid'],
+    #         'equip_msg': equip_info,
+    #     }
+    #     data_log_mod.set_log('EquUpgrade', self, **log_data)
+    #     return equip_info
 
 
