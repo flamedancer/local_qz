@@ -21,7 +21,6 @@ from apps.common.exceptions import ParamsError
 def get_equip_drop_info():
     '''
     * 获取装备碎片掉落的关卡信息
-    * miaoyichao
     '''
     equip_drop_info = {}
     equip_soul_drop_info = {}
@@ -65,6 +64,45 @@ def __check_can_update(base_equip,user_lv):
             update_flag = 0
     return update_flag
 
+
+def __sort_equips(equips):
+    """ 排序规则， 从前到后
+    1. 已装备,未装备
+    2. star
+    3. eqtype  1:武器,2:护甲,3:头盔,4:战靴,
+    4. equip_id
+    5. lv
+    """
+    equip_config = game_config.equip_config
+    def sort_fun(item1, item2):
+        cmp1, cmp2 = item1[1], item2[1]
+        flag = cmp(bool(cmp1['used_by']), bool(cmp2['used_by']))
+        if flag:
+            return flag
+        flag = cmp(cmp1['star'], cmp2['star'])
+        if flag:
+            return flag
+        eqtype_seq = [6, 5, 4, 2, 3, 1]
+        flag = cmp(eqtype_seq.index(equip_config[cmp1['eid']]['eqtype']), 
+                eqtype_seq.index(equip_config[cmp1['eid']]['eqtype']))
+        if flag:
+            return flag
+        flag = cmp(cmp1['eid'], cmp2['eid'])
+        if flag:
+            return flag
+        flag = cmp(eqtype_seq.index(cmp1['cur_lv']), cmp2['cur_lv'])
+        if flag:
+            return flag
+        return 1
+    equips = sorted(equips.items(), cmp=sort_fun, reverse=True)
+    return equips
+
+
+def get_sorted_equips(rk_user, params):
+    user_equips_obj = rk_user.user_equips
+    return {'user_sorted_equips': __sort_equips(user_equips_obj.equips)}
+
+
 def get_user_lv(uid):
     '''
     * 获取用户的等级
@@ -75,7 +113,6 @@ def get_user_lv(uid):
 def __check_same_type(user_equips_lists,uetype,cost_list):
     '''
     * 检查消耗的素材的类型是否和要升级的装备的类型是一致的
-    * miaoyichao
     '''
 
     #对要消耗的装备遍历
@@ -263,73 +300,6 @@ def update(rk_user,params):
         return 0,data
     else:
         return 11,{'msg':utils.get_msg('equip','params_wrong')}
-
-
-# def upgrade(rk_user, params):
-#     """升品操作
-
-#     Args:
-#         ueid: 需要升品的装备 唯一标示号
-#         cost_ueid: 升品需要消耗的装备唯一标示号， 若为 '' 表示不需要消耗装备
-#                 多个装备用 , 隔开
-
-#     """
-#     ueid = params['ueid']
-#     cost_ueids = params.get('cost_ueid', '').split(",")
-#     user_equips_obj = rk_user.user_equips
-#     # 检查是否存在
-#     if not user_equips_obj.has_ueid(ueid):
-#         return 11, {'msg': utils.get_msg('equip', 'no_equip')}
-
-#     ueid_info = user_equips_obj.equips[ueid]
-#     quality = ueid_info['quality']
-
-#     equip_upgrade_config = rk_user.game_config.equip_upgrade_config
-#     quality_order = equip_upgrade_config['quality_order']
-#     next_quality_index = quality_order.index(quality) + 1
-#     # 已达到最大品级
-#     if next_quality_index >= len(quality_order):
-#         return 11, {'msg': utils.get_msg('equip', 'already_max_quality')}
-
-#     equip_type = rk_user.game_config.equip_config[ueid_info['eid']]['eqtype']
-#     quality = ueid_info['quality']
-
-#     needs = copy.deepcopy(equip_upgrade_config[quality][equip_type])
-
-#     # 判断是否需要同名卡牌
-#     needs_equip_num = 0
-#     if "needs_equip_num" in equip_upgrade_config[quality][equip_type]:
-#         needs_equip_num = needs.pop("needs_equip_num")
-
-#     suited_cost_equip = []
-#     if needs_equip_num > 0:
-#         suited_cost_equip = []
-#         for equip_ueid in cost_ueids:
-
-#             if user_equips_obj.has_ueid(equip_ueid) and \
-#             user_equips_obj.equips[equip_ueid]['quality'] == quality.split("+")[0] + "+0":
-#                 suited_cost_equip.append(equip_ueid)
-#         if len(suited_cost_equip) < needs_equip_num:
-#             return 11, {'msg': 'lack same color equip'}
-#     else:
-#         suited_cost_equip = []
-
-#     needs = utils.format_award(needs)
-#     if not tools.is_things_enough(rk_user, needs):
-#         return 11, {'msg': "not enough things"}
-
-
-#     user_equips_obj.delete_equip(suited_cost_equip, where="upgrade_equip")
-#     tools.del_things(rk_user, needs, where="upgrade_equip")
-
-#     next_quality = quality_order[next_quality_index]
-#     new_equip_info = rk_user.user_equips.upgrade_equip(ueid, next_quality)
-
-#     # 判断新手引导
-#     newbie_step = int(params.get('newbie_step', 0))
-#     if newbie_step:
-#         rk_user.user_property.set_newbie_steps(newbie_step, "equip_upgrade")
-#     return 0, {"new_equip_info": new_equip_info}
 
 
 def equip_stove(rk_user,params):

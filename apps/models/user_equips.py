@@ -100,17 +100,14 @@ class UserEquips(GameModel):
 
         Args:
             eid: 装备唯一标示符
-            quality: 品质  例如  蓝 、紫 
         """
         ueid = create_gen_id()
         is_first = False
         ret = False
         equip_upgrade_config = self.game_config.equip_upgrade_config
 
-        quality = self.game_config.equip_config[eid].get('init_quality', 'white')
         star = self.game_config.equip_config[eid].get('star', 1)
-        # #获取装备的star和基础经验    装备星级 由品质 决定
-        # star = equip_upgrade_config['color_star'][quality.split('+')[0]]
+
         eqtype = self.game_config.equip_config[eid]['eqtype']
         #因为普通装备的经验和金钱是等价的所以这里使用common_gold
         if eqtype<=4:
@@ -128,7 +125,6 @@ class UserEquips(GameModel):
             'used_by':'',
             'cur_lv':1,
             'cur_experience':real_exp,
-            'quality': quality,
             'star': star  #  装备星级 由品质 决定
         }
         is_first = UserCollection.get_instance(self.uid).add_collected_card(eid,'equips')

@@ -483,7 +483,7 @@ class UserLogin(GameModel):
         title = system_compensates_conf.get('title', '')
         # 当天注册不给予补偿
         add_date = utils.timestamp_toDatetime(self.user_base.add_time).date()
-        if str(add_date) != str(now.date()):
+        if str(add_date) != str(now.date()) and system_compensates_conf.get('awards'):
             if str(now.date()) in system_compensates_conf['awards']: # 兼容旧配置
                 data['compensates'] = {
                     'content':system_compensates_conf[str(now.date())].get('content', ''),

@@ -106,8 +106,9 @@ class UserMysteryStore(GameModel):
         if self.free_refresh_cnt >= max_free_fresh_cnt:
             next_auto_refresh_time = 0
         else:
-            next_refresh_hour = ((now.hour / refresh_hours_gap) + 1) * refresh_hours_gap
-            next_auto_refresh_time_str = str(datetime.datetime(now.year, now.month, now.day, next_refresh_hour))
+            next_refresh_hour = ((now.hour / refresh_hours_gap) + 1) * refresh_hours_gap % 24
+            day_num = now.day if next_refresh_hour else now.day + 1
+            next_auto_refresh_time_str = str(datetime.datetime(now.year, now.month, day_num, next_refresh_hour))
             next_auto_refresh_time = utils.string_toTimestamp(next_auto_refresh_time_str)
         mystery_store_info = {
             "store": self.store,
@@ -136,8 +137,6 @@ class UserMysteryStore(GameModel):
         max_free_fresh_cnt = vip_conf[str(cur_vip_lv)].get('max_free_fresh_mystery_store_cnt', 4)
         # 计算可产生多少刷新次数：间隔的小时数 / 刷新间隔
         may_product_cnt = int((deltatime.total_seconds() // 3600) // refresh_hours_gap)
-        print self.last_incre_refresh_cnt_timestr, now
-        print "may_product_cnt", may_product_cnt
         # 更新刷新次数
         self.free_refresh_cnt = min(int(may_product_cnt + self.free_refresh_cnt), max_free_fresh_cnt)
         # 更新刷新时间

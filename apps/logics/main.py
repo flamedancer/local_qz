@@ -52,6 +52,7 @@ def index(rk_user,params):
 
     return 0,data
 
+
 def __gacha_info(rk_user):
     data = {}
     gacha_conf = game_config.gacha_config
@@ -252,7 +253,7 @@ def get_equip_config(rk_user, params):
     #获取套装配置信息
     data['suit_type_conf'] = game_config.suit_type_config
     #获取武器和碎片的掉落来源信息
-    data.update(get_equip_drop_info())
+    # data.update(get_equip_drop_info())
     data['equip_upgrade_config'] = game_config.equip_upgrade_config  # 装备升品配置
     return 0, data
 
@@ -301,7 +302,7 @@ def get_card_config(rk_user, params):
     data['card_conf'] = game_config.card_config
     data['talent_config'] = game_config.talent_skill_config
     data['talent_value_config'] = game_config.talent_value_config
-    data['soul_drop_info'] = get_card_soul_drop_info()
+    # data['soul_drop_info'] = get_card_soul_drop_info()
     return 0, data
 
 def get_monster_config(rk_user, params):
@@ -412,17 +413,17 @@ def get_dungeon_config(rk_user,params):
                 if 'invisible_drop' in local_copy[floor_key]['rooms'][room_key]:
                     local_copy[floor_key]['rooms'][room_key].pop('invisible_drop')
                 #去除通关经验
-                if 'exp' in local_copy[floor_key]['rooms'][room_key]:
-                    local_copy[floor_key]['rooms'][room_key].pop('exp')
-                #去除通关金币
-                if 'gold' in local_copy[floor_key]['rooms'][room_key]:
-                    local_copy[floor_key]['rooms'][room_key].pop('gold')
+                # if 'exp' in local_copy[floor_key]['rooms'][room_key]:
+                #     local_copy[floor_key]['rooms'][room_key].pop('exp')
+                # #去除通关金币
+                # if 'gold' in local_copy[floor_key]['rooms'][room_key]:
+                #     local_copy[floor_key]['rooms'][room_key].pop('gold')
                 #去除可打次数信息
                 if 'can_make_copy_cn' in local_copy[floor_key]['rooms'][room_key]:
                     local_copy[floor_key]['rooms'][room_key].pop('can_make_copy_cn')
-                #去除通关经验点信息
-                if 'exp_point' in local_copy[floor_key]['rooms'][room_key]:
-                    local_copy[floor_key]['rooms'][room_key].pop('exp_point')
+                # #去除通关经验点信息
+                # if 'exp_point' in local_copy[floor_key]['rooms'][room_key]:
+                #     local_copy[floor_key]['rooms'][room_key].pop('exp_point')
 
             data[conf_type] = local_copy
 

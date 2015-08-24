@@ -508,7 +508,7 @@ def edit_user(request):
         if add_super_soul_num >= 0:
             user_souls_obj.add_super_soul(add_super_soul_num, where=qa_edit)
         else:
-            user_souls_obj.minus_card_soul('super_soul', add_super_soul_num, where=qa_edit)
+            user_souls_obj.minus_card_soul('super_soul', -add_super_soul_num, where=qa_edit)
 
     # 武将碎片兑换武将
     if request.POST.get('soul_exchange_card'):
@@ -523,7 +523,7 @@ def edit_user(request):
         user_souls_obj = UserSouls.get_instance(uid)
         user_souls_obj.minus_card_soul(sid, num,where=qa_edit)
         user_souls_obj.put()
-    data.update(soul.get_all(user, None)[1])
+    data.update(copy.deepcopy(soul.get_all(user, None)[1]))
 
     #武将碎片的显示
     for sid, soul_conf in data['normal_souls'].items():

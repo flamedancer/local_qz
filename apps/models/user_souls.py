@@ -67,7 +67,6 @@ class UserSouls(GameModel):
     def get_equip_souls(self):
         '''
         获取装备的魂碎片
-        miaoyichao
         '''
         data = {'equip_souls_info': self.equip_souls_info}
         return data

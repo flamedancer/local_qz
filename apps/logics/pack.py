@@ -29,6 +29,17 @@ def get_store(rk_user, params):
     data = {}
     data['materials'] = user_pack_obj.materials
     data['props'] = user_pack_obj.props
+    
+    # 道具排序
+    # props = user_pack_obj.props
+    # return_props = []
+    # sorted_keys = sorted(props.keys())
+    # for item in sorted_keys:
+    #     this_props = {'id': item}
+    #     this_props.update(props[item])
+    #     return_props.append(this_props)
+    # data['props'] = return_props
+          
     drop_info = get_drop_info()
     data['drop_mat_info'] = drop_info['drop_mat_info']
     data['item_deck'] = [{},{},{},{},{}]

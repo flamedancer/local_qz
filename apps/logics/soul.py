@@ -31,7 +31,6 @@ def get_card_souls(rk_user,params):
 def get_equip_souls(rk_user,params):
     '''
     #获取用户的装备碎片信息
-    miaoyichao
     '''
     user_souls_obj = UserSouls.get_instance(rk_user.uid)
     return 0, user_souls_obj.get_equip_souls()

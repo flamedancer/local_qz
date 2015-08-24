@@ -24,7 +24,7 @@ setup_environ(settings)
 
 
 this_config_name = ''
-config_path = 'config_file.txt'
+config_path = ''
 assert len(sys.argv) >= 2, 'no config_file'
 config_path = os.path.join(cur_dir, sys.argv[1])
 assert os.path.exists(config_path), '!!!Can find COnfigfile!!'
@@ -34,7 +34,7 @@ if len(sys.argv) == 3:
 
 from apps.models.config import Config
 
-config_dict = ast.literal_eval(open("config_file.txt", "r").read())
+config_dict = ast.literal_eval(open(config_path, "r").read())
 
 for sconfig_name in config_dict:
     print "*Find config ", sconfig_name,  "*This_config", this_config_name
