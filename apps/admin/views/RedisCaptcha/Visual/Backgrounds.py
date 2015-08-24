@@ -9,7 +9,7 @@ Background layers for visual CAPTCHAs
 
 from ..Visual import Layer, Pictures
 import random
-import ImageDraw, Image
+# import ImageDraw, Image
 
 
 class SolidColor(Layer):

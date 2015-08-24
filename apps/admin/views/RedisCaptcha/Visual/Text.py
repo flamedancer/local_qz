@@ -10,7 +10,7 @@ Text generation for visual CAPTCHAs.
 import random, os
 #from Captcha import Visual, File
 from apps.admin.views.RedisCaptcha import Visual, File
-import ImageFont, ImageDraw
+# import ImageFont, ImageDraw
 
 
 class FontFactory(File.RandomFileFactory):

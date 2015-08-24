@@ -17,7 +17,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-import pycurl
+# import pycurl
 
 def _call(resource, method, data=None, headers=None, timeout=None, debug=None):
     """A lightweight wrapper around PycURL

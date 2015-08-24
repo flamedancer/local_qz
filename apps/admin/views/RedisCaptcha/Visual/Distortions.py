@@ -8,7 +8,7 @@ Distortion layers for visual CAPTCHAs
 #
 
 from ..Visual import Layer
-import Image
+# import Image
 import random, math
 
 
@@ -44,7 +44,7 @@ class WarpBase(Layer):
        This warping engine runs a grid of points through this transform and uses
        PIL's mesh transform to warp the image.
        """
-    filtering = Image.BILINEAR
+    # filtering = Image.BILINEAR
     resolution = 10
 
     def getTransform(self, image):

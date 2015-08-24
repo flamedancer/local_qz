@@ -9,7 +9,7 @@ to manipulate these images.
 #
 
 from ... import RedisCaptcha as Captcha
-import Image
+# import Image
 
 __all__ = ['ImageCaptcha', 'Layer']
 
