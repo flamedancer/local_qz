@@ -150,8 +150,10 @@ def show_main_task(rk_user, params):
         got_award = ut.main_task.get(task, {}).get('got_award', 0)
         if got_award >= ut.max_step(task):  # 最大进度数和最大奖励个数是一样的
             current_step = str(ut.max_step(task))
+            data['tasks'][task]['all_finished'] = True
         else:
             current_step = str(got_award + 1)
+            data['tasks'][task]['all_finished'] = False
 
         data['tasks'][task]['title'] = conf[task]['title']
         
