@@ -182,17 +182,14 @@ class UserTask(GameModel):
         # 第一系列任务检查  (通关第1大章第1大关第2小关)
         #---------------------------------------------------------------------------
         step = self.__get_step('set_1')
-        if step == 999:  # 做完这一系列任务就不需要处理了
-            # all_finished = True
-            pass
-        else:
-            # all_finished = False
+        if str(step+1) in conf['set_1']['value']:  # 做完这一系列任务就不需要处理了
             normal_current = self.user_dungeon.dungeon_info['normal_current']  #  游戏中显示 new 的那一关
             cur_floor = int(normal_current['floor_id'])
             cur_room = int(normal_current['room_id'])
             value = conf['set_1']['value'][str(step+1)]
-            step_floor = self.__format_floor(value[0], value[1])
-            step_room = value[2]
+            step_floor, step_room = map(str, value)
+            # step_floor = self.__format_floor(value[0], value[1])
+            # step_room = value[2]
     
             if cur_floor > step_floor or (cur_floor == step_floor and cur_room > step_room):
 
@@ -201,12 +198,9 @@ class UserTask(GameModel):
         # 第2 系列任务检查  (获得第1大章第1大关所有星)
         #---------------------------------------------------------------------------
         step = self.__get_step('set_2')
-        if step == 999:  # 做完这一系列任务就不需要处理了
-            
-            pass
-        else:
-            value = conf['set_2']['value'][str(step+1)]
-            floor = str(self.__format_floor(value[0], value[1]))
+        if str(step+1) not in conf['set_2']['value']:  # 做完这一系列任务就不需要处理了
+            floor = str(conf['set_2']['value'][str(step+1)])
+            # floor = str(self.__format_floor(value[0], value[1]))
             print 'wzgdebug floor', floor
             #info = self.user_dungeon.has_played_info['normal'][str(floor)]
             #if info['cur_star'] >= info['floor_all_star']:
@@ -225,9 +219,7 @@ class UserTask(GameModel):
         # 第3 系列任务检查  (战场总星数达到100颗)
         #---------------------------------------------------------------------------
         step = self.__get_step('set_3')
-        if step == 999:  # 做完这一系列任务就不需要处理了
-            pass
-        else:
+        if str(step+1) not in conf['set_3']['value']:  # 做完这一系列任务就不需要处理了
             cur_star = self.user_dungeon.total_got_star
             conf_star = conf['set_3']['value'][str(step+1)]
             if cur_star >= conf_star:
@@ -236,9 +228,7 @@ class UserTask(GameModel):
         # 第4 系列任务检查  (主角达到30级)
         #---------------------------------------------------------------------------
         step = self.__get_step('set_4')
-        if step == 999:  # 做完这一系列任务就不需要处理了
-            pass
-        else:
+        if str(step+1) not in conf['set_4']['value']:  # 做完这一系列任务就不需要处理了
             cur_lv = self.user_property.lv
             conf_lv = conf['set_4']['value'][str(step+1)]
             if cur_lv >= conf_lv:
@@ -271,29 +261,29 @@ class UserTask(GameModel):
             rtn = 999
         return rtn
 
-    def __format_floor(self, dazhang, daguan):
-        '''
-        游戏中有大章(dazhang),大关(daguan),小关
-        配置中只有 floor(大关), room(小关), 所以要转化成统一的格式
-        大章,大关  转化成 floor
-        '''
-                              # 注意   一有变动就要改 ----------------------------------------------------------------------------
-                              # 注意   一有变动就要改 ----------------------------------------------------------------------------
-                              # 注意   一有变动就要改 ----------------------------------------------------------------------------
-        floor_num = [7,3]     # 每个大章有几 floor, (不会经常改动,所以在这写死)
-                              # 注意   一有变动就要改 ----------------------------------------------------------------------------
-                              # 注意   一有变动就要改 ----------------------------------------------------------------------------
-                              # 注意   一有变动就要改 ----------------------------------------------------------------------------
+    # def __format_floor(self, dazhang, daguan):
+    #     '''
+    #     游戏中有大章(dazhang),大关(daguan),小关
+    #     配置中只有 floor(大关), room(小关), 所以要转化成统一的格式
+    #     大章,大关  转化成 floor
+    #     '''
+    #                           # 注意   一有变动就要改 ----------------------------------------------------------------------------
+    #                           # 注意   一有变动就要改 ----------------------------------------------------------------------------
+    #                           # 注意   一有变动就要改 ----------------------------------------------------------------------------
+    #     floor_num = [7,3]     # 每个大章有几 floor, (不会经常改动,所以在这写死)
+    #                           # 注意   一有变动就要改 ----------------------------------------------------------------------------
+    #                           # 注意   一有变动就要改 ----------------------------------------------------------------------------
+    #                           # 注意   一有变动就要改 ----------------------------------------------------------------------------
 
-        floor = daguan
-        if dazhang == 1:
-            return floor
-        elif dazhang > 1:
-            for n in range(dazhang - 1):
-                floor += floor_num[n]
-        else:
-            pass
-        return floor
+    #     floor = daguan
+    #     if dazhang == 1:
+    #         return floor
+    #     elif dazhang > 1:
+    #         for n in range(dazhang - 1):
+    #             floor += floor_num[n]
+    #     else:
+    #         pass
+    #     return floor
 
     def get_award(self, whichset):
         '''获得奖励后, 奖励计数+1'''

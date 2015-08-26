@@ -134,14 +134,14 @@ def show_main_task(rk_user, params):
     获取玩家 主线任务信息
     '''
     conf = game_config.task_config['main_task']
+    dungeon_conf = game_config.normal_dungeon_config
     ut = rk_user.user_task
+    udungeon = rk_user.user_dungeon
     data = {'tasks': {}}
     for task in conf:
         data['tasks'][task] = {}
 
         if task in ut.main_task:
-            print 'ut.main_task:', ut.main_task
-            print 'show_main_task', task
             #step = ut.main_task[task]['step']
             #if step >= ut.max_step(task):
             #    current_step = str(ut.max_step(task))
@@ -150,17 +150,41 @@ def show_main_task(rk_user, params):
 
             got_award = ut.main_task[task]['got_award']
             if got_award >= ut.max_step(task):  # 最大进度数和最大奖励个数是一样的
-                current_award = str(ut.max_step(task))
+                current_step = str(ut.max_step(task))
             else:
-                current_award = str(got_award + 1)
+                current_step = str(got_award + 1)
 
             data['tasks'][task]['title'] = conf[task]['title']
-            data['tasks'][task]['desc'] = conf[task]['desc'] % conf[task]['value'][current_award]
+            
             data['tasks'][task]['can_award'] = ut.main_task[task]['step'] > ut.main_task[task]['got_award']
-            data['tasks'][task]['award'] = conf[task]['award'][current_award]
-            data['tasks'][task]['total_steps'] = len(conf[task]['value'])
-            data['tasks'][task]['finished_step'] = ut.main_task[task]['step']
+            data['tasks'][task]['award'] = conf[task]['award'][current_step]
+            # data['tasks'][task]['total_steps'] = len(conf[task]['value'])
+            # data['tasks'][task]['finished_step'] = ut.main_task[task]['step']
             data['tasks'][task]['got_award'] = ut.main_task[task]['got_award']   # 已领取的奖励个数
+
+            # 根据不同的任务，显示不同的进度
+            # 第一系列任务进度显示  (通关第1大章第1大关第2小关)  始终显示 0/1  或 1/1
+            if task == 'set_1':
+                step_floor, step_room = map(str, conf['set_1']['value'][current_step])
+                data['tasks'][task]['desc'] = conf[task]['desc'] % dungeon_conf[step_floor][step_room]['name']
+                data['tasks'][task]['total_steps'] = 1
+                data['tasks'][task]['finished_step'] = 1 if  data['tasks'][task]['can_award'] else 0
+            # 第2 系列任务  (获得第1大章第1大关所有星)  显示当前获得星 / 此关所有星
+            elif task == 'set_2':
+                step_floor = str(conf['set_2']['value'][current_step])
+                data['tasks'][task]['desc'] = conf[task]['desc'] % dungeon_conf[step_floor]['name']
+                data['tasks'][task]['total_steps'] = udungeon.get_floor_all_star('normal', step_floor)
+                data['tasks'][task]['finished_step'] = udungeon.has_played_info['normal'].get(floor, {}).get('cur_star', 0)
+            # 第3 系列任务检查  (战场总星数达到x颗 )  当前获得总星/条件星数
+            elif task == 'set_3':
+                data['tasks'][task]['desc'] = conf[task]['desc'] % conf['set_3']['value'][current_step]
+                data['tasks'][task]['finished_step'] = udungeon.total_got_star
+                data['tasks'][task]['total_steps'] = conf['set_3']['value'][current_step]
+            # 第4 系列任务检查  (主角达到30级)  当前等级 / 条件等级
+            elif task == 'set_4':
+                data['tasks'][task]['desc'] = conf[task]['desc'] % conf['set_4']['value'][current_step]
+                data['tasks'][task]['finished_step'] = rk_user.user_property.lv
+                data['tasks'][task]['total_steps'] = conf['set_4']['value'][current_step]
         else:
             data['tasks'][task]['title'] = conf[task]['title']
             data['tasks'][task]['desc'] = conf[task]['desc'] % conf[task]['value']['1']

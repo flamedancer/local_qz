@@ -40,7 +40,10 @@ print "**end backup!"
 
 oldest_daystr = str(datetime.date.today() -
     datetime.timedelta(days=30))
-oldest_filepath = os.path.join(dirpath, oldest_daystr)
-if os.path.exists(oldest_filepath):
-    print "****delet too old configfile:", oldest_filepath
-    os.remove(oldest_filepath)
+# oldest_filepath = os.path.join(dirpath, oldest_daystr)
+# 删除30 天以前的数据
+for file_name in os.walk(dirpath).next()[2]:
+	if file_name <= oldest_daystr:
+		old_filepath = os.path.join(dirpath, file_name)
+	    print "****delet too old configfile:", old_filepath
+	    os.remove(old_filepath)

@@ -4,36 +4,39 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 LOCAL_DEBUG = False
 ENVIRONMENT_TYPE = 'dev'
-
 # 服务器标示符 港台和国服标识
 APP_SEVER_ID = 'cn'
 # admin页面显示主题
-APP_NAME = '天生主公外网测试服'
+APP_NAME = 'ACG开发服务器'
 # android客户端类型   不在此列的都极为ios客户端
 ANDROID_CLIENT_TYPE = ['oc_android','xiaomi','gp','360','wandoujia','17173','91','pp']
+
+
 
 WALKER_POP_URL = ''
 WALKER_KING_URL = ''
 WALKER_APP_ID = ''
 
-BASE_ROOT = '/alidata/sites/op/qz'
-BASE_URL = 'http://twqz.negaplay.com'
+BASE_ROOT = '/home/hvgc/new_qz'
+BASE_URL = 'http://139.196.31.214:8003'
 
 #  报错邮件配置
-EMAIL_HOST = 'mail.touchgame.net'
+EMAIL_HOST = 'honvue.com'
+# 多少封邮件后， 发送短信提醒
+MOBILE_ERROR_NUM = 30
 EMAIL_PORT = 25
-EMAIL_ACCOUNT = 'sgqz@touchgame.net'
-EMAIL_PASSWORD = 'jnwUZV47i08S'
+EMAIL_ACCOUNT = 'chen.guo@honvue.com'
+EMAIL_PASSWORD = 'flamedancer070613'
 EMAIL_USE_TLS=False
-EMAIL_TITLE = 'sqqz email'
+EMAIL_TITLE = 'ACG ERROR email'
 ADMINS = (
-    ('sgqz', EMAIL_ACCOUNT),
+    ('chen.guo', EMAIL_ACCOUNT),
 )
 MANAGERS = ADMINS
 
 # 通用配置
 TIME_ZONE = 'Asia/Shanghai'
-LANGUAGE_CODE = 'zh'
+LANGUAGE_CODE = 'ja'
 SITE_ID = 1
 USE_I18N = True
 USE_L10N = True
@@ -68,10 +71,10 @@ PIER_USE = True
 
 # **重要  appid和平台id
 OC_APP_ID = ''  #  生成uid的前缀
-OC_PLATFORM_ID = '61' #  生成uid的前缀
+OC_PLATFORM_ID = '1' #  生成uid的前缀
 
 # **重要 redis缓存字段前缀
-CACHE_PRE = "qz_"
+CACHE_PRE = "qzper_"
 
 # **重要 请求的时间戳超过30秒  不处理
 AUTH_AGE = 30
@@ -82,28 +85,26 @@ SIG_SECRET_KEY = 'e#!(MO4gfu!^392)_()rm3'
 # **重要 使用的等级排行榜 名字
 LV_TOP = "lv_top"
 # **重要 storage config 此服 使用的数据库配置 index
-STORAGE_INDEX = 'dev'
+STORAGE_INDEX = '1'
 # **重要 所有服 数据库配置
 STORAGE_CONFIG = {
-    "dev":{ #  外网测试服
-        'redis':[{'host':'10.200.55.32','port':6394,'db':'0'}],  # 一组redis 用来存储游戏数据
-        'realtime_pvp_redis':{'host':'10.200.55.32','port':6394,'db':'1'},  # 一组redis 用来记录在线pvp的用户
-        'top_redis':{'host':'10.200.55.32','port':6394,'db':'15'},  #一个redis 用来做排行榜
-        'mongodb':{'host':'10.200.55.32','port':27017,'db':'qz_op_db','username':'qzstgdyg','password':'w22cBor99yYh7E3F7'}, #一个mongodb 用来存储游戏数据
-        'log_mongodb':{'host':'10.200.55.32','port':27017,'db':'qz_op_db','username':'qzstgdyg','password':'w22cBor99yYh7E3F7'}, # 一个mongodb 用来查询游戏数据
-    },
+    '1':{
+            'redis':[{'host':'127.0.0.1','port':6379,'db':'0'}],  #一组redis 用来存储游戏数据
+            'realtime_pvp_redis':{'host':'127.0.0.1','port':6379,'db':'1'},  #一redis 用来做实时pvp使用
+            'top_redis':{'host':'127.0.0.1','port':6379,'db':'3'},  #一个redis 用来做排行榜
+            'mongodb':{'host':'127.0.0.1','port':27017,'db':'acg','username':'','password':''}, #一个mongodb 用来存储游戏数据
+            'log_mongodb':{'host':'127.0.0.1','port':27017,'db':'acglog','username':'','password':''},
+            'secondary_log_mongodb':{'host':'127.0.0.1','port':27017,'db':'acglog','username':'','password':''}, 
+        },
 }
 
 # 实时pvp分服配置
-REAL_PVP_ALL_SERVERS = ["10.200.55.32:9041"]
+REAL_PVP_ALL_SERVERS = ["139.196.31.214:9040"]
 REAL_PVP_SUBAREA_SERVER_CONF = {
-    "1":  ["10.200.55.32:9041"],
-    "2":  ["10.200.55.32:9041"],
-    "3":  ["10.200.55.32:9041"],
-    "4":  ["10.200.55.32:9041"],
-    "5":  ["10.200.55.32:9041"],
+    "1":  ["10.200.55.32:9040"],
 }
 
+"""  暂时不用的配置
 
 #tapjoy key  (未知配置)
 # TAPJOY_KEY = 'jJw4Pw2ZEnECxiNKjpd1'
@@ -149,3 +150,5 @@ MYCARD_FACID = "GFD01197"
 MYCARD_KEY1 = "mycardwanco"
 MYCARD_KEY2 = "CE2b1zQL6"
 
+
+"""

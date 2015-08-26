@@ -309,7 +309,7 @@ class UserDungeon(GameModel):
             else:
                 floor_data[floor_id][judges_name] = False
 
-        floor_data[floor_id]['floor_all_star'] = self.__get_floor_all_star('normal',floor_id)
+        floor_data[floor_id]['floor_all_star'] = self.get_floor_all_star('normal',floor_id)
         floor_data[floor_id]['cur_star'] = 0
         #格式化 floor 里面的 room 的所有的信息
         floor_data[floor_id]['rooms'] = {}
@@ -841,7 +841,7 @@ class UserDungeon(GameModel):
             has_played_info[dungeon_type][floor_id]['rooms'][room_id] = {}
             floor_info = has_played_info[dungeon_type][floor_id]
             #计算该floor的所有的星
-            floor_all_star = self.__get_floor_all_star(dungeon_type,floor_id)
+            floor_all_star = self.get_floor_all_star(dungeon_type,floor_id)
             floor_info['floor_all_star'] = floor_all_star
             #因为该floor是最新的所以当前所打的星就是当前floor所获得最大的星
             floor_info['cur_star'] = int(star_ratio)
@@ -872,7 +872,7 @@ class UserDungeon(GameModel):
         if put_fg:
             self.put()
 
-    def __get_floor_all_star(self,dungeon_type,floor_id):
+    def get_floor_all_star(self,dungeon_type,floor_id):
         '''
         * miaoyichao
         * 获取该floorid的星级 

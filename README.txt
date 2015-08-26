@@ -6,8 +6,7 @@ msgpack-python
 
 本地化 qz
 
-sudo pip install Django==1.3.1
-sudo pip install uwsgi
+
 
 cp -r ../../qz_svn/back-end-code/guochen\ \(branch\)
 
@@ -15,12 +14,19 @@ cp -r ../../qz_svn/back-end-code/guochen\ \(branch\)
 更改这些文件中内容有路径的为本地路径
 如 DIR=/data/sites/MaxStrike 改为 DIR=`pwd`
 
-安装  sudo pip install pymongo
-      sudo pip install redis
-      sudo pip install msgpack-python
-      sudo pip install xlrd
+安装   pip install Django==1.3.1
+      pip install uwsgi   (需要依赖 python-dev  若有error：#include <Python.h>  则先：sudo yum install python-devlel
+                           需要依赖 pcre 若启动有警告：!!! no internal routing support, rebuild with pcre support !!!
+                                            则先安装 prec yum -y install pcre-devel openssl openssl-devel  
+                                              再重装pip install uwsgi -I
+                          )
+      pip install pymongo
+      pip install redis
+      pip install msgpack-python
+      pip install xlrd
       sudo pip install pycrypto
-      sudo pip install pycurl
+      #sudo pip install pycurl
+    实时对战需依赖：   (sudo) pip install geventwebsocket
 
 修改 pymongo bug  ：  在  /python2.7/site-packages/pymongo/common.py  第392行加入一行：
      'max_pool_size': validate_positive_integer_or_none,
@@ -54,7 +60,7 @@ cp -r ../../qz_svn/back-end-code/guochen\ \(branch\)
    db.sequence.insert(
        {
           _id: "userid",
-          seq: 100000000
+          seq: 000000000
        }
     )
 
