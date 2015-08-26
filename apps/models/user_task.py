@@ -198,7 +198,7 @@ class UserTask(GameModel):
         # 第2 系列任务检查  (获得第1大章第1大关所有星)
         #---------------------------------------------------------------------------
         step = self.__get_step('set_2')
-        if str(step+1) not in conf['set_2']['value']:  # 做完这一系列任务就不需要处理了
+        if str(step+1) in conf['set_2']['value']:  # 做完这一系列任务就不需要处理了
             floor = str(conf['set_2']['value'][str(step+1)])
             # floor = str(self.__format_floor(value[0], value[1]))
             print 'wzgdebug floor', floor
@@ -219,7 +219,7 @@ class UserTask(GameModel):
         # 第3 系列任务检查  (战场总星数达到100颗)
         #---------------------------------------------------------------------------
         step = self.__get_step('set_3')
-        if str(step+1) not in conf['set_3']['value']:  # 做完这一系列任务就不需要处理了
+        if str(step+1) in conf['set_3']['value']:  # 做完这一系列任务就不需要处理了
             cur_star = self.user_dungeon.total_got_star
             conf_star = conf['set_3']['value'][str(step+1)]
             if cur_star >= conf_star:
@@ -228,7 +228,7 @@ class UserTask(GameModel):
         # 第4 系列任务检查  (主角达到30级)
         #---------------------------------------------------------------------------
         step = self.__get_step('set_4')
-        if str(step+1) not in conf['set_4']['value']:  # 做完这一系列任务就不需要处理了
+        if str(step+1) in conf['set_4']['value']:  # 做完这一系列任务就不需要处理了
             cur_lv = self.user_property.lv
             conf_lv = conf['set_4']['value'][str(step+1)]
             if cur_lv >= conf_lv:
