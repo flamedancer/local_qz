@@ -26,7 +26,7 @@ cp -r ../../qz_svn/back-end-code/guochen\ \(branch\)
       pip install xlrd
       sudo pip install pycrypto
       #sudo pip install pycurl
-    实时对战需依赖：   (sudo) pip install geventwebsocket
+    实时对战需依赖：   (sudo) pip install gevent-websocket
 
 修改 pymongo bug  ：  在  /python2.7/site-packages/pymongo/common.py  第392行加入一行：
      'max_pool_size': validate_positive_integer_or_none,

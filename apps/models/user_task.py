@@ -186,8 +186,7 @@ class UserTask(GameModel):
             normal_current = self.user_dungeon.dungeon_info['normal_current']  #  游戏中显示 new 的那一关
             cur_floor = int(normal_current['floor_id'])
             cur_room = int(normal_current['room_id'])
-            value = conf['set_1']['value'][str(step+1)]
-            step_floor, step_room = map(str, value)
+            step_floor, step_room = conf['set_1']['value'][str(step+1)]
             # step_floor = self.__format_floor(value[0], value[1])
             # step_room = value[2]
     

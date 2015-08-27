@@ -73,7 +73,7 @@ class UserProperty(GameModel):
                             'fight_soul': 0, #战魂
                             'stamina_upd_time': int(time.time()),
 
-                            'newbie': True,     # 是否新手
+                            'newbie': False,     # 是否新手
                             'newbie_steps':0,     # 已完成的新手步骤
 
                             'bind_award':True,
