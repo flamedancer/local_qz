@@ -7,7 +7,7 @@ ENVIRONMENT_TYPE = 'dev'
 # 服务器标示符 港台和国服标识
 APP_SEVER_ID = 'cn'
 # admin页面显示主题
-APP_NAME = 'ACG开发服务器'
+APP_NAME = '幻世神姬开发服务器'
 # android客户端类型   不在此列的都极为ios客户端
 ANDROID_CLIENT_TYPE = ['oc_android','xiaomi','gp','360','wandoujia','17173','91','pp']
 
@@ -101,7 +101,7 @@ STORAGE_CONFIG = {
 # 实时pvp分服配置
 REAL_PVP_ALL_SERVERS = ["139.196.31.214:9040"]
 REAL_PVP_SUBAREA_SERVER_CONF = {
-    "1":  ["10.200.55.32:9040"],
+    "1":  ["139.196.31.214:9040"],
 }
 
 """  暂时不用的配置
