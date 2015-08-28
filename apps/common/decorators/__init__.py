@@ -784,13 +784,17 @@ def auth_token_for_oc(request,access_token,openid,uuid,mktid,version,client_type
         return fg,pid,msg
     #有openid时，检查access_token是否正确
     account = AccountMapping.get(openid)
-    if not account:
+    if not account: 
         if game_config.system_config.get('account_assign_switch'):
             fg = True
             pid = openid
             #验证成功，安装用户
             request.rk_user = UserBase._install(pid,'oc',uuid,mktid,version,client_type,macaddr,idfa,ios_ver, subarea=subarea)
-            access_token = get_upwd()
+            # debug 模式下，将传入的access_token 作为新用户taken
+            if settings.DEBUG is True:
+                access_token = access_token or get_upwd()
+            else:
+                access_token = get_upwd()
             request.rk_user.account.update_info(pid, access_token)
             account = request.rk_user.account
             print "debug_guochen_new_token pid, access_token, openid", pid, access_token, openid
