@@ -29,9 +29,19 @@ from apps.models import data_log_mod
 
 port = "9040" if len(sys.argv) != 2 else sys.argv[1]
 
-
+# 获得本机ip
+import fcntl
+import struct
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
+localIP = get_ip_address('eth0')
 # localIP = socket.gethostbyname(socket.gethostname())
-localIP = '42.96.168.85'
+# localIP = '42.96.168.85'
 server_site = localIP + ":" + port
 THIS_READYING_REDIS = readying_player_redis.ALL_REDIS_MODEL[server_site]
 print "$$$$$$$$THIS  server_site is", server_site 
