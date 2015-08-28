@@ -167,9 +167,9 @@ def stove(rk_user,params):
         equip5_prop_list = []
         equip6_prop_list = []
         for prop_id in props_conf:
-            if props_conf[prop_id]['used_by'] == 'equip5':
+            if props_conf[prop_id].get('used_by') == 'equip5':
                 equip5_prop_list.append((prop_id, props_conf[prop_id]['exp']))
-            elif props_conf[prop_id]['used_by'] == 'equip6':
+            elif props_conf[prop_id].get('used_by') == 'equip6':
                 equip6_prop_list.append((prop_id, props_conf[prop_id]['exp']))
         equip5_prop_list.sort(reverse=True)
         equip6_prop_list.sort(reverse=True)
