@@ -77,13 +77,13 @@ def do_daily_task(func):
         # value为任务id，对应task_config['daily_task']的key
         method_list = {
             'dungeon.end': ['task_1', 'task_4', 'task_13'],   # 完成普通副本， 完成试炼, 大扫荡
-            #'gift.get_sign_in_gift': 'task_2',
+            'gift.get_sign_in_gift': 'task_2',
             'mystery_store.buy_store_goods': 'task_3',
             'equip.update': ['task_5', 'task_7'],   # 装备升级  宝物升级
             'card.card_update': 'task_6',
             'activity.explore': 'task_9',
-            'pack.buy_props': 'task_10',    # 商城购买物品（道具）
-            #'vip.buy_vip_gift': 'task_10', # 商城购买物品（礼包）
+            # 'pack.buy_props': 'task_10',    # 商城购买物品（道具）
+            'vip.buy_vip_gift': 'task_10', # 商城购买物品（礼包）
             'activity.get_banquet_stamina': 'task_11', # 吃包子
             'gacha.charge': 'task_12',          # 招募
             'gacha.charge_multi': 'task_12',    # 招募
